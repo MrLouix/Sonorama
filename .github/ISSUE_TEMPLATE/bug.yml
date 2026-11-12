@@ -1,0 +1,48 @@
+name: Signaler un bug
+description: Quelque chose ne fonctionne pas comme prévu
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Que s'est-il passé ?
+      description: Décrivez le problème et ce que vous attendiez à la place.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes pour reproduire
+      placeholder: |
+        1. Ouvrir la page Météo
+        2. Passer en mode plan
+        3. …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version de Sonorama
+      description: Réglages, section « À propos »
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Appareil et version d'Android
+      placeholder: Pixel 6a, Android 15
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Domaine
+      options:
+        - Son (boucle, fondu, coupure, craquement)
+        - Lecture en arrière-plan, notification, Bluetooth
+        - Cartes et pages
+        - Import de packs
+        - Accessibilité
+        - Autre
+    validations:
+      required: true

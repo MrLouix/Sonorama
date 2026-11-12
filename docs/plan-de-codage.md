@@ -101,7 +101,8 @@ Une carte simple a l'identifiant `s:<id du son>` : réimporter un pack retrouve 
 
 ## 5. Stratégie de test
 
-- **Tests JVM** (`./gradlew test`) : `MixEngine` avec de faux lecteurs et un temps virtuel, courbe de volume, validation des manifestes, contrôle des chemins d'archive, export de pages.
+- **Tests JVM** (`./gradlew testDebugUnitTest`) : `MixEngine` avec de faux lecteurs et un temps virtuel, courbe de volume, validation des manifestes, contrôle des chemins d'archive, export de pages.
+- **Tests d'écran sur JVM** (Robolectric) : l'appli réelle — base, pack de base, moteur — pilotée à travers l'interface Compose : pages intégrées, mode direct, mode plan, création d'une page, écrans secondaires. Chaque test écrit une capture dans `app/build/screens/`.
 - **Lint Android** (`./gradlew lint`) : chaînes non traduites, permissions, API.
 - **Essais sur appareil** (non automatisés) : raccord des boucles, charge de 12 lecteurs, lecture écran éteint, notification et casque Bluetooth, TalkBack. Ce sont les critères de sortie des lots 0 et 1 ; ils ne peuvent pas être validés sans téléphone.
 

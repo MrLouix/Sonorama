@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Aucune permission réseau ni d'accès au stockage : l'appli fonctionne entièrement hors ligne. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -7,6 +8,11 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Maintient le processeur éveillé pendant la lecture écran éteint. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- Media3 déclare cette permission pour le streaming ; Sonorama ne lit que des fichiers locaux. -->
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
 
     <application
         android:name=".SonoramaApp"

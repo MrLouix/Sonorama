@@ -57,6 +57,19 @@ android {
         includeInBundle = false
     }
 
+    testOptions {
+        unitTests {
+            // Les tests d'écran (Robolectric) ont besoin des ressources et des assets.
+            isIncludeAndroidResources = true
+            all {
+                it.systemProperty("robolectric.pixelCopyRenderMode", "hardware")
+                it.systemProperty("robolectric.dependency.repo.url", "https://repo1.maven.org/maven2")
+                // Les captures sont toujours écrites (app/build/screens) ; aucune comparaison à une référence.
+                it.systemProperty("roborazzi.test.record", "true")
+            }
+        }
+    }
+
     lint {
         warningsAsErrors = false
         // Les chaînes « %d sur %d » ne sont pas des pluriels.
@@ -98,4 +111,11 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.test.manifest)
 }

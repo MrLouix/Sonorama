@@ -127,7 +127,6 @@ private fun FadeSlider(label: Int, valueMs: Int, onChange: (Int) -> Unit) {
         onValueChange = { local = (it * 10).roundToInt() / 10f },
         onValueChangeFinished = { onChange((local * 1000).roundToInt()) },
         valueRange = 0f..SettingsStore.MAX_FADE_MS / 1000f,
-        steps = SettingsStore.MAX_FADE_MS / 100 - 1,
         modifier = Modifier.semantics { contentDescription = name },
     )
 }

@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Lint, tests et APK de débogage
+        run: ./gradlew lintDebug testDebugUnitTest assembleDebug
+
+      - name: Captures des tests d'écran
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: captures
+          path: app/build/screens
+          if-no-files-found: ignore
+
+      - name: Rapports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports
+          path: |
+            app/build/reports
+            app/build/test-results
+
+      - name: APK de débogage
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonorama-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
