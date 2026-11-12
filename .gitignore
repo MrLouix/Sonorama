@@ -1,0 +1,28 @@
+# Gradle
+.gradle/
+build/
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Kotlin
+.kotlin/
+
+# Signature
+*.jks
+*.keystore
+keystore.properties
+
+# Système
+.DS_Store
+Thumbs.db
+
+# Outils
+__pycache__/
+*.pyc
+tools/build/
