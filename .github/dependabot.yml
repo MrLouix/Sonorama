@@ -1,0 +1,17 @@
+version: 2
+# Chaque PR de Dependabot déclenche la CI : tout est regroupé et mensuel pour en limiter le nombre.
+updates:
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      gradle:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]

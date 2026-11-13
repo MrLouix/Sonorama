@@ -1,0 +1,389 @@
+{
+  "format": 1,
+  "id": "sonorama.base",
+  "version": 1,
+  "name": {
+    "fr": "Pack de base",
+    "en": "Base pack"
+  },
+  "pages": [
+    {
+      "id": "nature",
+      "name": {
+        "fr": "Nature",
+        "en": "Nature"
+      },
+      "symbol": "forest"
+    },
+    {
+      "id": "ville",
+      "name": {
+        "fr": "Ville",
+        "en": "City"
+      },
+      "symbol": "location_city"
+    },
+    {
+      "id": "technologique",
+      "name": {
+        "fr": "Technologique",
+        "en": "Technology"
+      },
+      "symbol": "memory"
+    },
+    {
+      "id": "meteo",
+      "name": {
+        "fr": "Météo",
+        "en": "Weather"
+      },
+      "symbol": "thunderstorm"
+    },
+    {
+      "id": "transports",
+      "name": {
+        "fr": "Transports",
+        "en": "Transport"
+      },
+      "symbol": "train"
+    }
+  ],
+  "sounds": [
+    {
+      "id": "birds",
+      "file": "audio/birds.ogg",
+      "name": {
+        "fr": "Oiseaux",
+        "en": "Birds"
+      },
+      "symbol": "flutter_dash",
+      "defaultVolume": 60,
+      "page": "nature",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "stream",
+      "file": "audio/stream.ogg",
+      "name": {
+        "fr": "Ruisseau",
+        "en": "Stream"
+      },
+      "symbol": "water",
+      "defaultVolume": 65,
+      "page": "nature",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "waves",
+      "file": "audio/waves.ogg",
+      "name": {
+        "fr": "Vagues",
+        "en": "Waves"
+      },
+      "symbol": "waves",
+      "defaultVolume": 70,
+      "page": "nature",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "campfire",
+      "file": "audio/campfire.ogg",
+      "name": {
+        "fr": "Feu de camp",
+        "en": "Campfire"
+      },
+      "symbol": "local_fire_department",
+      "defaultVolume": 70,
+      "page": "nature",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "crickets",
+      "file": "audio/crickets.ogg",
+      "name": {
+        "fr": "Grillons",
+        "en": "Crickets"
+      },
+      "symbol": "bug_report",
+      "defaultVolume": 50,
+      "page": "nature",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "traffic",
+      "file": "audio/traffic.ogg",
+      "name": {
+        "fr": "Circulation",
+        "en": "Traffic"
+      },
+      "symbol": "traffic",
+      "defaultVolume": 60,
+      "page": "ville",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "crowd",
+      "file": "audio/crowd.ogg",
+      "name": {
+        "fr": "Foule",
+        "en": "Crowd"
+      },
+      "symbol": "groups",
+      "defaultVolume": 60,
+      "page": "ville",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "fountain",
+      "file": "audio/fountain.ogg",
+      "name": {
+        "fr": "Fontaine",
+        "en": "Fountain"
+      },
+      "symbol": "water_drop",
+      "defaultVolume": 60,
+      "page": "ville",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "pigeons",
+      "file": "audio/pigeons.ogg",
+      "name": {
+        "fr": "Pigeons",
+        "en": "Pigeons"
+      },
+      "symbol": "emoji_nature",
+      "defaultVolume": 55,
+      "page": "ville",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "city_night",
+      "file": "audio/city_night.ogg",
+      "name": {
+        "fr": "Nuit en ville",
+        "en": "City night"
+      },
+      "symbol": "nights_stay",
+      "defaultVolume": 65,
+      "page": "ville",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "server_room",
+      "file": "audio/server_room.ogg",
+      "name": {
+        "fr": "Salle des serveurs",
+        "en": "Server room"
+      },
+      "symbol": "dns",
+      "defaultVolume": 60,
+      "page": "technologique",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "fan",
+      "file": "audio/fan.ogg",
+      "name": {
+        "fr": "Ventilateur",
+        "en": "Fan"
+      },
+      "symbol": "wind_power",
+      "defaultVolume": 60,
+      "page": "technologique",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "electric_hum",
+      "file": "audio/electric_hum.ogg",
+      "name": {
+        "fr": "Bourdonnement électrique",
+        "en": "Electric hum"
+      },
+      "symbol": "bolt",
+      "defaultVolume": 50,
+      "page": "technologique",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "spaceship",
+      "file": "audio/spaceship.ogg",
+      "name": {
+        "fr": "Vaisseau spatial",
+        "en": "Spaceship"
+      },
+      "symbol": "rocket_launch",
+      "defaultVolume": 70,
+      "page": "technologique",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "console_beeps",
+      "file": "audio/console_beeps.ogg",
+      "name": {
+        "fr": "Bips de console",
+        "en": "Console beeps"
+      },
+      "symbol": "terminal",
+      "defaultVolume": 50,
+      "page": "technologique",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "light_rain",
+      "file": "audio/light_rain.ogg",
+      "name": {
+        "fr": "Pluie légère",
+        "en": "Light rain"
+      },
+      "symbol": "water_drop",
+      "defaultVolume": 65,
+      "page": "meteo",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "heavy_rain",
+      "file": "audio/heavy_rain.ogg",
+      "name": {
+        "fr": "Pluie forte",
+        "en": "Heavy rain"
+      },
+      "symbol": "umbrella",
+      "defaultVolume": 65,
+      "page": "meteo",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "wind",
+      "file": "audio/wind.ogg",
+      "name": {
+        "fr": "Vent",
+        "en": "Wind"
+      },
+      "symbol": "air",
+      "defaultVolume": 65,
+      "page": "meteo",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "distant_storm",
+      "file": "audio/distant_storm.ogg",
+      "name": {
+        "fr": "Orage lointain",
+        "en": "Distant storm"
+      },
+      "symbol": "thunderstorm",
+      "defaultVolume": 70,
+      "page": "meteo",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "blizzard",
+      "file": "audio/blizzard.ogg",
+      "name": {
+        "fr": "Blizzard",
+        "en": "Blizzard"
+      },
+      "symbol": "ac_unit",
+      "defaultVolume": 60,
+      "page": "meteo",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "train",
+      "file": "audio/train.ogg",
+      "name": {
+        "fr": "Train",
+        "en": "Train"
+      },
+      "symbol": "train",
+      "defaultVolume": 65,
+      "page": "transports",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "plane_cabin",
+      "file": "audio/plane_cabin.ogg",
+      "name": {
+        "fr": "Cabine d'avion",
+        "en": "Plane cabin"
+      },
+      "symbol": "flight",
+      "defaultVolume": 60,
+      "page": "transports",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "car_interior",
+      "file": "audio/car_interior.ogg",
+      "name": {
+        "fr": "Voiture",
+        "en": "Car"
+      },
+      "symbol": "directions_car",
+      "defaultVolume": 65,
+      "page": "transports",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    },
+    {
+      "id": "boat",
+      "file": "audio/boat.ogg",
+      "name": {
+        "fr": "Bateau",
+        "en": "Boat"
+      },
+      "symbol": "directions_boat",
+      "defaultVolume": 65,
+      "page": "transports",
+      "author": "Sonorama",
+      "license": "CC0-1.0",
+      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
+    }
+  ]
+}

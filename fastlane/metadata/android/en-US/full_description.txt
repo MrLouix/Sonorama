@@ -1,0 +1,12 @@
+Sonorama plays looping ambient sounds and mixes them live from pages of touch cards. It is made for reading stories to children and for running tabletop role-playing games: one hand is enough, without looking away from the book or the table.
+
+• A grid of cards: one tap starts or stops a sound, always with a fade.
+• A plan mode: prepare several changes, then apply them together with a crossfade.
+• A volume per card: long-press, then slide up or down.
+• Up to 12 sounds at once, across several pages.
+• Your own pages: gather your favourite cards, save a whole mix as a single card.
+• Plays with the screen off, with controls on the lock screen and headsets.
+• 24 sounds included: nature, city, technology, weather, transport.
+• More sounds as ZIP packs imported from the phone; the format is open.
+
+No account, no ads, no tracking. The app requests no network access.

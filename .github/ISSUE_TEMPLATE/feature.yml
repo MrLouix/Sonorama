@@ -1,0 +1,23 @@
+name: Proposer une amélioration
+description: Une idée de fonction ou de changement
+labels: [amélioration]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Avant de proposer, vérifiez la section « Hors périmètre » de la
+        [spécification](https://github.com/MrLouix/Sonorama/blob/main/docs/specification.md) :
+        musique, comptes, synchronisation et catalogue en ligne sont exclus par choix.
+  - type: textarea
+    id: need
+    attributes:
+      label: Quel besoin ?
+      description: La situation concrète (lecture d'histoire, partie de jeu de rôle…) où l'appli vous limite.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposition
+    validations:
+      required: true

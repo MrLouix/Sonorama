@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Faille de sécurité
+    url: https://github.com/MrLouix/Sonorama/security/advisories/new
+    about: Signalement privé, à ne pas publier dans un ticket.

@@ -1,0 +1,12 @@
+Sonorama joue des sons d'ambiance en boucle et les mixe en direct depuis des pages de cartes tactiles. Elle est pensée pour lire des histoires aux enfants et pour mener des parties de jeu de rôle : une main suffit, sans quitter le livre ou la table des yeux.
+
+• Une grille de cartes : un appui lance ou arrête un son, toujours en fondu.
+• Un mode plan : préparez plusieurs changements, appliquez-les ensemble en fondu croisé.
+• Un volume par carte : appui long, puis glissez vers le haut ou le bas.
+• Jusqu'à 12 sons en même temps, sur plusieurs pages.
+• Vos pages : rassemblez vos cartes favorites, enregistrez un mix complet en une carte.
+• Lecture écran éteint, commandes sur l'écran verrouillé et au casque.
+• 24 sons fournis : nature, ville, technologie, météo, transports.
+• D'autres sons par packs ZIP, importés depuis le téléphone ; le format est ouvert.
+
+Aucun compte, aucune publicité, aucune télémétrie. L'appli ne demande aucun accès réseau.
