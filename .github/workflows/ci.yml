@@ -29,6 +29,7 @@ jobs:
       - name: Lint, tests et APK de débogage
         run: ./gradlew lintDebug testDebugUnitTest assembleDebug
 
+      # Le stockage Actions est limité : pas d'APK en artefact, et le reste n'est gardé que 3 jours.
       - name: Captures des tests d'écran
         if: always()
         uses: actions/upload-artifact@v4
@@ -36,6 +37,7 @@ jobs:
           name: captures
           path: app/build/screens
           if-no-files-found: ignore
+          retention-days: 3
 
       - name: Rapports
         if: failure()
@@ -45,9 +47,4 @@ jobs:
           path: |
             app/build/reports
             app/build/test-results
-
-      - name: APK de débogage
-        uses: actions/upload-artifact@v4
-        with:
-          name: sonorama-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 3
