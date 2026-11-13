@@ -1,6 +1,5 @@
 # Sonorama
 
-[![CI](https://github.com/MrLouix/Sonorama/actions/workflows/ci.yml/badge.svg)](https://github.com/MrLouix/Sonorama/actions/workflows/ci.yml)
 [![Licence : GPL-3.0](https://img.shields.io/badge/licence-GPL--3.0-blue.svg)](LICENSE)
 
 Sonorama est une appli Android qui joue des sons d'ambiance en boucle, mixés en direct depuis des pages de
