@@ -65,13 +65,14 @@ class AppContainer(context: Context) {
     val importer = PackImporter(context, repository, scope)
 
     @Suppress("unused")
-    private val focus = AudioFocusController(context, engine, scope)
+    private val focus = AudioFocusController(context, engine, preview, scope)
 
     init {
         scope.launch {
             val lastMix = settings.value.lastMix
             runCatching { BasePack.ensureInstalled(context.applicationContext, repository) }
-            repository.library.first { it.loaded && it.packs.isNotEmpty() }
+            // Si le pack de base n'a pas pu être lu, l'appli continue avec ce qui est déjà en base.
+            repository.library.first { it.loaded }
             // Le dernier mix est restauré en pause.
             engine.restore(lastMix)
             repository.library.collect { engine.syncWithLibrary() }

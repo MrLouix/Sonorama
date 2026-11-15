@@ -40,7 +40,7 @@ data class MixState(
     fun isActive(cardId: String): Boolean = cardId in active
 }
 
-enum class MixEvent { LIMIT_REACHED, CARD_UNAVAILABLE, CHANGED_WHILE_PAUSED }
+enum class MixEvent { LIMIT_REACHED, CARD_UNAVAILABLE, CHANGED_WHILE_PAUSED, PLAYBACK_FAILED }
 
 data class FadeSettings(
     val fadeInMs: Int = 500,
@@ -178,6 +178,11 @@ class MixEngine(
         val starts = ArrayList<Voice>()
         val stops = ArrayList<Voice>()
         val moves = ArrayList<Pair<Voice, Float>>()
+        // Une carte a pu grossir depuis sa mise au plan : la limite est revérifiée ici.
+        var budget = MAX_SOUNDS - voices.entries.sumOf { (id, voice) ->
+            if (changes[id]?.toggle == true) 0 else voice.spec.sounds.size
+        }
+        var refused = false
         for ((cardId, change) in changes) {
             change.volume?.let {
                 volumes = volumes + (cardId to it)
@@ -190,12 +195,18 @@ class MixEngine(
                     stops += existing
                 } else {
                     val spec = cards(cardId)?.takeIf { it.sounds.isNotEmpty() } ?: continue
+                    if (spec.sounds.size > budget) {
+                        refused = true
+                        continue
+                    }
+                    budget -= spec.sounds.size
                     starts += Voice(spec, volumeOf(cardId))
                 }
             } else if (existing != null && change.volume != null) {
                 moves += existing to change.volume / 100f
             }
         }
+        if (refused) _events.tryEmit(MixEvent.LIMIT_REACHED)
         val audible = playing || (wasEmpty && starts.isNotEmpty())
         if (!audible) {
             starts.forEach {
@@ -347,11 +358,22 @@ class MixEngine(
     private fun start(voice: Voice) {
         if (voice.players == null) {
             voice.players = voice.spec.sounds.map {
-                players.create(it.uri) to VolumeCurve.gainForPercent(it.relativeVolume)
+                players.create(it.uri) { onPlayerError(voice) } to VolumeCurve.gainForPercent(it.relativeVolume)
             }
         }
         applyGain(voice)
         voice.players?.forEach { it.first.play() }
+    }
+
+    /** Un son illisible arrête sa carte au lieu de la laisser affichée active en silence. */
+    private fun onPlayerError(voice: Voice) {
+        if (voices[voice.cardId] !== voice) return
+        voices.remove(voice.cardId)
+        voice.release()
+        if (voices.isEmpty()) becomeEmpty()
+        _events.tryEmit(MixEvent.PLAYBACK_FAILED)
+        publish()
+        kick()
     }
 
     private fun applyGain(voice: Voice) {
@@ -413,7 +435,8 @@ class MixEngine(
         releasing.forEach(::applyGain)
         if (pausePending && master.value <= 0f) {
             pausePending = false
-            voices.values.forEach { voice -> voice.players?.forEach { it.first.pause() } }
+            // En pause, les lecteurs et leurs décodeurs sont rendus au système ; ils sont recréés à la reprise.
+            voices.values.forEach { it.release() }
         }
     }
 

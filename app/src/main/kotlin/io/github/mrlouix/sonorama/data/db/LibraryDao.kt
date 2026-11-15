@@ -73,6 +73,9 @@ interface LibraryDao {
     @Query("DELETE FROM page_cards WHERE cardId = :cardId")
     suspend fun removeCardFromPages(cardId: String)
 
+    @Query("DELETE FROM page_cards WHERE pageId = :pageId AND cardId = :cardId")
+    suspend fun removeCardFromPage(pageId: String, cardId: String)
+
     // ----------------------------------------------------------------- pages
     @Query("SELECT * FROM pages WHERE id = :id")
     suspend fun page(id: String): PageEntity?

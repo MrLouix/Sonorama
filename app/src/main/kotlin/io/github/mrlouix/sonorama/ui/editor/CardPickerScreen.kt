@@ -44,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.mrlouix.sonorama.R
 import io.github.mrlouix.sonorama.data.Card
 import io.github.mrlouix.sonorama.data.Limits
+import io.github.mrlouix.sonorama.ui.AppSnackbarHost
 import io.github.mrlouix.sonorama.ui.MainViewModel
 import io.github.mrlouix.sonorama.ui.ScreenTopBar
 import io.github.mrlouix.sonorama.ui.Symbols
@@ -65,15 +66,16 @@ fun CardPickerScreen(viewModel: MainViewModel) {
     val available = library.cards.values.filter { it.available && matches(it) }
     val groups = buildList {
         val composites = available.filter { it.composite }
-        if (composites.isNotEmpty()) add(myCards to composites)
+        if (composites.isNotEmpty()) add(Triple("mes-cartes", myCards, composites))
         // Les thèmes suivent l'ordre des pages intégrées.
         for (theme in library.pages.filter { it.builtIn }) {
             val cards = available.filter { !it.composite && it.themePageId == theme.id }
-            if (cards.isNotEmpty()) add(theme.name.get(french) to cards)
+            if (cards.isNotEmpty()) add(Triple("page:${theme.id}", theme.name.get(french), cards))
         }
     }
 
     Scaffold(
+        snackbarHost = { AppSnackbarHost() },
         topBar = {
             ScreenTopBar(
                 title = stringResource(R.string.picker_title, page.cardIds.size, Limits.PAGE_CARDS_MAX),
@@ -107,8 +109,9 @@ fun CardPickerScreen(viewModel: MainViewModel) {
                         )
                     }
                 }
-                for ((title, cards) in groups) {
-                    stickyHeader(key = "h:$title") {
+                // La clé vient de l'identifiant du groupe : deux pages peuvent porter le même nom.
+                for ((groupId, title, cards) in groups) {
+                    stickyHeader(key = "h:$groupId") {
                         Text(
                             title,
                             style = MaterialTheme.typography.titleSmall,

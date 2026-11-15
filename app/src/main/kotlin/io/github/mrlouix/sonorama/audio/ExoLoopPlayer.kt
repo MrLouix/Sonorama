@@ -7,6 +7,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -61,13 +62,18 @@ class ExoLoopPlayer(private val player: ExoPlayer) : LoopPlayer {
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
             .build()
 
-        override fun create(uri: String): LoopPlayer {
+        override fun create(uri: String, onError: () -> Unit): LoopPlayer {
             val player = ExoPlayer.Builder(appContext, renderers, mediaSources)
                 .setPlaybackLooper(playbackThread.looper)
                 // Le focus audio est géré une fois pour tout le mix, pas lecteur par lecteur.
                 .setAudioAttributes(attributes, false)
                 .setWakeMode(C.WAKE_MODE_LOCAL)
                 .build()
+            player.addListener(
+                object : Player.Listener {
+                    override fun onPlayerError(error: PlaybackException) = onError()
+                },
+            )
             player.repeatMode = Player.REPEAT_MODE_ONE
             player.volume = 0f
             player.setMediaItem(MediaItem.fromUri(uri))

@@ -3,20 +3,25 @@ package io.github.mrlouix.sonorama
 import android.app.Application
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollToNodeAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.test.core.app.ApplicationProvider
 import com.github.takahirom.roborazzi.captureRoboImage
 import io.github.mrlouix.sonorama.audio.MixMode
 import io.github.mrlouix.sonorama.data.ThemeMode
+import io.github.mrlouix.sonorama.data.pack.PackFormat
 import io.github.mrlouix.sonorama.ui.MainViewModel
 import io.github.mrlouix.sonorama.ui.Screen
 import io.github.mrlouix.sonorama.ui.SonoramaRoot
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -139,5 +144,55 @@ class ScreensTest {
         capture("now-playing")
         rule.onNodeWithText("Tout arrêter").performClick()
         waitFor { viewModel.mix.value.active.isEmpty() }
+    }
+
+    /** Installe un pack dont deux pages portent le même nom que la page Nature. */
+    private fun installPackWithDuplicatePageNames() {
+        val app = ApplicationProvider.getApplicationContext<Application>() as SonoramaApp
+        val manifest = PackFormat.parse(
+            """{"format":1,"id":"jumeaux","version":1,"name":{"fr":"Jumeaux"},
+               "pages":[{"id":"p1","name":{"fr":"Nature"}},{"id":"p2","name":{"fr":"Nature"}}],
+               "sounds":[{"id":"a","file":"a.ogg","name":{"fr":"Son A"},"page":"p1","license":"CC0"},
+                         {"id":"b","file":"b.ogg","name":{"fr":"Son B"},"page":"p2","license":"CC0"}]}""",
+        ).also(PackFormat::validate)
+        runBlocking { app.container.repository.installPack(manifest, builtIn = false) { "file:///absent/${it.file}" } }
+        waitFor { viewModel.library.value.cards.size == 26 }
+    }
+
+    @Test
+    fun `the card picker survives pages with the same name and reports a full page`() {
+        installPackWithDuplicatePageNames()
+        rule.runOnUiThread {
+            viewModel.newPage()
+            viewModel.open(Screen.CardPicker)
+        }
+        rule.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Son B"))
+        rule.onNodeWithText("Son A").assertExists()
+        rule.onNodeWithText("Son B").assertExists()
+
+        // 26 cartes installées pour 24 places : le refus s'affiche sur l'écran où il se produit.
+        rule.runOnUiThread { viewModel.library.value.cards.keys.forEach(viewModel::togglePageCard) }
+        assertEquals(24, viewModel.pageDraft.value!!.cardIds.size)
+        waitFor { rule.onAllNodes(hasText("Une page contient 24 cartes au plus.")).fetchSemanticsNodes().isNotEmpty() }
+        capture("picker-full")
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "fr-w360dp-h640dp-420dpi")
+    fun `the bottom bar keeps its labels whole on a narrow screen`() {
+        rule.onNodeWithText("Plan").performClick()
+        card("Oiseaux").performClick()
+        rule.onNodeWithText("Direct").assertExists()
+        rule.onNodeWithText("Appliquer 1 changement").assertExists()
+        capture("narrow")
+    }
+
+    @Test
+    @Config(sdk = [35], qualifiers = "fr-w360dp-h640dp-420dpi", fontScale = 2.0f)
+    fun `the bottom bar keeps its labels whole at twice the font size`() {
+        rule.onNodeWithText("Plan").performClick()
+        card("Oiseaux").performClick()
+        rule.onNodeWithText("Appliquer 1 changement").assertExists()
+        capture("big-font")
     }
 }

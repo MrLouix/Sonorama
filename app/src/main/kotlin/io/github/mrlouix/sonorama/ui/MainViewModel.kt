@@ -106,7 +106,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     MixEvent.LIMIT_REACHED -> say(R.string.message_limit, MixEngine.MAX_SOUNDS)
                     MixEvent.CARD_UNAVAILABLE -> say(R.string.message_card_unavailable)
                     MixEvent.CHANGED_WHILE_PAUSED -> say(R.string.message_paused)
+                    MixEvent.PLAYBACK_FAILED -> say(R.string.message_playback_failed)
                 }
+            }
+        }
+        // La pré-écoute peut s'arrêter d'elle-même (appel entrant, casque débranché, son illisible).
+        viewModelScope.launch {
+            preview.owner.collect { owner ->
+                _previewCard.value = owner.takeIf { it != EDITOR_PREVIEW }
+                if (owner != EDITOR_PREVIEW) _compositeDraft.update { it?.copy(listening = false) }
             }
         }
     }
@@ -146,9 +154,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun tapCard(card: Card) {
         if (!card.available) {
-            _messages.tryEmit(
-                UiMessage(R.string.message_pack_missing, actionLabel = R.string.action_reimport, action = MessageAction.OPEN_PACKS),
-            )
+            val pack = library.value.packs.firstOrNull { it.id == card.packId }
+            val text = when {
+                card.composite -> R.string.message_composite_missing
+                pack?.installed == true -> R.string.message_sound_removed
+                else -> R.string.message_pack_missing
+            }
+            _messages.tryEmit(UiMessage(text, actionLabel = R.string.action_reimport, action = MessageAction.OPEN_PACKS))
             return
         }
         engine.tap(card.id)
@@ -337,7 +349,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun refreshCompositePreview(draft: CompositeDraft) {
         if (!draft.listening || draft.sounds.isEmpty()) {
-            if (preview.owner == EDITOR_PREVIEW) preview.stop()
+            if (preview.owner.value == EDITOR_PREVIEW) preview.stop()
             return
         }
         val lib = library.value
@@ -389,14 +401,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             lib.sounds[part.soundId]?.let { it.uri to VolumeCurve.combine(card.volume, part.relativeVolume) }
         }.toMap()
         preview.play(card.id, sounds)
-        _previewCard.value = card.id
     }
 
-    fun stopPreview() {
-        preview.stop()
-        _previewCard.value = null
-        _compositeDraft.update { it?.copy(listening = false) }
-    }
+    fun stopPreview() = preview.stop()
 
     // ------------------------------------------------------------------- packs
 

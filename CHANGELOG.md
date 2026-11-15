@@ -7,6 +7,10 @@ le projet applique le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ### Ajouté
 
+- Signature des packs (ECDSA P-256) : mention « officiel », « signé » ou « non signé », clé mémorisée au
+  premier import, outil `tools/sign_pack.py`. Format de pack 2, le format 1 reste lisible.
+- Confirmation avant toute mise à jour d'un pack, avec l'empreinte du fichier affichée à la demande.
+
 - Écran principal : pages à onglets, grille de cartes, barre de commande, panneau « En cours ».
 - Moteur de mixage : jusqu'à 12 sons en boucle, fondus d'entrée et de sortie, pause et reprise du mix.
 - Mode plan : changements préparés sur plusieurs pages, appliqués ensemble en fondu croisé.
@@ -17,3 +21,25 @@ le projet applique le [versionnage sémantique](https://semver.org/lang/fr/).
 - Cartes composées et scènes (enregistrement du mix en cours).
 - Import de packs ZIP depuis le téléphone, avec vérifications et bilan ; écran des licences des sons.
 - Réglages : durées de fondu, thème clair ou sombre, langue (français, anglais).
+
+### Corrigé
+
+- Barre de commande et noms de cartes lisibles sur écran étroit et jusqu'à 200 % de taille de police.
+- Les messages (limites atteintes, refus) s'affichent sur l'écran où ils se produisent.
+- La pré-écoute s'arrête en quittant l'appli, sur un appel et au débranchement du casque.
+- Relancer la lecture pendant un appel ne joue plus par-dessus l'appel.
+- Un son illisible arrête sa carte au lieu de la laisser affichée active en silence.
+- La limite de 12 sons est revérifiée à l'application d'un plan.
+- En pause, les lecteurs sont rendus au système.
+- L'export d'une page survit à une rotation de l'écran.
+- La confirmation et le bilan d'import s'affichent quel que soit l'écran.
+- Un son qui change de page dans une mise à jour de pack quitte l'ancienne page.
+- Les icônes de la barre d'état suivent le thème choisi dans l'appli.
+
+### Sécurité
+
+- Un pack dont deux pages portent le même nom ne fait plus planter le sélecteur de cartes.
+- Liste fermée de licences : les variantes « NonCommercial » et « NoDerivs » ne passent plus.
+- Remplacement d'un pack : l'ancien contenu n'est supprimé qu'une fois le nouveau en place.
+- Longueur maximale pour les champs libres du manifeste.
+- Somme de contrôle de la distribution Gradle dans le wrapper.

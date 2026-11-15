@@ -26,3 +26,6 @@ Thumbs.db
 __pycache__/
 *.pyc
 tools/build/
+
+# Clés privées de signature de packs
+*.pem

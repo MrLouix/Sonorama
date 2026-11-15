@@ -53,6 +53,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.mrlouix.sonorama.R
 import io.github.mrlouix.sonorama.data.Limits
+import io.github.mrlouix.sonorama.ui.AppSnackbarHost
 import io.github.mrlouix.sonorama.ui.MainViewModel
 import io.github.mrlouix.sonorama.ui.Screen
 import io.github.mrlouix.sonorama.ui.ScreenTopBar
@@ -68,6 +69,7 @@ fun PageEditorScreen(viewModel: MainViewModel) {
     val library by viewModel.library.collectAsStateWithLifecycle()
     val page = draft ?: return
     Scaffold(
+        snackbarHost = { AppSnackbarHost() },
         topBar = {
             ScreenTopBar(
                 title = stringResource(if (page.pageId == null) R.string.page_editor_new else R.string.page_editor_edit),

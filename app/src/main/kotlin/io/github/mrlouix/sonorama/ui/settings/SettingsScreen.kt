@@ -43,6 +43,7 @@ import io.github.mrlouix.sonorama.BuildConfig
 import io.github.mrlouix.sonorama.R
 import io.github.mrlouix.sonorama.data.SettingsStore
 import io.github.mrlouix.sonorama.data.ThemeMode
+import io.github.mrlouix.sonorama.ui.AppSnackbarHost
 import io.github.mrlouix.sonorama.ui.MainViewModel
 import io.github.mrlouix.sonorama.ui.Screen
 import io.github.mrlouix.sonorama.ui.ScreenTopBar
@@ -52,7 +53,9 @@ import kotlin.math.roundToInt
 @Composable
 fun SettingsScreen(viewModel: MainViewModel, onLanguageChanged: () -> Unit) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    Scaffold(topBar = { ScreenTopBar(stringResource(R.string.settings_title), onBack = { viewModel.back() }) }) { padding ->
+    Scaffold(
+        snackbarHost = { AppSnackbarHost() },
+        topBar = { ScreenTopBar(stringResource(R.string.settings_title), onBack = { viewModel.back() }) }) { padding ->
         Column(
             Modifier
                 .padding(padding)
@@ -150,7 +153,9 @@ private fun Choice(label: Int, selected: Boolean, onSelect: () -> Unit) {
 fun LicensesScreen(viewModel: MainViewModel) {
     val library by viewModel.library.collectAsStateWithLifecycle()
     val french = isFrench()
-    Scaffold(topBar = { ScreenTopBar(stringResource(R.string.licenses_title), onBack = { viewModel.back() }) }) { padding ->
+    Scaffold(
+        snackbarHost = { AppSnackbarHost() },
+        topBar = { ScreenTopBar(stringResource(R.string.licenses_title), onBack = { viewModel.back() }) }) { padding ->
         SelectionContainer(Modifier.padding(padding)) {
             LazyColumn(contentPadding = PaddingValues(16.dp), modifier = Modifier.fillMaxSize()) {
                 for (pack in library.packs.filter { it.installed }) {
