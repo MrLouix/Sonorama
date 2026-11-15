@@ -6,9 +6,12 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -21,6 +24,12 @@ fun isFrench(): Boolean = LocalConfiguration.current.locales[0].language == "fr"
 
 @Composable
 fun LocalizedName.text(): String = get(isFrench())
+
+/** Hôte des messages courts, partagé par tous les écrans pour qu'un refus s'affiche là où il se produit. */
+val LocalSnackbar = staticCompositionLocalOf<SnackbarHostState> { error("Aucun hôte de messages") }
+
+@Composable
+fun AppSnackbarHost() = SnackbarHost(LocalSnackbar.current)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

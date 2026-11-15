@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddCircle
 import androidx.compose.material.icons.rounded.CloudOff
@@ -224,6 +225,11 @@ fun CardTile(
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
+                // Un mot plus large que la carte rétrécit légèrement au lieu d'être coupé en son milieu.
+                autoSize = TextAutoSize.StepBased(
+                    minFontSize = MaterialTheme.typography.labelLarge.fontSize * 0.7f,
+                    maxFontSize = MaterialTheme.typography.labelLarge.fontSize,
+                ),
             )
         }
 

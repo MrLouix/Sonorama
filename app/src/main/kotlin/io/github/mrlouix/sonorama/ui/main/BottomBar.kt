@@ -2,10 +2,12 @@ package io.github.mrlouix.sonorama.ui.main
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -29,17 +31,28 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.mrlouix.sonorama.R
 import io.github.mrlouix.sonorama.audio.MixMode
 import io.github.mrlouix.sonorama.audio.MixState
 
-/** Barre de commande fixe : mode, play/pause, compteur ; Appliquer et Annuler quand un plan attend. */
+// Largeurs que demandent les éléments à la taille de police normale ; elles grandissent avec elle.
+private val MODE_WIDTH = 146.dp
+private val COUNTER_WIDTH = 80.dp
+private val PLAY_WIDE = 96.dp
+private val PLAY_NARROW = 72.dp
+private val GAP = 12.dp
+
+/**
+ * Barre de commande fixe : mode, play/pause, compteur ; Appliquer et Annuler quand un plan attend.
+ * Sur un écran étroit ou avec une grande police, la barre passe sur deux lignes au lieu de tronquer ses libellés.
+ */
 @Composable
 fun BottomBar(
     mix: MixState,
@@ -50,67 +63,104 @@ fun BottomBar(
     onCancel: () -> Unit,
 ) {
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 3.dp) {
-        Column(Modifier.navigationBarsPadding().padding(horizontal = 12.dp, vertical = 10.dp)) {
-            if (mix.plan.isNotEmpty()) {
-                Row(
-                    Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                        Text(stringResource(R.string.action_cancel), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                    Button(onClick = onApply, modifier = Modifier.weight(2f).heightIn(min = 48.dp)) {
-                        Text(
-                            pluralStringResource(R.plurals.apply_changes, mix.plan.size, mix.plan.size),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                }
+        BoxWithConstraints(Modifier.navigationBarsPadding().padding(horizontal = 12.dp, vertical = 10.dp)) {
+            val fontScale = LocalDensity.current.fontScale
+            val sides = (MODE_WIDTH + COUNTER_WIDTH) * fontScale
+            val playWidth = when {
+                maxWidth >= sides + PLAY_WIDE + GAP * 2 -> PLAY_WIDE
+                maxWidth >= sides + PLAY_NARROW + GAP * 2 -> PLAY_NARROW
+                else -> null
             }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                    SingleChoiceSegmentedButtonRow {
-                        MixMode.entries.forEachIndexed { index, mode ->
-                            SegmentedButton(
-                                selected = mix.mode == mode,
-                                onClick = { if (mix.mode != mode) onMode(mode) },
-                                shape = SegmentedButtonDefaults.itemShape(index, MixMode.entries.size),
-                                icon = {},
-                                modifier = Modifier.heightIn(min = 48.dp),
-                            ) {
-                                Text(
-                                    stringResource(if (mode == MixMode.DIRECT) R.string.mode_direct else R.string.mode_plan),
-                                    maxLines = 1,
-                                )
-                            }
-                        }
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (mix.plan.isNotEmpty()) {
+                    PlanActions(mix.plan.size, stacked = playWidth == null, onApply = onApply, onCancel = onCancel)
+                }
+                if (playWidth != null) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) { ModeSwitch(mix.mode, onMode) }
+                        PlayButton(mix.playing, onTogglePlayback, Modifier.padding(horizontal = GAP).size(playWidth, 64.dp))
+                        Counter(mix.active.size, onOpenNowPlaying)
                     }
-                }
-                val playLabel = stringResource(if (mix.playing) R.string.action_pause else R.string.action_play)
-                FilledIconButton(
-                    onClick = onTogglePlayback,
-                    modifier = Modifier.padding(horizontal = 12.dp).size(width = 96.dp, height = 64.dp),
-                ) {
-                    Icon(
-                        if (mix.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                        contentDescription = playLabel,
-                        modifier = Modifier.size(36.dp),
-                    )
-                }
-                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-                    val count = mix.active.size
-                    val label = pluralStringResource(R.plurals.active_cards, count, count)
-                    FilledTonalButton(
-                        onClick = onOpenNowPlaying,
-                        modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = label },
-                    ) {
-                        Icon(Icons.Rounded.GraphicEq, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(count.toString(), style = MaterialTheme.typography.titleMedium)
+                } else {
+                    ModeSwitch(mix.mode, onMode, Modifier.fillMaxWidth())
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        PlayButton(mix.playing, onTogglePlayback, Modifier.weight(1f).height(64.dp))
+                        Spacer(Modifier.width(GAP))
+                        Counter(mix.active.size, onOpenNowPlaying)
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PlanActions(count: Int, stacked: Boolean, onApply: () -> Unit, onCancel: () -> Unit) {
+    val apply = pluralStringResource(R.plurals.apply_changes, count, count)
+    val cancel = stringResource(R.string.action_cancel)
+    if (stacked) {
+        // Libellés entiers, sur plusieurs lignes au besoin : le nombre de changements doit rester lisible.
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = onApply, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                Text(apply, textAlign = TextAlign.Center)
+            }
+            OutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                Text(cancel, textAlign = TextAlign.Center)
+            }
+        }
+    } else {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                Text(cancel, textAlign = TextAlign.Center)
+            }
+            Button(onClick = onApply, modifier = Modifier.weight(2f).heightIn(min = 48.dp)) {
+                Text(apply, textAlign = TextAlign.Center)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModeSwitch(mode: MixMode, onMode: (MixMode) -> Unit, modifier: Modifier = Modifier) {
+    SingleChoiceSegmentedButtonRow(modifier) {
+        MixMode.entries.forEachIndexed { index, entry ->
+            SegmentedButton(
+                selected = mode == entry,
+                onClick = { if (mode != entry) onMode(entry) },
+                shape = SegmentedButtonDefaults.itemShape(index, MixMode.entries.size),
+                icon = {},
+                modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+            ) {
+                Text(
+                    stringResource(if (entry == MixMode.DIRECT) R.string.mode_direct else R.string.mode_plan),
+                    maxLines = 1,
+                    softWrap = false,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlayButton(playing: Boolean, onClick: () -> Unit, modifier: Modifier) {
+    FilledIconButton(onClick = onClick, modifier = modifier) {
+        Icon(
+            if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+            contentDescription = stringResource(if (playing) R.string.action_pause else R.string.action_play),
+            modifier = Modifier.size(36.dp),
+        )
+    }
+}
+
+@Composable
+private fun Counter(count: Int, onClick: () -> Unit) {
+    val label = pluralStringResource(R.plurals.active_cards, count, count)
+    FilledTonalButton(
+        onClick = onClick,
+        modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = label },
+    ) {
+        Icon(Icons.Rounded.GraphicEq, contentDescription = null, modifier = Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(count.toString(), style = MaterialTheme.typography.titleMedium, maxLines = 1, softWrap = false)
     }
 }

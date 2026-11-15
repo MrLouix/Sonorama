@@ -17,10 +17,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Fingerprint
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -40,17 +39,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.mrlouix.sonorama.R
 import io.github.mrlouix.sonorama.data.Pack
-import io.github.mrlouix.sonorama.data.pack.ImportResult
-import io.github.mrlouix.sonorama.data.pack.ImportStatus
-import io.github.mrlouix.sonorama.data.pack.PackError
+import io.github.mrlouix.sonorama.ui.AppSnackbarHost
 import io.github.mrlouix.sonorama.ui.MainViewModel
 import io.github.mrlouix.sonorama.ui.ScreenTopBar
-import io.github.mrlouix.sonorama.ui.isFrench
 import io.github.mrlouix.sonorama.ui.text
 
 /** Sélecteur de fichiers du système, ouvert sur Téléchargements et filtré sur les ZIP. */
@@ -70,8 +65,11 @@ fun PacksScreen(viewModel: MainViewModel) {
     val import by viewModel.importState.collectAsStateWithLifecycle()
     val launcher = rememberLauncherForActivityResult(PickPacks()) { uris -> viewModel.importPacks(uris) }
     var toDelete by remember { mutableStateOf<Pack?>(null) }
+    var details by remember { mutableStateOf<Pack?>(null) }
 
-    Scaffold(topBar = { ScreenTopBar(stringResource(R.string.packs_title), onBack = { viewModel.back() }) }) { padding ->
+    Scaffold(
+        snackbarHost = { AppSnackbarHost() },
+        topBar = { ScreenTopBar(stringResource(R.string.packs_title), onBack = { viewModel.back() }) }) { padding ->
         LazyColumn(
             modifier = Modifier.padding(padding).fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
@@ -108,7 +106,7 @@ fun PacksScreen(viewModel: MainViewModel) {
                 val name = pack.name.text()
                 Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text(name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(name, style = MaterialTheme.typography.titleSmall, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                         val detail = when {
                             !pack.installed -> stringResource(R.string.pack_uninstalled)
                             pack.builtIn -> stringResource(
@@ -122,6 +120,18 @@ fun PacksScreen(viewModel: MainViewModel) {
                             )
                         }
                         Text(detail, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (pack.installed) {
+                            Text(
+                                trustLabel(pack.trust),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                    if (!pack.builtIn) {
+                        IconButton(onClick = { details = pack }) {
+                            Icon(Icons.Rounded.Fingerprint, contentDescription = stringResource(R.string.action_pack_fingerprint, name))
+                        }
                     }
                     if (pack.installed && !pack.builtIn) {
                         IconButton(onClick = { toDelete = pack }) {
@@ -131,6 +141,21 @@ fun PacksScreen(viewModel: MainViewModel) {
                 }
             }
         }
+    }
+
+    details?.let { pack ->
+        AlertDialog(
+            onDismissRequest = { details = null },
+            title = { Text(pack.name.text()) },
+            text = {
+                Column {
+                    Text(trustLabel(pack.trust))
+                    Spacer(Modifier.height(12.dp))
+                    Fingerprints(pack.archiveSha256, pack.signerKey)
+                }
+            },
+            confirmButton = { TextButton(onClick = { details = null }) { Text(stringResource(R.string.action_close)) } },
+        )
     }
 
     toDelete?.let { pack ->
@@ -146,76 +171,5 @@ fun PacksScreen(viewModel: MainViewModel) {
             },
             dismissButton = { TextButton(onClick = { toDelete = null }) { Text(stringResource(R.string.action_cancel)) } },
         )
-    }
-
-    import.question?.let { question ->
-        AlertDialog(
-            onDismissRequest = {},
-            title = { Text(stringResource(R.string.replace_pack_title, question.packName.get(isFrench()))) },
-            text = { Text(stringResource(R.string.replace_pack_text, question.installedVersion, question.newVersion)) },
-            confirmButton = { Button(onClick = { viewModel.answerImport(true) }) { Text(stringResource(R.string.action_replace)) } },
-            dismissButton = { TextButton(onClick = { viewModel.answerImport(false) }) { Text(stringResource(R.string.action_ignore)) } },
-        )
-    }
-
-    if (!import.running && import.results.isNotEmpty()) {
-        AlertDialog(
-            onDismissRequest = viewModel::dismissImportResults,
-            title = { Text(stringResource(R.string.import_report_title)) },
-            text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    for (result in import.results) {
-                        Text(
-                            result.packName?.get(isFrench()) ?: result.fileName,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Text(describe(result), style = MaterialTheme.typography.bodyMedium)
-                        Spacer(Modifier.height(12.dp))
-                    }
-                }
-            },
-            confirmButton = { TextButton(onClick = viewModel::dismissImportResults) { Text(stringResource(R.string.action_close)) } },
-        )
-    }
-}
-
-@Composable
-private fun describe(result: ImportResult): String = when (result.status) {
-    ImportStatus.INSTALLED -> pluralStringResource(R.plurals.import_installed, result.soundsAdded, result.soundsAdded)
-    ImportStatus.UPDATED -> stringResource(
-        R.string.import_updated,
-        pluralStringResource(R.plurals.sounds, result.soundCount, result.soundCount),
-        pluralStringResource(R.plurals.import_new_sounds, result.soundsAdded, result.soundsAdded),
-    )
-    ImportStatus.REPLACED -> stringResource(
-        R.string.import_replaced,
-        pluralStringResource(R.plurals.sounds, result.soundCount, result.soundCount),
-    )
-    ImportStatus.IGNORED -> stringResource(R.string.import_ignored)
-    ImportStatus.CANCELLED -> stringResource(R.string.import_cancelled)
-    ImportStatus.REFUSED -> {
-        val reason = stringResource(
-            when (result.error) {
-                PackError.NOT_A_ZIP -> R.string.pack_error_not_a_zip
-                PackError.MANIFEST_MISSING -> R.string.pack_error_manifest_missing
-                PackError.MANIFEST_UNREADABLE -> R.string.pack_error_manifest_unreadable
-                PackError.UNKNOWN_FORMAT -> R.string.pack_error_unknown_format
-                PackError.INVALID_ID, PackError.RESERVED_ID -> R.string.pack_error_invalid_id
-                PackError.NO_SOUNDS -> R.string.pack_error_no_sounds
-                PackError.TOO_MANY_SOUNDS -> R.string.pack_error_too_many_sounds
-                PackError.DUPLICATE_SOUND -> R.string.pack_error_duplicate_sound
-                PackError.INVALID_NAME -> R.string.pack_error_invalid_name
-                PackError.UNSAFE_PATH -> R.string.pack_error_unsafe_path
-                PackError.UNSUPPORTED_AUDIO -> R.string.pack_error_unsupported_audio
-                PackError.UNKNOWN_PAGE -> R.string.pack_error_unknown_page
-                PackError.FORBIDDEN_LICENSE -> R.string.pack_error_forbidden_license
-                PackError.FILE_MISSING -> R.string.pack_error_file_missing
-                PackError.TOO_LARGE -> R.string.pack_error_too_large
-                PackError.IO, null -> R.string.pack_error_io
-            },
-        )
-        val detail = if (result.detail.isBlank()) "" else " (${result.detail})"
-        stringResource(R.string.import_refused, reason + detail)
     }
 }

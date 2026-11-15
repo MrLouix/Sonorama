@@ -5,6 +5,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -14,6 +15,7 @@ import io.github.mrlouix.sonorama.ui.editor.CardPickerScreen
 import io.github.mrlouix.sonorama.ui.editor.CompositeEditorScreen
 import io.github.mrlouix.sonorama.ui.editor.PageEditorScreen
 import io.github.mrlouix.sonorama.ui.main.MainScreen
+import io.github.mrlouix.sonorama.ui.packs.ImportDialogs
 import io.github.mrlouix.sonorama.ui.packs.PacksScreen
 import io.github.mrlouix.sonorama.ui.settings.LicensesScreen
 import io.github.mrlouix.sonorama.ui.settings.SettingsScreen
@@ -46,8 +48,18 @@ fun SonoramaRoot(viewModel: MainViewModel, onLanguageChanged: () -> Unit) {
 
     SonoramaTheme(settings.theme) {
         BackHandler(enabled = backStack.size > 1) { viewModel.back() }
-        when (backStack.last()) {
-            Screen.Main -> MainScreen(viewModel, snackbar)
+        CompositionLocalProvider(LocalSnackbar provides snackbar) {
+            Screens(viewModel, backStack.last(), onLanguageChanged)
+        }
+        ImportDialogs(viewModel)
+    }
+}
+
+@Composable
+private fun Screens(viewModel: MainViewModel, screen: Screen, onLanguageChanged: () -> Unit) {
+    run {
+        when (screen) {
+            Screen.Main -> MainScreen(viewModel)
             Screen.Packs -> PacksScreen(viewModel)
             Screen.Settings -> SettingsScreen(viewModel, onLanguageChanged)
             Screen.Licenses -> LicensesScreen(viewModel)

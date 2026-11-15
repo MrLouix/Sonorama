@@ -1,14 +1,17 @@
 # Format des packs de sons
 
 Un pack ajoute des sons à Sonorama. C'est une archive ZIP qui ne contient que des données, jamais de code.
-Ce document décrit la version **1** du format ; le pack de base embarqué dans l'appli l'utilise aussi
-(`app/src/main/assets/basepack`).
+Ce document décrit les versions **1** et **2** du format. La version 2 ajoute les empreintes des fichiers
+audio et la signature ; la version 1 reste lisible. Le pack de base embarqué dans l'appli utilise le même
+format (`app/src/main/assets/basepack`).
 
 ## Contenu de l'archive
 
 ```
 mon-pack.zip
 ├── manifest.json      obligatoire, à la racine
+├── manifest.sig       pack signé : signature du manifeste
+├── signing-key.pub    pack signé : clé publique de l'auteur
 ├── LICENSES.md        recommandé : auteur, licence et source de chaque son
 └── audio/
     ├── cheminee.ogg
@@ -48,7 +51,7 @@ Seuls les fichiers déclarés dans le manifeste, et `LICENSES.md`, sont copiés 
 
 | Champ | Obligatoire | Description |
 | --- | --- | --- |
-| `format` | oui | Version du format : `1` |
+| `format` | oui | Version du format : `1` ou `2` |
 | `id` | oui | Identifiant stable du pack. Minuscules, chiffres, `.`, `_`, `-` ; 64 caractères au plus ; commence par une lettre ou un chiffre. `sonorama.base` est réservé |
 | `version` | oui | Entier ≥ 1. Une version supérieure met à jour le pack installé |
 | `name` | oui | Nom affiché, en `fr` et/ou en `en` (60 caractères au plus) |
@@ -61,7 +64,7 @@ Seuls les fichiers déclarés dans le manifeste, et `LICENSES.md`, sont copiés 
 | --- | --- | --- |
 | `id` | oui | Identifiant de la page, mêmes règles que pour le pack |
 | `name` | oui | Nom de l'onglet |
-| `symbol` | non | Pictogramme (voir plus bas) ; `music_note` par défaut |
+| `symbol` | non | Pictogramme (voir plus bas) ; `music_note` par défaut ; 64 caractères au plus |
 
 Un son peut aussi rejoindre une page déjà fournie par l'appli, sans la déclarer :
 `nature`, `ville`, `technologique`, `meteo`, `transports`. Si une page déclarée existe déjà, elle est complétée.
@@ -73,12 +76,13 @@ Un son peut aussi rejoindre une page déjà fournie par l'appli, sans la déclar
 | `id` | oui | Identifiant du son, unique dans le pack. Le garder d'une version à l'autre conserve le volume réglé et la place de la carte sur les pages personnalisées |
 | `file` | oui | Chemin relatif dans l'archive, en `.ogg`. Pas de `..`, pas de chemin absolu, pas d'antislash |
 | `name` | oui | Nom de la carte, en `fr` et/ou en `en` |
-| `symbol` | non | Pictogramme ; `music_note` par défaut |
+| `symbol` | non | Pictogramme ; `music_note` par défaut ; 64 caractères au plus |
 | `defaultVolume` | non | Volume initial de la carte, de 0 à 100 ; 70 par défaut |
 | `page` | oui | Page qui reçoit la carte : déclarée dans `pages` ou fournie par l'appli |
-| `author` | non | Auteur du son, affiché dans « Licences des sons » |
-| `license` | oui | Voir ci-dessous |
-| `source` | non | Adresse d'origine du son |
+| `author` | non | Auteur du son, affiché dans « Licences des sons » ; 200 caractères au plus |
+| `license` | oui | Voir ci-dessous ; 64 caractères au plus |
+| `source` | non | Adresse d'origine du son ; 500 caractères au plus |
+| `sha256` | pack signé | Empreinte SHA-256 du fichier audio, en hexadécimal minuscule. Vérifiée à l'import dès qu'elle est présente |
 
 Les champs inconnus sont ignorés, pour permettre des ajouts futurs.
 
@@ -95,10 +99,12 @@ Exemple d'encodage : `ffmpeg -i boucle.wav -c:a libvorbis -q:a 4 -ar 44100 -ac 2
 
 | Valeur de `license` | Acceptée |
 | --- | --- |
-| `CC0-1.0`, `CC0`, `Public-Domain` | oui |
-| `CC-BY-4.0` et autres `CC-BY-…`, `CC-BY-SA-…` | oui, avec `author` renseigné |
-| Toute licence contenant `NC` (pas d'usage commercial) ou `ND` (pas de modification) | non |
+| `CC0`, `CC0-1.0`, `Public-Domain` | oui |
+| `CC-BY`, `CC-BY-SA`, avec version (`CC-BY-4.0`) et juridiction (`CC-BY-3.0-FR`) éventuelles | oui, avec `author` renseigné |
+| Toute licence « pas d'usage commercial » ou « pas de modification » (`NC`, `ND`, `NonCommercial`, `NoDerivs`) | non |
 | Toute autre valeur | non |
+
+La liste est fermée : une valeur qui n'a pas exactement l'une de ces formes est refusée.
 
 ## Symboles
 
@@ -115,11 +121,82 @@ L'import refuse le pack, en indiquant la raison, si :
 - `format` n'est pas une version connue ;
 - un identifiant, un nom ou un chemin est invalide, ou un son est déclaré deux fois ;
 - un son désigne une page inconnue ou porte une licence non acceptée ;
-- un fichier audio déclaré manque ou n'est pas un fichier Ogg ;
+- un fichier audio déclaré manque, n'est pas un fichier Ogg, ou ne correspond pas à son `sha256` ;
+- la signature est invalide, incomplète, ou ne couvre pas tous les fichiers audio ;
 - le contenu dépasse 500 Mo.
 
-Réimporter une version supérieure met le pack à jour ; réimporter la même version, ou une plus ancienne,
-propose de remplacer ou d'ignorer. Les volumes, les pages personnalisées et les cartes composées sont conservés.
+Réimporter un pack déjà installé demande **toujours** confirmation, quelle que soit la version. Le dialogue
+propose « Afficher l'empreinte » : l'empreinte SHA-256 du fichier ZIP, à comparer avec celle que publie
+l'auteur. Les volumes, les pages personnalisées et les cartes composées sont conservés.
+
+## Signature
+
+Un pack ne contient que des données : la signature ne dit pas qu'il est « sûr », elle garantit **qui** l'a
+produit. Elle empêche qu'un fichier se fasse passer pour la mise à jour d'un pack que vous avez déjà.
+
+| Mention dans l'appli | Signification |
+| --- | --- |
+| Signé par l'équipe Sonorama | La clé est l'une des clés officielles compilées dans l'appli |
+| Signé par son auteur | Signature valide, clé inconnue de l'appli |
+| Non signé | Aucune signature ; le pack reste importable |
+
+La clé d'un pack est **mémorisée au premier import**, et le reste après une désinstallation :
+
+| Pack déjà connu | Fichier importé | Résultat |
+| --- | --- | --- |
+| Signé | Même clé | Confirmation habituelle |
+| Signé | Autre clé | Confirmation avec avertissement |
+| Signé, installé | Non signé | Refusé ; il faut d'abord supprimer le pack |
+| Signé, désinstallé | Non signé | Confirmation avec avertissement |
+| Non signé | Signé | Confirmation ; la clé est mémorisée |
+
+### Signer un pack
+
+Il faut Python 3.10+ et `openssl` (fourni avec Git pour Windows).
+
+```bash
+python3 tools/sign_pack.py keygen ma-cle.pem          # une seule fois
+python3 tools/sign_pack.py sign mon-pack/ ma-cle.pem  # écrit mon-pack.zip
+python3 tools/sign_pack.py fingerprint mon-pack.zip   # réaffiche les empreintes
+```
+
+`sign` complète le manifeste (format 2, `sha256` de chaque son), écrit `manifest.sig` et `signing-key.pub`,
+fabrique le ZIP et affiche deux empreintes à publier à côté du lien de téléchargement : celle du ZIP et
+celle de la clé.
+
+**La clé privée (`ma-cle.pem`) ne doit jamais être publiée ni commitée** — le `.gitignore` du dépôt écarte
+les fichiers `*.pem`. Gardez-en une sauvegarde : si vous la perdez, vos prochaines versions seront
+signalées comme signées par une autre clé.
+
+### Détail technique
+
+- Algorithme : ECDSA sur la courbe P-256 avec SHA-256.
+- `manifest.sig` : la signature (DER) des octets exacts de `manifest.json`, encodée en Base64.
+- `signing-key.pub` : la clé publique au format PEM (`-----BEGIN PUBLIC KEY-----`).
+- Empreinte d'une clé : SHA-256 de la clé publique encodée en DER.
+- Dans un pack signé, chaque son porte un `sha256` : c'est ce qui étend la signature du manifeste aux
+  fichiers audio.
+
+À la main, sans le script :
+
+```bash
+openssl ecparam -name prime256v1 -genkey -noout -out ma-cle.pem
+openssl pkey -in ma-cle.pem -pubout -out signing-key.pub
+openssl dgst -sha256 -sign ma-cle.pem manifest.json | base64 -w0 > manifest.sig
+```
+
+### Clé officielle du projet
+
+Pour que vos packs portent la mention « Signé par l'équipe Sonorama » :
+
+1. Créez la clé sur votre machine : `python3 tools/sign_pack.py keygen sonorama-officielle.pem`.
+   Conservez-la hors ligne ; elle ne doit transiter par aucun dépôt ni aucune session d'assistant.
+2. Copiez l'empreinte affichée dans `OFFICIAL_KEYS`
+   ([`PackSignature.kt`](../app/src/main/kotlin/io/github/mrlouix/sonorama/data/pack/PackSignature.kt)).
+3. Publiez une version de l'appli : seules les versions qui contiennent l'empreinte reconnaissent la clé.
+
+La liste accepte plusieurs empreintes, ce qui permet de préparer une clé de remplacement à l'avance.
+**Tant qu'elle est vide, aucun pack n'est présenté comme officiel**, hormis le pack de base embarqué.
 
 ## Fabriquer l'archive
 

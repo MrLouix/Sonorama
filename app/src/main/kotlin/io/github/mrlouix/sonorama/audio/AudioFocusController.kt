@@ -7,21 +7,31 @@ import android.content.IntentFilter
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
- * Focus audio pour tout le mix : pause sur perte de focus (appel entrant), reprise après une
- * perte passagère, pause au débranchement du casque. La baisse temporaire sur notification
- * est laissée au système, qui l'applique automatiquement aux lecteurs.
+ * Focus audio pour tout ce que l'appli fait entendre, mix et pré-écoute : pause sur perte de focus
+ * (appel entrant), reprise du mix après une perte passagère, pause au débranchement du casque.
+ * La baisse temporaire sur notification est laissée au système, qui l'applique aux lecteurs.
  */
-class AudioFocusController(context: Context, private val engine: MixEngine, scope: CoroutineScope) {
+class AudioFocusController(
+    context: Context,
+    private val engine: MixEngine,
+    private val preview: PreviewMixer,
+    scope: CoroutineScope,
+) {
     private val appContext = context.applicationContext
     private val audioManager = appContext.getSystemService(AudioManager::class.java)
-    private var resumeOnGain = false
+
+    /** Vrai tant que le système nous accorde le focus. */
     private var hasFocus = false
+
+    /** Le mix jouait quand le focus a été perdu passagèrement : il reprendra à son retour. */
+    private var resumeOnGain = false
     private var noisyRegistered = false
 
     private val listener = AudioManager.OnAudioFocusChangeListener { change ->
@@ -29,13 +39,15 @@ class AudioFocusController(context: Context, private val engine: MixEngine, scop
             AudioManager.AUDIOFOCUS_LOSS -> {
                 hasFocus = false
                 resumeOnGain = false
-                engine.pause()
+                silence()
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                hasFocus = false
                 resumeOnGain = engine.state.value.playing
-                engine.pause()
+                silence()
             }
             AudioManager.AUDIOFOCUS_GAIN -> {
+                hasFocus = true
                 if (resumeOnGain) {
                     resumeOnGain = false
                     engine.resume()
@@ -58,40 +70,53 @@ class AudioFocusController(context: Context, private val engine: MixEngine, scop
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
                 resumeOnGain = false
-                engine.pause()
+                silence()
             }
         }
     }
 
     init {
         scope.launch {
-            engine.state.map { it.playing }.distinctUntilChanged().collect { playing ->
-                if (playing) onPlay() else onPause()
-            }
+            combine(engine.state, preview.owner) { mix, owner -> mix.playing || owner != null }
+                .distinctUntilChanged()
+                .collect { audible -> if (audible) onAudible() else onSilent() }
         }
     }
 
-    private fun onPlay() {
+    private fun silence() {
+        engine.pause()
+        preview.stop()
+    }
+
+    private fun onAudible() {
+        // Sans focus (jamais obtenu, ou perdu pendant un appel), il faut le redemander :
+        // s'il est refusé, rien ne doit jouer par-dessus l'appel en cours.
         if (!hasFocus) {
             hasFocus = audioManager.requestAudioFocus(request) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
             if (!hasFocus) {
-                engine.pause()
+                silence()
                 return
             }
+            resumeOnGain = false
         }
         if (!noisyRegistered) {
-            appContext.registerReceiver(noisyReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+            ContextCompat.registerReceiver(
+                appContext,
+                noisyReceiver,
+                IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY),
+                ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
             noisyRegistered = true
         }
     }
 
-    private fun onPause() {
+    private fun onSilent() {
         if (noisyRegistered) {
             appContext.unregisterReceiver(noisyReceiver)
             noisyRegistered = false
         }
-        // Pendant une perte passagère, on garde la demande pour être prévenu du retour du focus.
-        if (hasFocus && !resumeOnGain) {
+        // Pendant une perte passagère, la demande est gardée pour être prévenu du retour du focus.
+        if (!resumeOnGain) {
             audioManager.abandonAudioFocusRequest(request)
             hasFocus = false
         }

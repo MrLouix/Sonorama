@@ -10,7 +10,10 @@ import io.github.mrlouix.sonorama.data.db.PackEntity
 import io.github.mrlouix.sonorama.data.db.PageCardEntity
 import io.github.mrlouix.sonorama.data.db.PageEntity
 import io.github.mrlouix.sonorama.data.db.SoundEntity
+import io.github.mrlouix.sonorama.data.pack.KnownPack
 import io.github.mrlouix.sonorama.data.pack.ManifestSound
+import io.github.mrlouix.sonorama.data.pack.PackSignature
+import io.github.mrlouix.sonorama.data.pack.PackTrust
 import io.github.mrlouix.sonorama.data.pack.PackManifest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
@@ -76,7 +79,12 @@ class LibraryRepository(private val db: AppDatabase, scope: CoroutineScope) {
         }
         val counts = t.sounds.filter { it.available }.groupingBy { it.packId }.eachCount()
         val packs = t.packs.map {
-            Pack(it.id, it.version, LocalizedName(it.nameFr, it.nameEn), it.builtIn, it.installed, counts[it.id] ?: 0)
+            Pack(
+                id = it.id, version = it.version, name = LocalizedName(it.nameFr, it.nameEn),
+                builtIn = it.builtIn, installed = it.installed, soundCount = counts[it.id] ?: 0,
+                trust = if (it.builtIn) PackTrust.OFFICIAL else PackSignature.trustOf(it.signerKey),
+                signerKey = it.signerKey, archiveSha256 = it.archiveSha256,
+            )
         }
         return Library(loaded = true, packs = packs, sounds = sounds, cards = cards, pages = pages)
     }
@@ -86,15 +94,27 @@ class LibraryRepository(private val db: AppDatabase, scope: CoroutineScope) {
     suspend fun installedPackVersion(packId: String): Int? =
         dao.pack(packId)?.takeIf { it.installed }?.version
 
+    /** Ce que l'appli sait d'un pack déjà importé, même désinstallé depuis. */
+    suspend fun knownPack(packId: String): KnownPack? =
+        dao.pack(packId)?.let { KnownPack(it.version, it.installed, it.signerKey) }
+
     /**
      * Enregistre un pack et crée ses cartes et ses pages. Les volumes, pages personnalisées
      * et cartes composées existants sont conservés. Renvoie le nombre de sons nouveaux.
      */
-    suspend fun installPack(manifest: PackManifest, builtIn: Boolean, uriOf: (ManifestSound) -> String): Int =
+    suspend fun installPack(
+        manifest: PackManifest,
+        builtIn: Boolean,
+        signerKey: String? = null,
+        archiveSha256: String? = null,
+        uriOf: (ManifestSound) -> String,
+    ): Int =
         db.withTransaction {
             val packId = manifest.id
             val known = dao.soundsOfPack(packId).associateBy { it.id }
-            dao.upsertPack(PackEntity(packId, manifest.version, manifest.name.fr, manifest.name.en, builtIn, true))
+            dao.upsertPack(
+                PackEntity(packId, manifest.version, manifest.name.fr, manifest.name.en, builtIn, true, signerKey, archiveSha256),
+            )
             dao.markSoundsUnavailable(packId)
             for (page in manifest.pages) {
                 if (dao.page(page.id) == null) {
@@ -115,6 +135,11 @@ class LibraryRepository(private val db: AppDatabase, scope: CoroutineScope) {
                 )
             }
             dao.upsertSounds(entities)
+            // Un son qui change de page thématique quitte l'ancienne.
+            for (sound in entities) {
+                val before = known[sound.id]?.pageId ?: continue
+                if (before != sound.pageId) dao.removeCardFromPage(before, simpleCardId(sound.id))
+            }
             for ((index, sound) in entities.withIndex()) {
                 val cardId = simpleCardId(sound.id)
                 if (dao.card(cardId) == null) {

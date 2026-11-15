@@ -40,8 +40,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -56,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -74,6 +73,7 @@ import io.github.mrlouix.sonorama.data.Library
 import io.github.mrlouix.sonorama.data.Limits
 import io.github.mrlouix.sonorama.data.Page
 import io.github.mrlouix.sonorama.data.PageExchange
+import io.github.mrlouix.sonorama.ui.AppSnackbarHost
 import io.github.mrlouix.sonorama.ui.MainViewModel
 import io.github.mrlouix.sonorama.ui.Screen
 import io.github.mrlouix.sonorama.ui.Symbols
@@ -82,7 +82,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: MainViewModel, snackbar: SnackbarHostState) {
+fun MainScreen(viewModel: MainViewModel) {
     val library by viewModel.library.collectAsStateWithLifecycle()
     val mix by viewModel.mix.collectAsStateWithLifecycle()
     val pageToShow by viewModel.pageToShow.collectAsStateWithLifecycle()
@@ -96,7 +96,8 @@ fun MainScreen(viewModel: MainViewModel, snackbar: SnackbarHostState) {
     var addPageOpen by remember { mutableStateOf(false) }
     var pageToDelete by remember { mutableStateOf<Page?>(null) }
     var pageToDuplicate by remember { mutableStateOf<Page?>(null) }
-    var pageToExport by remember { mutableStateOf<String?>(null) }
+    // Conservé à travers une rotation : l'activité peut être recréée pendant le choix du fichier.
+    var pageToExport by rememberSaveable { mutableStateOf<String?>(null) }
 
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(PageExchange.MIME)) { uri ->
         val pageId = pageToExport
@@ -152,7 +153,7 @@ fun MainScreen(viewModel: MainViewModel, snackbar: SnackbarHostState) {
                 onCancel = viewModel::cancelPlan,
             )
         },
-        snackbarHost = { SnackbarHost(snackbar) },
+        snackbarHost = { AppSnackbarHost() },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             if (pages.isNotEmpty()) {
@@ -402,8 +403,9 @@ private fun PageGrid(page: Page, library: Library, mix: MixState, viewModel: Mai
         return
     }
     LazyVerticalGrid(
-        // Trois colonnes sur un téléphone en portrait, davantage en paysage et sur tablette.
-        columns = GridCells.Adaptive(minSize = 104.dp),
+        // Trois colonnes sur un téléphone en portrait, davantage en paysage et sur tablette,
+        // moins quand la police grossit pour que les noms tiennent sur les cartes.
+        columns = GridCells.Adaptive(minSize = 104.dp * (1f + (LocalDensity.current.fontScale - 1f).coerceAtLeast(0f) * 0.55f)),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
