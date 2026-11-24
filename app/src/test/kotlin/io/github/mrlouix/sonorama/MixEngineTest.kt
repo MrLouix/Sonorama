@@ -597,15 +597,28 @@ class MixEngineTest {
     }
 
     @Test
-    fun `tapping a voice card stops it like any active card`() = runTest {
+    fun `a first tap keeps a voice card playing, a second tap stops it`() = runTest {
         val h = Harness(this)
         h.card("wolf")
+        h.card("rain")
         h.engine.trigger(listOf("wolf"), 5000)
         advanceTimeBy(600)
         h.engine.tap("wolf")
         assertTrue(h.engine.state.value.timed.isEmpty())
         advanceTimeBy(6000)
+        assertEquals(listOf("wolf"), h.engine.state.value.active)
+        h.engine.tap("wolf")
+        advanceTimeBy(600)
         assertTrue(h.engine.state.value.active.isEmpty())
+
+        // En mode plan aussi, le premier appui garde la carte au lieu de préparer son arrêt.
+        h.engine.trigger(listOf("rain"), 5000)
+        h.engine.setMode(MixMode.PLAN)
+        h.engine.tap("rain")
+        assertTrue(h.engine.state.value.plan.isEmpty())
+        assertTrue(h.engine.state.value.timed.isEmpty())
+        h.engine.tap("rain")
+        assertEquals(setOf("rain"), h.engine.state.value.plan.keys)
     }
 
     @Test

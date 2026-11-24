@@ -1,7 +1,6 @@
 package io.github.mrlouix.sonorama
 
 import android.app.Application
-import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
@@ -10,7 +9,6 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performCustomAccessibilityActionWithLabel
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
@@ -219,7 +217,6 @@ class ScreensTest {
             words.filterTo(HashSet()) { it.equals("grignotin", ignoreCase = true) }
     }
 
-    @OptIn(ExperimentalTestApi::class)
     @Test
     fun `voice mode starts a card for a while and keywords are edited per page`() {
         val app = ApplicationProvider.getApplicationContext<Application>()
@@ -234,8 +231,8 @@ class ScreensTest {
         rule.onNodeWithText("Dernier mot-clé entendu : oiseau").assertExists()
         capture("voice")
 
-        // L'anneau de la carte sert de bouton « Garder en lecture » ; TalkBack l'expose en action.
-        card("Oiseaux").performCustomAccessibilityActionWithLabel("Garder en lecture")
+        // Un appui sur une carte lancée à la voix la garde en lecture.
+        card("Oiseaux").performClick()
         waitFor { viewModel.mix.value.timed.isEmpty() }
         assertTrue("s:sonorama.base/birds" in viewModel.mix.value.active)
         capture("voice-kept")

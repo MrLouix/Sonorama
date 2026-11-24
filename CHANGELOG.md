@@ -15,8 +15,8 @@ le projet applique le [versionnage sémantique](https://semver.org/lang/fr/).
 - Modèle vocal français intégré ; modèle anglais officiel importable. Langue de l'histoire réglable.
 - Version de débogage seulement : transcription du texte entendu, exportable en CSV.
 - Un APK par type de processeur.
-- Une carte lancée à la voix peut être gardée en lecture d'un appui sur son anneau (épingle) : elle
-  rejoint alors le mix comme une carte lancée à la main.
+- Un appui sur une carte lancée à la voix la garde en lecture, comme une carte lancée à la main ; un
+  second appui l'arrête.
 - Outils de pack : `tools/prepare_loop.py` (boucle sans raccord, niveau et Ogg du pack de base, contrôle),
   `tools/check_pack.py` (règles de l'appli, durée et format audio, symboles, vocabulaire Vosk, ZIP),
   `tools/generate_ambience.py` (Stable Audio Open en local).

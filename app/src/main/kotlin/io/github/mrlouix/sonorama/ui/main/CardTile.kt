@@ -1,7 +1,6 @@
 package io.github.mrlouix.sonorama.ui.main
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -95,8 +94,6 @@ fun CardTile(
     /** Carte lancée à la voix : un anneau montre le temps restant. */
     timed: TimedPlay?,
     onTap: () -> Unit,
-    /** Garde en lecture une carte lancée à la voix ; l'anneau sert de bouton. */
-    onKeep: () -> Unit,
     onVolumeChange: (Int) -> Unit,
     onVolumeCommit: (Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -105,7 +102,6 @@ fun CardTile(
     var dragVolume by remember { mutableStateOf<Int?>(null) }
     val currentVolume by rememberUpdatedState(volume)
     val currentTap by rememberUpdatedState(onTap)
-    val currentKeep by rememberUpdatedState(onKeep)
     val currentChange by rememberUpdatedState(onVolumeChange)
     val currentCommit by rememberUpdatedState(onVolumeCommit)
 
@@ -140,9 +136,15 @@ fun CardTile(
         }
     }
     val voiceText = if (timed != null) ", " + stringResource(R.string.card_state_voice) else ""
-    val keepLabel = stringResource(R.string.action_keep_voice_card)
     val voiceCard = timed != null && status == CardStatus.ACTIVE
-    val toggleLabel = stringResource(if (lit) R.string.action_deactivate else R.string.action_activate)
+    // Sur une carte lancée à la voix, l'appui la garde en lecture ; un second appui l'arrête.
+    val toggleLabel = stringResource(
+        when {
+            voiceCard -> R.string.action_keep_voice_card
+            lit -> R.string.action_deactivate
+            else -> R.string.action_activate
+        },
+    )
     val louder = stringResource(R.string.action_volume_up)
     val quieter = stringResource(R.string.action_volume_down)
 
@@ -219,15 +221,7 @@ fun CardTile(
                     true
                 }
                 if (available) {
-                    customActions = listOfNotNull(
-                        if (voiceCard) {
-                            CustomAccessibilityAction(keepLabel) {
-                                currentKeep()
-                                true
-                            }
-                        } else {
-                            null
-                        },
+                    customActions = listOf(
                         CustomAccessibilityAction(louder) {
                             currentCommit((currentVolume + VOLUME_STEP).coerceAtMost(VolumeCurve.MAX_VOLUME))
                             true
@@ -276,14 +270,13 @@ fun CardTile(
             else -> null
         }
         if (voiceCard) {
-            // Anneau qui se vide pendant la durée de jeu d'une carte déclenchée à la voix. C'est aussi un
-            // bouton : l'épingle garde la carte en lecture, comme si elle avait été lancée à la main.
+            // Anneau qui se vide pendant la durée de jeu d'une carte déclenchée à la voix. L'épingle rappelle
+            // qu'un appui sur la carte la garde en lecture.
             val ringColor = content
             Box(
                 Modifier
                     .align(Alignment.TopEnd)
-                    .size(48.dp)
-                    .clickable(onClick = { currentKeep() }, onClickLabel = keepLabel),
+                    .size(48.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Box(

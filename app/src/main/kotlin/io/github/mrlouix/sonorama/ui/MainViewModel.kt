@@ -194,9 +194,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setVolume(cardId: String, volume: Int, commit: Boolean) = engine.setVolume(cardId, volume, commit)
 
-    /** Une carte lancée à la voix reste en lecture, sans arrêt automatique. */
-    fun keepCard(cardId: String) = engine.keep(cardId)
-
     fun togglePlayback() {
         val state = mix.value
         if (state.active.isEmpty() && !state.paused) say(R.string.message_empty_mix) else engine.togglePlayback()
@@ -211,8 +208,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun stopAll() = engine.stopAll()
 
+    /** Bouton d'arrêt du panneau « En cours » : une carte lancée à la voix s'arrête au lieu d'être gardée. */
     fun stopCard(cardId: String) {
-        if (mix.value.isActive(cardId)) engine.tap(cardId)
+        val state = mix.value
+        when {
+            cardId in state.timed -> engine.deactivate(cardId)
+            state.isActive(cardId) -> engine.tap(cardId)
+        }
     }
 
     // -------------------------------------------------------------- mode vocal

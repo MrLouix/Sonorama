@@ -101,9 +101,13 @@ class MixEngine(
 
     // ---------------------------------------------------------------- commandes
 
-    /** Appui court sur une carte : effet immédiat en mode direct, mise au plan sinon. */
+    /**
+     * Appui court sur une carte : effet immédiat en mode direct, mise au plan sinon. Sur une carte lancée
+     * à la voix, l'appui la garde en lecture ([keep]), dans les deux modes ; un second appui l'arrête.
+     */
     fun tap(cardId: String) {
         when {
+            cardId in timed -> keep(cardId)
             mode == MixMode.PLAN -> togglePlan(cardId)
             cardId in voices -> deactivate(cardId)
             else -> activate(cardId)

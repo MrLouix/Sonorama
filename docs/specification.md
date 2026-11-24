@@ -346,8 +346,8 @@ Ajouté le 24 nov. 2026. L'appli écoute la personne qui lit l'histoire et décl
 - Les sons déclenchés à la voix comptent dans la limite de 12 sons ; à la limite, le plus ancien son vocal s'arrête pour faire place. Les sons du mix ne sont jamais arrêtés par la voix.
 - Mix vide : un mot-clé lance la lecture.
 - Pause : aucun son ne joue et le micro est coupé ; les sons vocaux en cours s'arrêtent. À la reprise, l'écoute reprend si elle était allumée.
-- Un appui sur une carte déclenchée à la voix l'arrête, comme toute carte active.
-- L'anneau du compte à rebours est aussi un bouton, marqué d'une épingle : il garde la carte en lecture, sans arrêt automatique, comme si elle avait été lancée à la main (elle rejoint le mix enregistré et ne cède plus sa place aux sons vocaux). Effet immédiat, y compris en mode plan. Cible tactile de 48 dp ; action « Garder en lecture » pour TalkBack.
+- Un appui n'importe où sur une carte déclenchée à la voix la garde en lecture, sans arrêt automatique, comme si elle avait été lancée à la main : elle rejoint le mix enregistré et ne cède plus sa place aux sons vocaux. Un second appui l'arrête. Effet immédiat, y compris en mode plan. L'anneau porte une épingle pour le rappeler ; TalkBack annonce l'action « Garder en lecture ».
+- Le bouton d'arrêt du panneau « En cours » arrête directement une carte déclenchée à la voix.
 
 **Écoute**
 

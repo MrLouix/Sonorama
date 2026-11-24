@@ -87,7 +87,7 @@ Flux unidirectionnel : l'interface envoie des commandes au `MainViewModel`, qui 
 | Permission `WAKE_LOCK` | Ajoutée | Nécessaire à la lecture écran éteint pendant 2 h ; permission normale, sans invite |
 | Réordonnancement | Glisser-déposer **et** boutons monter/descendre | Alternative accessible |
 | Navigation | Pile d'écrans dans le ViewModel, sans bibliothèque de navigation | Six écrans, aucune URL profonde |
-| Garder un son vocal | L'anneau du compte à rebours sert de bouton (épingle), plutôt qu'un bouton de plus | Aucun élément ajouté à la carte ; l'appui ailleurs garde son sens (arrêter) |
+| Garder un son vocal | Un appui sur la carte la garde, un second l'arrête ; l'anneau porte une épingle | Aucun bouton de plus ; une cible minuscule ferait arrêter le son par erreur pendant la lecture |
 | Mots-clés | Modifiés depuis l'onglet de la page (appui long, « Mots-clés »), carte par carte | L'appui long sur une carte règle déjà le volume |
 | Reconnaissance | Phrase entière par défaut ; mode limité aux mots-clés comparable dans l'APK de débogage | Essai sur voix de synthèse : le mode limité invente des mots-clés |
 | APK | Un APK par processeur, codes de version `version × 10 + processeur` | Vosk ajoute environ 10 Mo de code natif par processeur |
