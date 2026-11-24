@@ -194,6 +194,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setVolume(cardId: String, volume: Int, commit: Boolean) = engine.setVolume(cardId, volume, commit)
 
+    /** Une carte lancée à la voix reste en lecture, sans arrêt automatique. */
+    fun keepCard(cardId: String) = engine.keep(cardId)
+
     fun togglePlayback() {
         val state = mix.value
         if (state.active.isEmpty() && !state.paused) say(R.string.message_empty_mix) else engine.togglePlayback()

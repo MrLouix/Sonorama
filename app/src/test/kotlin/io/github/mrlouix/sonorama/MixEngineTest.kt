@@ -607,4 +607,30 @@ class MixEngineTest {
         advanceTimeBy(6000)
         assertTrue(h.engine.state.value.active.isEmpty())
     }
+
+    @Test
+    fun `a voice card can be kept playing like a card started by hand`() = runTest {
+        val h = Harness(this)
+        h.card("mix", sounds = 10)
+        h.card("wolf")
+        h.engine.trigger(listOf("wolf"), 5000)
+        advanceTimeBy(1000)
+        h.engine.setMode(MixMode.PLAN)
+        h.engine.keep("wolf")
+        assertTrue(h.engine.state.value.timed.isEmpty())
+        assertTrue(h.engine.state.value.plan.isEmpty())
+        assertEquals(listOf("wolf"), h.savedMix)
+        advanceTimeBy(10_000)
+        assertEquals(listOf("wolf"), h.engine.state.value.active)
+        // Gardée, elle ne cède plus sa place aux sons vocaux.
+        h.engine.setMode(MixMode.DIRECT)
+        h.engine.tap("mix")
+        h.card("big", sounds = 2)
+        h.engine.trigger(listOf("big"), 5000)
+        assertEquals(listOf("wolf", "mix"), h.engine.state.value.active)
+        assertTrue(MixEvent.LIMIT_REACHED in h.events)
+        // Une carte qui n'est pas lancée à la voix n'est pas concernée.
+        h.engine.keep("mix")
+        assertTrue("mix" in h.engine.state.value.active)
+    }
 }

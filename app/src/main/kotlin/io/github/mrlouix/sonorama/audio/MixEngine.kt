@@ -305,6 +305,17 @@ class MixEngine(
         }
     }
 
+    /**
+     * Garde en lecture une carte lancée à la voix : elle ne s'arrêtera plus d'elle-même et rejoint le mix
+     * comme si elle avait été lancée à la main (dernier mix enregistré, jamais évincée par la voix).
+     * Effet immédiat dans les deux modes : le son ne change pas.
+     */
+    fun keep(cardId: String) {
+        val timer = timed.remove(cardId) ?: return
+        timer.job.cancel()
+        publish()
+    }
+
     private fun arm(cardId: String, durationMs: Long) {
         timed.remove(cardId)?.job?.cancel()
         val job = scope.launch {

@@ -1,6 +1,7 @@
 package io.github.mrlouix.sonorama.ui.main
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
@@ -20,7 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddCircle
 import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.GraphicEq
-import androidx.compose.material.icons.rounded.Mic
+import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.icons.rounded.RemoveCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -94,6 +95,8 @@ fun CardTile(
     /** Carte lancée à la voix : un anneau montre le temps restant. */
     timed: TimedPlay?,
     onTap: () -> Unit,
+    /** Garde en lecture une carte lancée à la voix ; l'anneau sert de bouton. */
+    onKeep: () -> Unit,
     onVolumeChange: (Int) -> Unit,
     onVolumeCommit: (Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -102,6 +105,7 @@ fun CardTile(
     var dragVolume by remember { mutableStateOf<Int?>(null) }
     val currentVolume by rememberUpdatedState(volume)
     val currentTap by rememberUpdatedState(onTap)
+    val currentKeep by rememberUpdatedState(onKeep)
     val currentChange by rememberUpdatedState(onVolumeChange)
     val currentCommit by rememberUpdatedState(onVolumeCommit)
 
@@ -136,6 +140,8 @@ fun CardTile(
         }
     }
     val voiceText = if (timed != null) ", " + stringResource(R.string.card_state_voice) else ""
+    val keepLabel = stringResource(R.string.action_keep_voice_card)
+    val voiceCard = timed != null && status == CardStatus.ACTIVE
     val toggleLabel = stringResource(if (lit) R.string.action_deactivate else R.string.action_activate)
     val louder = stringResource(R.string.action_volume_up)
     val quieter = stringResource(R.string.action_volume_down)
@@ -213,7 +219,15 @@ fun CardTile(
                     true
                 }
                 if (available) {
-                    customActions = listOf(
+                    customActions = listOfNotNull(
+                        if (voiceCard) {
+                            CustomAccessibilityAction(keepLabel) {
+                                currentKeep()
+                                true
+                            }
+                        } else {
+                            null
+                        },
                         CustomAccessibilityAction(louder) {
                             currentCommit((currentVolume + VOLUME_STEP).coerceAtMost(VolumeCurve.MAX_VOLUME))
                             true
@@ -255,29 +269,40 @@ fun CardTile(
         // L'état se lit aussi par une icône, jamais par la couleur seule.
         val badge = when {
             !available -> Icons.Rounded.CloudOff
-            timed != null && status == CardStatus.ACTIVE -> Icons.Rounded.Mic
+            voiceCard -> null
             status == CardStatus.ACTIVE -> Icons.Rounded.GraphicEq
             status == CardStatus.PENDING_START -> Icons.Rounded.AddCircle
             status == CardStatus.PENDING_STOP -> Icons.Rounded.RemoveCircle
             else -> null
         }
-        if (timed != null && status == CardStatus.ACTIVE) {
-            // Anneau qui se vide pendant la durée de jeu d'une carte déclenchée à la voix.
+        if (voiceCard) {
+            // Anneau qui se vide pendant la durée de jeu d'une carte déclenchée à la voix. C'est aussi un
+            // bouton : l'épingle garde la carte en lecture, comme si elle avait été lancée à la main.
             val ringColor = content
             Box(
                 Modifier
                     .align(Alignment.TopEnd)
-                    .padding(4.dp)
-                    .size(26.dp)
-                    .drawWithContent {
-                        val stroke = 2.5.dp.toPx()
-                        val inset = stroke / 2
-                        val arcSize = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke)
-                        val topLeft = androidx.compose.ui.geometry.Offset(inset, inset)
-                        drawArc(ringColor.copy(alpha = 0.25f), 0f, 360f, false, topLeft, arcSize, style = Stroke(stroke))
-                        drawArc(ringColor, -90f, 360f * remaining, false, topLeft, arcSize, style = Stroke(stroke))
-                    },
-            )
+                    .size(48.dp)
+                    .clickable(onClick = { currentKeep() }, onClickLabel = keepLabel),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    Modifier
+                        .size(28.dp)
+                        .drawWithContent {
+                            val stroke = 2.5.dp.toPx()
+                            val inset = stroke / 2
+                            val arcSize = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke)
+                            val topLeft = androidx.compose.ui.geometry.Offset(inset, inset)
+                            drawArc(ringColor.copy(alpha = 0.25f), 0f, 360f, false, topLeft, arcSize, style = Stroke(stroke))
+                            drawArc(ringColor, -90f, 360f * remaining, false, topLeft, arcSize, style = Stroke(stroke))
+                            drawContent()
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Rounded.PushPin, contentDescription = null, tint = content, modifier = Modifier.size(15.dp))
+                }
+            }
         }
         if (badge != null) {
             Icon(

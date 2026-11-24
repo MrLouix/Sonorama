@@ -224,6 +224,7 @@
     <string name="voice_notification_paused">Micro coupé (pause)</string>
     <string name="voice_stop">Couper</string>
     <string name="card_state_voice">lancée à la voix</string>
+    <string name="action_keep_voice_card">Garder en lecture</string>
     <string name="action_keywords">Mots-clés</string>
     <string name="keywords_title">Mots-clés · %1$s</string>
     <string name="keywords_intro">Le mode vocal lance une carte quand il entend un de ses mots-clés. Langue de l\'histoire : %1$s.</string>

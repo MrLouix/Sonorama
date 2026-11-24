@@ -64,7 +64,7 @@ Flux unidirectionnel : l'interface envoie des commandes au `MainViewModel`, qui 
 - Pause : rampe du fondu général vers 0 puis `pause()` des lecteurs ; les cartes restent actives. En pause, les voix ajoutées ne créent leurs lecteurs qu'au prochain *play*.
 - Limite de 12 sons vérifiée à l'activation (mode direct) et à la mise au plan (mix projeté).
 - Le moteur vit dans l'`Application` ; le service ne fait qu'exposer play/pause à la session média.
-- Mode vocal : `trigger(cartes, durée)` lance des voix minutées (fondus fixes de 0,5 s et 1 s), prolongées si le mot revient. Elles comptent dans la limite ; à la limite, la plus ancienne voix minutée cède sa place. Elles ne sont jamais enregistrées comme dernier mix. Une pause les arrête ; `paused` reste vrai même si le mix s'est vidé, pour que le micro reste coupé.
+- Mode vocal : `trigger(cartes, durée)` lance des voix minutées (fondus fixes de 0,5 s et 1 s), prolongées si le mot revient. Elles comptent dans la limite ; à la limite, la plus ancienne voix minutée cède sa place. Elles ne sont jamais enregistrées comme dernier mix. Une pause les arrête ; `paused` reste vrai même si le mix s'est vidé, pour que le micro reste coupé. `keep(carte)` retire le minutage : la voix devient une voix ordinaire.
 
 ### Mode vocal
 
@@ -87,6 +87,7 @@ Flux unidirectionnel : l'interface envoie des commandes au `MainViewModel`, qui 
 | Permission `WAKE_LOCK` | Ajoutée | Nécessaire à la lecture écran éteint pendant 2 h ; permission normale, sans invite |
 | Réordonnancement | Glisser-déposer **et** boutons monter/descendre | Alternative accessible |
 | Navigation | Pile d'écrans dans le ViewModel, sans bibliothèque de navigation | Six écrans, aucune URL profonde |
+| Garder un son vocal | L'anneau du compte à rebours sert de bouton (épingle), plutôt qu'un bouton de plus | Aucun élément ajouté à la carte ; l'appui ailleurs garde son sens (arrêter) |
 | Mots-clés | Modifiés depuis l'onglet de la page (appui long, « Mots-clés »), carte par carte | L'appui long sur une carte règle déjà le volume |
 | Reconnaissance | Phrase entière par défaut ; mode limité aux mots-clés comparable dans l'APK de débogage | Essai sur voix de synthèse : le mode limité invente des mots-clés |
 | APK | Un APK par processeur, codes de version `version × 10 + processeur` | Vosk ajoute environ 10 Mo de code natif par processeur |

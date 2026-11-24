@@ -463,6 +463,7 @@ private fun PageGrid(page: Page, library: Library, mix: MixState, viewModel: Mai
                 available = card.available,
                 timed = mix.timed[card.id],
                 onTap = { viewModel.tapCard(card) },
+                onKeep = { viewModel.keepCard(card.id) },
                 onVolumeChange = { viewModel.setVolume(card.id, it, false) },
                 onVolumeCommit = { viewModel.setVolume(card.id, it, true) },
                 modifier = Modifier.fillMaxWidth(),

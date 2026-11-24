@@ -220,6 +220,7 @@
     <string name="voice_notification_paused">Microphone off (paused)</string>
     <string name="voice_stop">Turn off</string>
     <string name="card_state_voice">started by voice</string>
+    <string name="action_keep_voice_card">Keep playing</string>
     <string name="action_keywords">Keywords</string>
     <string name="keywords_title">Keywords · %1$s</string>
     <string name="keywords_intro">Voice mode starts a card when it hears one of its keywords. Story language: %1$s.</string>
