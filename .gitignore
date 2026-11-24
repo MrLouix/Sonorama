@@ -29,3 +29,6 @@ tools/build/
 
 # Clés privées de signature de packs
 *.pem
+
+# Sources des packs de sons (Freesound, projet audio), non versionnées
+/pack-sources/
