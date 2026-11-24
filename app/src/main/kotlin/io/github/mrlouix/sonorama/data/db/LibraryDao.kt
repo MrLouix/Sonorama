@@ -61,6 +61,9 @@ interface LibraryDao {
     @Query("UPDATE cards SET nameFr = :nameFr, nameEn = :nameEn, symbol = :symbol WHERE id = :id")
     suspend fun describeCard(id: String, nameFr: String, nameEn: String, symbol: String)
 
+    @Query("UPDATE cards SET keywords = :keywords WHERE id = :id")
+    suspend fun setCardKeywords(id: String, keywords: String?)
+
     @Query("DELETE FROM cards WHERE id = :id")
     suspend fun deleteCard(id: String)
 

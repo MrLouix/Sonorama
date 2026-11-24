@@ -202,4 +202,53 @@
         <item quantity="one">%d prepared change has not been applied. Apply it now or discard it?</item>
         <item quantity="other">%d prepared changes have not been applied. Apply them now or discard them?</item>
     </plurals>
+
+    <!-- Mode vocal -->
+    <string name="action_voice">Voice mode</string>
+    <string name="voice_state_off">Off</string>
+    <string name="voice_state_on">Listening</string>
+    <string name="voice_state_paused">Paused, microphone off</string>
+    <string name="voice_status_starting">Starting the microphone…</string>
+    <string name="voice_status_paused">Paused: the microphone is off until playback resumes</string>
+    <string name="voice_last_keyword">Last keyword heard: %1$s</string>
+    <plurals name="voice_keyword_count">
+        <item quantity="one">Listening for %d keyword on this page</item>
+        <item quantity="other">Listening for %d keywords on this page</item>
+    </plurals>
+    <string name="voice_channel">Voice mode</string>
+    <string name="voice_notification_title">Microphone on</string>
+    <string name="voice_notification_paused">Microphone off (paused)</string>
+    <string name="voice_stop">Turn off</string>
+    <string name="card_state_voice">started by voice</string>
+    <string name="action_keep_voice_card">Keep playing</string>
+    <string name="action_keywords">Keywords</string>
+    <string name="keywords_title">Keywords · %1$s</string>
+    <string name="keywords_intro">Voice mode starts a card when it hears one of its keywords. Story language: %1$s.</string>
+    <string name="keywords_field">Keywords</string>
+    <string name="keywords_hint">Separated by commas. List each form: wolf, wolves.</string>
+    <string name="keyword_unknown">unknown to the speech model</string>
+    <string name="keywords_unknown_warning">Greyed-out words are unknown to the speech model and will never be heard.</string>
+    <string name="action_reset_keywords">Pack keywords</string>
+    <string name="message_voice_no_model">No speech model for the story language. Import one in Settings.</string>
+    <string name="message_voice_no_keywords">No card on this page has a keyword yet.</string>
+    <string name="message_voice_auto_stopped">Voice mode turned off after 5 minutes without a keyword.</string>
+    <string name="message_voice_failed">The microphone could not be used. Voice mode is off.</string>
+    <string name="message_mic_denied">Voice mode needs the microphone.</string>
+    <string name="message_mic_denied_forever">Microphone access is blocked. Allow it in Android settings.</string>
+    <string name="action_open_settings">Open</string>
+    <string name="message_model_installed">Speech model installed.</string>
+    <string name="message_model_unknown">This file is not an official Vosk model known to Sonorama.</string>
+    <string name="message_model_too_large">This file is too large to be a speech model.</string>
+    <string name="message_model_unreadable">The speech model could not be read.</string>
+    <string name="settings_voice">Voice mode</string>
+    <string name="settings_voice_duration">Length of a voice-started sound</string>
+    <string name="seconds_whole">%1$d s</string>
+    <string name="settings_story_language">Story language</string>
+    <string name="settings_follow_app">Same as the app</string>
+    <string name="settings_voice_models">Speech models</string>
+    <string name="model_bundled">Included in the app</string>
+    <string name="model_installed">Installed</string>
+    <string name="model_missing">Not installed</string>
+    <string name="action_import">Import</string>
+    <string name="model_how_to">Download %1$s from %2$s, then import it here. Only official models are accepted.</string>
 </resources>

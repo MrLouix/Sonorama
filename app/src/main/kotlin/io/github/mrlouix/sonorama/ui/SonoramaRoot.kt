@@ -1,5 +1,8 @@
 package io.github.mrlouix.sonorama.ui
 
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -9,12 +12,14 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.mrlouix.sonorama.ui.editor.CardPickerScreen
 import io.github.mrlouix.sonorama.ui.editor.CompositeEditorScreen
 import io.github.mrlouix.sonorama.ui.editor.PageEditorScreen
 import io.github.mrlouix.sonorama.ui.main.MainScreen
+import io.github.mrlouix.sonorama.ui.voice.KeywordsScreen
 import io.github.mrlouix.sonorama.ui.packs.ImportDialogs
 import io.github.mrlouix.sonorama.ui.packs.PacksScreen
 import io.github.mrlouix.sonorama.ui.settings.LicensesScreen
@@ -28,6 +33,7 @@ fun SonoramaRoot(viewModel: MainViewModel, onLanguageChanged: () -> Unit) {
     val backStack by viewModel.backStack.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val resources = LocalResources.current
+    val context = LocalContext.current
 
     LaunchedEffect(viewModel, resources) {
         viewModel.messages.collect { message ->
@@ -39,8 +45,15 @@ fun SonoramaRoot(viewModel: MainViewModel, onLanguageChanged: () -> Unit) {
                     actionLabel = message.actionLabel?.let { resources.getString(it) },
                     duration = SnackbarDuration.Short,
                 )
-                if (result == SnackbarResult.ActionPerformed && message.action == MessageAction.OPEN_PACKS) {
-                    viewModel.open(Screen.Packs)
+                if (result == SnackbarResult.ActionPerformed) {
+                    when (message.action) {
+                        MessageAction.OPEN_PACKS -> viewModel.open(Screen.Packs)
+                        MessageAction.OPEN_SETTINGS -> viewModel.open(Screen.Settings)
+                        MessageAction.OPEN_APP_SETTINGS -> context.startActivity(
+                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)),
+                        )
+                        null -> Unit
+                    }
                 }
             }
         }
@@ -66,6 +79,7 @@ private fun Screens(viewModel: MainViewModel, screen: Screen, onLanguageChanged:
             Screen.PageEditor -> PageEditorScreen(viewModel)
             Screen.CardPicker -> CardPickerScreen(viewModel)
             Screen.CompositeEditor -> CompositeEditorScreen(viewModel)
+            Screen.Keywords -> KeywordsScreen(viewModel)
         }
     }
 }

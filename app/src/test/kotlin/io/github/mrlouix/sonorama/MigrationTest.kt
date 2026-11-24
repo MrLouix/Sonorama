@@ -64,7 +64,7 @@ class MigrationTest {
             )
         }
         val database = Room.databaseBuilder(context, AppDatabase::class.java, name)
-            .addMigrations(AppDatabase.MIGRATION_1_2)
+            .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
             .allowMainThreadQueries()
             .build()
         try {
@@ -74,6 +74,35 @@ class MigrationTest {
             assertNull(pack.signerKey)
             assertNull(pack.archiveSha256)
             assertEquals(42, runBlocking { dao.cards().first() }.single().volume)
+        } finally {
+            database.close()
+            context.deleteDatabase(name)
+        }
+    }
+
+    @Test
+    fun `version 2 database migrates with empty keywords`() {
+        context.deleteDatabase(name)
+        createDatabase(2) { db ->
+            db.execSQL("INSERT INTO packs (id, version, nameFr, nameEn, builtIn, installed) VALUES ('demo', 1, 'Démo', 'Demo', 0, 1)")
+            db.execSQL(
+                "INSERT INTO sounds (id, packId, uri, nameFr, nameEn, symbol, defaultVolume, author, license, source, pageId, position, available) " +
+                    "VALUES ('demo/rain', 'demo', 'file:///rain.ogg', 'Pluie', 'Rain', 'umbrella', 70, '', 'CC0', '', 'meteo', 0, 1)",
+            )
+            db.execSQL(
+                "INSERT INTO cards (id, composite, nameFr, nameEn, symbol, volume, createdAt) VALUES ('s:demo/rain', 0, 'Pluie', 'Rain', 'umbrella', 42, 1)",
+            )
+        }
+        val database = Room.databaseBuilder(context, AppDatabase::class.java, name)
+            .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
+            .allowMainThreadQueries()
+            .build()
+        try {
+            val dao = database.libraryDao()
+            assertEquals("", runBlocking { dao.sounds().first() }.single().keywords)
+            val card = runBlocking { dao.cards().first() }.single()
+            assertNull(card.keywords)
+            assertEquals(42, card.volume)
         } finally {
             database.close()
             context.deleteDatabase(name)

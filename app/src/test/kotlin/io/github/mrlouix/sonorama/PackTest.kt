@@ -123,6 +123,17 @@ class PackTest {
     }
 
     @Test
+    fun `voice keywords are optional, read per language and bounded`() {
+        val parsed = PackFormat.parse(manifest(extra = """, "keywords": {"fr": ["pluie", "il pleut"], "en": ["rain"]}"""))
+        PackFormat.validate(parsed)
+        assertEquals(listOf("pluie", "il pleut"), parsed.sounds.single().keywords["fr"])
+        assertEquals(PackError.FIELD_TOO_LONG, errorOf { validate(manifest(extra = """, "keywords": {"fr": ["${"x".repeat(41)}"]}""")) })
+        assertEquals(PackError.FIELD_TOO_LONG, errorOf { validate(manifest(extra = """, "keywords": {"French": ["pluie"]}""")) })
+        val many = (1..31).joinToString(",") { "\"w$it\"" }
+        assertEquals(PackError.FIELD_TOO_LONG, errorOf { validate(manifest(extra = """, "keywords": {"fr": [$many]}""")) })
+    }
+
+    @Test
     fun `archive paths are checked`() {
         assertTrue(PackFormat.isSafePath("audio/rain.ogg"))
         assertTrue(PackFormat.isSafePath("rain.ogg"))

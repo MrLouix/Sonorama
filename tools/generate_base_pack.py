@@ -592,6 +592,34 @@ SOUNDS = [
     ("boat", "transports", "Bateau", "Boat", "directions_boat", 65, boat),
 ]
 
+# Mots-clés du mode vocal, vérifiés contre le vocabulaire des petits modèles Vosk français et anglais.
+KEYWORDS = {
+    'birds': (["oiseau", "oiseaux", "chant des oiseaux", "gazouillis", "merle", "rossignol"], ["bird", "birds", "birdsong", "chirping", "robin", "nightingale"]),
+    'stream': (["ruisseau", "rivière", "torrent", "source", "cascade"], ["stream", "brook", "river", "creek", "waterfall"]),
+    'waves': (["vague", "vagues", "mer", "océan", "plage", "marée"], ["wave", "waves", "sea", "ocean", "beach", "tide"]),
+    'campfire': (["feu de camp", "feu", "flammes", "bûches", "cheminée", "braises"], ["campfire", "fire", "flames", "logs", "fireplace", "embers"]),
+    'crickets': (["grillon", "grillons", "nuit d'été", "cigale", "cigales"], ["cricket", "crickets", "summer night", "cicada", "cicadas"]),
+    'traffic': (["circulation", "voitures", "embouteillage", "klaxon", "boulevard"], ["traffic", "cars", "traffic jam", "honking", "boulevard"]),
+    'crowd': (["foule", "marché", "gens", "place du village", "fête"], ["crowd", "market", "people", "town square", "festival"]),
+    'fountain': (["fontaine", "jet d'eau", "bassin"], ["fountain", "water jet", "basin"]),
+    'pigeons': (["pigeon", "pigeons", "roucoule", "colombe"], ["pigeon", "pigeons", "dove", "cooing"]),
+    'city_night': (["nuit en ville", "ville endormie", "rue déserte", "réverbère"], ["city at night", "sleeping city", "empty street", "streetlight"]),
+    'server_room': (["ordinateur", "ordinateurs", "serveur", "serveurs", "laboratoire"], ["computer", "computers", "server", "servers", "laboratory"]),
+    'fan': (["ventilateur", "climatisation", "souffle"], ["fan", "air conditioning", "blowing"]),
+    'electric_hum': (["électricité", "électrique", "courant", "bourdonnement", "machine"], ["electricity", "electric", "power", "humming", "machine"]),
+    'spaceship': (["vaisseau", "vaisseau spatial", "fusée", "espace", "étoiles"], ["spaceship", "spacecraft", "rocket", "space", "stars"]),
+    'console_beeps': (["robot", "robots", "bip", "bips", "ordinateur de bord", "console"], ["robot", "robots", "beep", "beeps", "control panel", "console"]),
+    'light_rain': (["pluie", "il pleut", "bruine", "gouttes", "averse"], ["rain", "raining", "drizzle", "drops", "shower"]),
+    'heavy_rain': (["déluge", "pluie battante", "trombes", "tempête", "pleuvait"], ["downpour", "pouring", "heavy rain", "storm", "rained"]),
+    'wind': (["vent", "souffle le vent", "rafale", "rafales", "bourrasque"], ["wind", "windy", "gust", "gusts", "breeze"]),
+    'distant_storm': (["orage", "tonnerre", "éclair", "éclairs", "gronde"], ["thunderstorm", "thunder", "lightning", "rumble", "storm"]),
+    'blizzard': (["blizzard", "neige", "tempête de neige", "glace", "hiver"], ["blizzard", "snow", "snowstorm", "ice", "winter"]),
+    'train': (["train", "gare", "locomotive", "wagon", "rails"], ["train", "station", "locomotive", "carriage", "railway"]),
+    'plane_cabin': (["avion", "vol", "aéroport", "pilote"], ["plane", "airplane", "flight", "airport", "pilot"]),
+    'car_interior': (["voiture", "en voiture", "route", "conduisait"], ["car", "drive", "road", "driving"]),
+    'boat': (["bateau", "navire", "voilier", "pirates", "port"], ["boat", "ship", "sailboat", "pirates", "harbor"]),
+}
+
 SOURCE = "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
 
 LICENSES_MD = """# Licences des sons — pack de base Sonorama
@@ -629,7 +657,7 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--only", action="append", help="ne régénérer que ce son (répétable)")
     parser.add_argument("--quality", type=float, default=3.0, help="qualité Vorbis (3 ≈ 112 kbit/s)")
-    parser.add_argument("--version", type=int, default=1, help="version du pack")
+    parser.add_argument("--version", type=int, default=2, help="version du pack")
     args = parser.parse_args()
 
     audio_dir = args.out / "audio"
@@ -655,6 +683,7 @@ def main() -> None:
                 "author": "Sonorama",
                 "license": "CC0-1.0",
                 "source": SOURCE,
+                "keywords": {"fr": KEYWORDS[sound_id][0], "en": KEYWORDS[sound_id][1]},
             }
         )
         licenses += f"| `{file_name}` | {name_fr} | Sonorama | CC0 1.0 |\n"

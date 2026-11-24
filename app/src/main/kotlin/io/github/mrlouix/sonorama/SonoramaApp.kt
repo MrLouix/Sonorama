@@ -13,6 +13,12 @@ import io.github.mrlouix.sonorama.data.SettingsStore
 import io.github.mrlouix.sonorama.data.db.AppDatabase
 import io.github.mrlouix.sonorama.data.pack.BasePack
 import io.github.mrlouix.sonorama.data.pack.PackImporter
+import io.github.mrlouix.sonorama.voice.SpeechEngine
+import io.github.mrlouix.sonorama.voice.SpeechModelStore
+import io.github.mrlouix.sonorama.voice.VariantFeatures
+import io.github.mrlouix.sonorama.voice.VoiceController
+import io.github.mrlouix.sonorama.voice.VoiceService
+import io.github.mrlouix.sonorama.voice.VoskSpeechEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -63,6 +69,28 @@ class AppContainer(context: Context) {
     val preview = PreviewMixer(playerFactory)
 
     val importer = PackImporter(context, repository, scope)
+
+    val speechModels = SpeechModelStore(context)
+
+    /** Transcription du texte entendu ; null dans l'APK de publication. */
+    val transcripts = VariantFeatures.transcripts(context)
+
+    /** Le code natif de Vosk ne se charge qu'au premier usage du mode vocal. */
+    private val vosk by lazy { VoskSpeechEngine() }
+
+    /** Remplaçable dans les tests, qui n'ont ni micro ni code natif. */
+    var speechEngine: () -> SpeechEngine = { vosk }
+
+    val voice = VoiceController(
+        scope = scope,
+        engine = engine,
+        library = repository.library,
+        settings = settings,
+        models = speechModels,
+        speech = { speechEngine() },
+        service = VoiceService.Launcher(context),
+        transcripts = transcripts,
+    )
 
     @Suppress("unused")
     private val focus = AudioFocusController(context, engine, preview, scope)

@@ -27,6 +27,12 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v6
 
+      # Modèle vocal intégré à l'APK (42 Mo), téléchargé par Gradle : gardé en cache plutôt que retéléchargé.
+      - uses: actions/cache@v6
+        with:
+          path: ~/.gradle/caches/sonorama-vosk
+          key: vosk-model-small-fr-0.22
+
       - name: Lint, tests et APK de débogage
         run: ./gradlew lintDebug testDebugUnitTest assembleDebug
 

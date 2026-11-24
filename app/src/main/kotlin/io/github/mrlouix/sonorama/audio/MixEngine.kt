@@ -36,9 +36,19 @@ data class MixState(
     /** Volumes réglés pendant cette session, plus récents que ceux de la base. */
     val volumes: Map<String, Int> = emptyMap(),
     val soundCount: Int = 0,
+    /** Cartes lancées à la voix pour un temps limité, avec leur échéance. */
+    val timed: Map<String, TimedPlay> = emptyMap(),
+    /** Pause demandée : aucun son ne joue et le micro du mode vocal se coupe. */
+    val paused: Boolean = false,
 ) {
     fun isActive(cardId: String): Boolean = cardId in active
 }
+
+/** Carte déclenchée à la voix : elle s'arrête d'elle-même à [endsAtMs] (horloge de [MixEngine.clock]). */
+data class TimedPlay(val endsAtMs: Long, val durationMs: Long)
+
+/** Horloge monotone en millisecondes, commune au moteur et à l'interface. */
+fun monotonicMillis(): Long = System.nanoTime() / 1_000_000
 
 enum class MixEvent { LIMIT_REACHED, CARD_UNAVAILABLE, CHANGED_WHILE_PAUSED, PLAYBACK_FAILED }
 
@@ -64,6 +74,7 @@ class MixEngine(
     private val cards: (String) -> CardSpec?,
     private val persistence: MixPersistence,
     private val fades: () -> FadeSettings,
+    val clock: () -> Long = ::monotonicMillis,
 ) {
     private val _state = MutableStateFlow(MixState())
     val state: StateFlow<MixState> = _state.asStateFlow()
@@ -77,17 +88,26 @@ class MixEngine(
 
     private var playing = false
     private var pausePending = false
+    /** Pause demandée alors que seuls des sons vocaux jouaient : le mix est vide mais la pause tient. */
+    private var held = false
     private var mode = MixMode.DIRECT
     private var plan: Map<String, PlanChange> = emptyMap()
     private var volumes: Map<String, Int> = emptyMap()
     private var savedMix: List<String> = emptyList()
     private var ticker: Job? = null
+    private val timed = LinkedHashMap<String, Timer>()
+
+    private class Timer(val play: TimedPlay, val job: Job)
 
     // ---------------------------------------------------------------- commandes
 
-    /** Appui court sur une carte : effet immédiat en mode direct, mise au plan sinon. */
+    /**
+     * Appui court sur une carte : effet immédiat en mode direct, mise au plan sinon. Sur une carte lancée
+     * à la voix, l'appui la garde en lecture ([keep]), dans les deux modes ; un second appui l'arrête.
+     */
     fun tap(cardId: String) {
         when {
+            cardId in timed -> keep(cardId)
             mode == MixMode.PLAN -> togglePlan(cardId)
             cardId in voices -> deactivate(cardId)
             else -> activate(cardId)
@@ -120,11 +140,14 @@ class MixEngine(
         return true
     }
 
-    fun deactivate(cardId: String) {
+    fun deactivate(cardId: String) = deactivate(cardId, fades().fadeOutMs)
+
+    private fun deactivate(cardId: String, fadeOutMs: Int) {
+        timed.remove(cardId)?.job?.cancel()
         val voice = voices.remove(cardId) ?: return
         if (voice.players != null && (playing || pausePending)) {
             releasing += voice
-            voice.fade.go(0f, fades().fadeOutMs)
+            voice.fade.go(0f, fadeOutMs)
         } else {
             voice.release()
         }
@@ -192,6 +215,7 @@ class MixEngine(
             if (change.toggle) {
                 if (existing != null) {
                     voices.remove(cardId)
+                    timed.remove(cardId)?.job?.cancel()
                     stops += existing
                 } else {
                     val spec = cards(cardId)?.takeIf { it.sounds.isNotEmpty() } ?: continue
@@ -245,8 +269,75 @@ class MixEngine(
         }
     }
 
+    /**
+     * Mode vocal : lance [cardIds] pour [durationMs], tout de suite, quel que soit le mode et sans toucher
+     * au plan. Une carte déjà lancée à la voix voit son compte à rebours repartir ; une carte active du mix
+     * n'est pas touchée. En pause, rien ne se passe. À la limite de sons, les plus anciens sons vocaux
+     * cèdent la place ; ceux du mix jamais.
+     */
+    fun trigger(cardIds: Collection<String>, durationMs: Long) {
+        if (held || (!playing && voices.isNotEmpty())) return
+        var changed = false
+        for (cardId in cardIds.distinct()) {
+            if (cardId in voices) {
+                if (cardId in timed) {
+                    arm(cardId, durationMs)
+                    changed = true
+                }
+                continue
+            }
+            val spec = cards(cardId)?.takeIf { it.sounds.isNotEmpty() } ?: continue
+            while (soundCount() + spec.sounds.size > MAX_SOUNDS) {
+                val oldest = timed.keys.firstOrNull { it !in cardIds } ?: break
+                deactivate(oldest, TIMED_FADE_OUT_MS)
+            }
+            if (soundCount() + spec.sounds.size > MAX_SOUNDS) {
+                _events.tryEmit(MixEvent.LIMIT_REACHED)
+                continue
+            }
+            val voice = Voice(spec, volumeOf(cardId))
+            if (voices.isEmpty() && !playing) startPlayingFromEmpty()
+            voices[cardId] = voice
+            start(voice)
+            voice.fade.go(1f, TIMED_FADE_IN_MS)
+            arm(cardId, durationMs)
+            changed = true
+        }
+        if (changed) {
+            publish()
+            kick()
+        }
+    }
+
+    /**
+     * Garde en lecture une carte lancée à la voix : elle ne s'arrêtera plus d'elle-même et rejoint le mix
+     * comme si elle avait été lancée à la main (dernier mix enregistré, jamais évincée par la voix).
+     * Effet immédiat dans les deux modes : le son ne change pas.
+     */
+    fun keep(cardId: String) {
+        val timer = timed.remove(cardId) ?: return
+        timer.job.cancel()
+        publish()
+    }
+
+    private fun arm(cardId: String, durationMs: Long) {
+        timed.remove(cardId)?.job?.cancel()
+        val job = scope.launch {
+            delay(durationMs)
+            if (timed[cardId]?.job === coroutineContext[Job]) deactivate(cardId, TIMED_FADE_OUT_MS)
+        }
+        timed[cardId] = Timer(TimedPlay(clock() + durationMs, durationMs), job)
+    }
+
     fun pause() {
         if (!playing) return
+        // En pause, aucun son ne joue : les sons vocaux s'arrêtent au lieu d'attendre la reprise.
+        timed.keys.toList().forEach { deactivate(it, fades().fadeOutMs) }
+        if (!playing) {
+            held = true
+            publish()
+            return
+        }
         playing = false
         if (voices.isNotEmpty()) {
             pausePending = true
@@ -257,7 +348,15 @@ class MixEngine(
     }
 
     fun resume() {
-        if (playing || voices.isEmpty()) return
+        if (playing) return
+        if (voices.isEmpty()) {
+            if (held) {
+                held = false
+                publish()
+            }
+            return
+        }
+        held = false
         playing = true
         pausePending = false
         voices.values.forEach { start(it) }
@@ -272,6 +371,7 @@ class MixEngine(
 
     fun stopAll() {
         plan = emptyMap()
+        held = false
         voices.keys.toList().forEach { deactivate(it) }
         publish()
     }
@@ -343,6 +443,7 @@ class MixEngine(
     private fun soundCount(): Int = voices.values.sumOf { it.spec.sounds.size }
 
     private fun startPlayingFromEmpty() {
+        held = false
         playing = true
         pausePending = false
         // Des voix peuvent encore s'éteindre : ne pas les faire remonter d'un coup.
@@ -369,6 +470,7 @@ class MixEngine(
     private fun onPlayerError(voice: Voice) {
         if (voices[voice.cardId] !== voice) return
         voices.remove(voice.cardId)
+        timed.remove(voice.cardId)?.job?.cancel()
         voice.release()
         if (voices.isEmpty()) becomeEmpty()
         _events.tryEmit(MixEvent.PLAYBACK_FAILED)
@@ -392,10 +494,14 @@ class MixEngine(
             plan = plan,
             volumes = volumes,
             soundCount = soundCount(),
+            timed = timed.mapValues { it.value.play },
+            paused = held || (!playing && voices.isNotEmpty()),
         )
-        if (active != savedMix) {
-            savedMix = active
-            persistence.saveMix(active)
+        // Les sons vocaux sont passagers : ils ne font pas partie du mix restauré au lancement.
+        val lasting = active.filter { it !in timed }
+        if (lasting != savedMix) {
+            savedMix = lasting
+            persistence.saveMix(lasting)
         }
     }
 
@@ -494,5 +600,7 @@ class MixEngine(
         const val MAX_SOUNDS = 12
         const val TICK_MS = 20L
         const val READY_TIMEOUT_MS = 1000L
+        const val TIMED_FADE_IN_MS = 500
+        const val TIMED_FADE_OUT_MS = 1000
     }
 }

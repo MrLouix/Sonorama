@@ -16,7 +16,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         PageEntity::class,
         PageCardEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -33,9 +33,17 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /** Version 3 : mots-clés du mode vocal (du pack sur les sons, de l'utilisateur sur les cartes). */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE sounds ADD COLUMN keywords TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE cards ADD COLUMN keywords TEXT")
+            }
+        }
+
         fun create(context: Context): AppDatabase =
             Room.databaseBuilder(context, AppDatabase::class.java, NAME)
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .build()
     }
 }

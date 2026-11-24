@@ -53,6 +53,7 @@ class LibraryRepository(private val db: AppDatabase, scope: CoroutineScope) {
                 id = s.id, packId = s.packId, uri = s.uri, name = LocalizedName(s.nameFr, s.nameEn),
                 symbol = s.symbol, defaultVolume = s.defaultVolume, author = s.author,
                 license = s.license, source = s.source, pageId = s.pageId, available = s.available,
+                keywords = Keywords.decode(s.keywords),
             )
         }
         val soundsByCard = t.cardSounds.groupBy { it.cardId }
@@ -66,6 +67,9 @@ class LibraryRepository(private val db: AppDatabase, scope: CoroutineScope) {
                 available = parts.isNotEmpty() && parts.all { sounds[it.soundId]?.available == true },
                 themePageId = if (c.composite) null else first?.pageId,
                 packId = if (c.composite) null else first?.packId,
+                keywords = c.keywords?.let(Keywords::decode)
+                    ?: if (c.composite) emptyMap() else first?.keywords.orEmpty(),
+                customKeywords = c.keywords != null,
             )
         }
         val cardsByPage = pageCards.groupBy { it.pageId }
@@ -132,6 +136,7 @@ class LibraryRepository(private val db: AppDatabase, scope: CoroutineScope) {
                     id = id, packId = packId, uri = uriOf(s), nameFr = s.name.fr, nameEn = s.name.en,
                     symbol = s.symbol, defaultVolume = s.defaultVolume.coerceIn(0, 100), author = s.author,
                     license = s.license, source = s.source, pageId = s.page, position = index, available = true,
+                    keywords = Keywords.encode(s.keywords),
                 )
             }
             dao.upsertSounds(entities)
@@ -173,6 +178,20 @@ class LibraryRepository(private val db: AppDatabase, scope: CoroutineScope) {
 
     suspend fun setCardVolume(cardId: String, volume: Int) = dao.setCardVolume(cardId, volume.coerceIn(0, 100))
 
+    /**
+     * Remplace les mots-clés de [cardId] dans [language]. Les autres langues gardent leurs mots-clés du
+     * moment ; la carte ne suit plus ceux du pack jusqu'à [resetCardKeywords].
+     */
+    suspend fun setCardKeywords(cardId: String, language: String, words: List<String>) {
+        val card = library.value.cards[cardId] ?: return
+        val cleaned = Keywords.clean(words)
+        val map = card.keywords - language + (if (cleaned.isEmpty()) emptyMap() else mapOf(language to cleaned))
+        dao.setCardKeywords(cardId, Keywords.encode(map, keepEmpty = true))
+    }
+
+    /** La carte reprend les mots-clés de son pack. */
+    suspend fun resetCardKeywords(cardId: String) = dao.setCardKeywords(cardId, null)
+
     /** Crée ([id] nul) ou met à jour une carte composée. Renvoie son identifiant. */
     suspend fun saveComposite(id: String?, name: String, symbol: String, sounds: List<CardSound>, volume: Int? = null): String =
         db.withTransaction {
@@ -184,6 +203,7 @@ class LibraryRepository(private val db: AppDatabase, scope: CoroutineScope) {
                     id = cardId, composite = true, nameFr = label, nameEn = label, symbol = symbol,
                     volume = volume ?: existing?.volume ?: 100,
                     createdAt = existing?.createdAt ?: System.currentTimeMillis(),
+                    keywords = existing?.keywords,
                 ),
             )
             dao.deleteCardSounds(cardId)

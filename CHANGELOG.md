@@ -7,6 +7,21 @@ le projet applique le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ### Ajouté
 
+- Mode vocal : bouton micro dans la barre du bas ; les cartes de la page affichée dont un mot-clé est
+  entendu jouent pendant une durée réglable (3 à 30 s), en plus du mix. Reconnaissance hors ligne par Vosk,
+  écoute écran éteint, micro coupé en pause, arrêt automatique après 5 minutes sans mot-clé.
+- Mots-clés par carte et par langue, déclarés par les packs (champ `keywords`) et modifiables depuis
+  l'onglet d'une page ; mots inconnus du modèle signalés. Mots-clés fournis pour les 24 sons du pack de base.
+- Modèle vocal français intégré ; modèle anglais officiel importable. Langue de l'histoire réglable.
+- Version de débogage seulement : transcription du texte entendu, exportable en CSV.
+- Un APK par type de processeur.
+- Un appui sur une carte lancée à la voix la garde en lecture, comme une carte lancée à la main ; un
+  second appui l'arrête.
+- Outils de pack : `tools/prepare_loop.py` (boucle sans raccord, niveau et Ogg du pack de base, contrôle),
+  `tools/check_pack.py` (règles de l'appli, durée et format audio, symboles, vocabulaire Vosk, ZIP),
+  `tools/generate_ambience.py` (Stable Audio Open en local).
+- Skills Claude Code `constituer-pack` et `generer-sons-ia`.
+
 - Signature des packs (ECDSA P-256) : mention « officiel », « signé » ou « non signé », clé mémorisée au
   premier import, outil `tools/sign_pack.py`. Format de pack 2, le format 1 reste lisible.
 - Confirmation avant toute mise à jour d'un pack, avec l'empreinte du fichier affichée à la demande.

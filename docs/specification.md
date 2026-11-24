@@ -62,6 +62,7 @@ L'appli tient en un écran principal : des pages que l'on fait défiler horizont
 - Bascule de mode Direct / Plan.
 - Compteur de cartes actives ; un appui ouvre le panneau « En cours ».
 - En mode plan avec des changements en attente : boutons Appliquer et Annuler.
+- Bouton micro du mode vocal, avec le dernier mot-clé reconnu (section 14).
 
 **Panneau « En cours »**
 
@@ -73,7 +74,7 @@ L'appli tient en un écran principal : des pages que l'on fait défiler horizont
 
 - Packs : import d'un ZIP, liste des packs installés, suppression.
 - Éditeur de page personnalisée et éditeur de carte composée.
-- Réglages : durées de fondu, thème clair ou sombre, langue, licences des sons.
+- Réglages : durées de fondu, thème clair ou sombre, langue, mode vocal, licences des sons.
 
 ## 4. Modes de lecture
 
@@ -286,7 +287,8 @@ Sources : [politique d'inclusion F-Droid](https://f-droid.org/fr/docs/Inclusion_
 
 - Tout fonctionne hors ligne ; les packs s'importent depuis un fichier local.
 - Aucun compte, aucune publicité, aucune télémétrie.
-- Permissions : service de premier plan (lecture média) et notifications. Ni Internet ni accès au stockage.
+- Permissions : service de premier plan (lecture média et micro), notifications et micro, demandé seulement au premier usage du mode vocal. Ni Internet ni accès au stockage.
+- Le micro n'est ouvert que pendant l'écoute du mode vocal ; aucun son n'est enregistré.
 
 **Langues**
 
@@ -325,3 +327,55 @@ Toutes les questions ouvertes ont été tranchées le 12 nov. 2026 ; trois point
 - [ ] Vérifier les marques déposées « Sonorama » (INPI, EUIPO) avant publication.
 - [ ] Lever le risque audio par le prototype du lot 0 : raccord de boucle et 12 sons simultanés.
 - [ ] Constituer le pack de base : 20 à 25 boucles sous CC0 ou CC BY, normalisées.
+
+## 14. Mode vocal
+
+Ajouté le 24 nov. 2026. L'appli écoute la personne qui lit l'histoire et déclenche, pendant quelques secondes, les cartes dont elle reconnaît un mot-clé. Le mode vocal s'utilise en même temps que le mix standard.
+
+**Principe**
+
+- Un bouton micro dans la barre basse allume et éteint l'écoute ; il affiche le dernier mot-clé reconnu.
+- Seules les cartes de la page affichée peuvent être déclenchées. Une page par histoire permet de choisir les sons possibles.
+- Un mot-clé reconnu lance toutes les cartes de la page qui le portent, tout de suite, quel que soit le mode (direct ou plan) et sans toucher au plan.
+- Le son joue pendant une durée réglable (3 à 30 s, 5 s par défaut), avec un fondu d'entrée de 0,5 s et de sortie de 1 s. Un mot-clé redit pendant ce temps relance le compte à rebours.
+- Un anneau sur la carte montre le temps restant.
+
+**Cohabitation avec le mix**
+
+- Une carte déjà active dans le mix n'est pas relancée par la voix.
+- Les sons déclenchés à la voix comptent dans la limite de 12 sons ; à la limite, le plus ancien son vocal s'arrête pour faire place. Les sons du mix ne sont jamais arrêtés par la voix.
+- Mix vide : un mot-clé lance la lecture.
+- Pause : aucun son ne joue et le micro est coupé ; les sons vocaux en cours s'arrêtent. À la reprise, l'écoute reprend si elle était allumée.
+- Un appui n'importe où sur une carte déclenchée à la voix la garde en lecture, sans arrêt automatique, comme si elle avait été lancée à la main : elle rejoint le mix enregistré et ne cède plus sa place aux sons vocaux. Un second appui l'arrête. Effet immédiat, y compris en mode plan. L'anneau porte une épingle pour le rappeler ; TalkBack annonce l'action « Garder en lecture ».
+- Le bouton d'arrêt du panneau « En cours » arrête directement une carte déclenchée à la voix.
+
+**Écoute**
+
+- Reconnaissance hors ligne par Vosk, de toute la phrase, dont on extrait les mots-clés de la page ; déclenchement sur les résultats partiels, dès que le mot est entendu. L'APK de débogage permet de comparer avec une reconnaissance limitée aux mots-clés (voir « Décisions »).
+- L'écoute démarre depuis l'appli ouverte et continue écran éteint, avec une notification « micro actif » qui permet de la couper.
+- Elle s'arrête d'elle-même après 5 minutes sans mot-clé reconnu.
+- Micro ouvert en mode « reconnaissance vocale », avec l'annulation d'écho du téléphone quand elle existe.
+
+**Mots-clés**
+
+- Le pack déclare des mots-clés par son et par langue ; ils se modifient carte par carte depuis l'onglet de la page (appui long, « Mots-clés »), l'appui long sur une carte restant le réglage du volume. Les mots-clés modifiés priment et survivent aux mises à jour du pack ; un bouton rétablit ceux du pack.
+- Une carte composée n'a que les mots-clés qu'on lui donne.
+- Casse et accents ignorés ; un mot-clé peut compter plusieurs mots ; les variantes (singulier, pluriel) sont déclarées une à une.
+- Un mot que le modèle de langue ne connaît pas est signalé et grisé : il ne sera jamais reconnu.
+
+**Langues et modèles**
+
+- La langue de l'histoire est un réglage à part, qui suit par défaut la langue de l'appli.
+- Le modèle français est intégré à l'APK. Le modèle anglais s'importe depuis un fichier ZIP ; seuls les modèles officiels Vosk, reconnus par leur empreinte SHA-256, sont acceptés.
+- Un APK par type de processeur, pour limiter la taille.
+
+**Transcription (versions de test uniquement)**
+
+- Dans l'APK de débogage, un réglage enregistre le texte entendu, jamais l'audio, pour repérer les sons à ajouter.
+- Chaque phrase est horodatée, avec les cartes déclenchées ; export CSV par le sélecteur de fichiers, effacement en un bouton.
+- Le code de la transcription n'existe pas dans l'APK de publication.
+
+**Décisions**
+
+- Reconnaissance de toute la phrase par défaut. Un essai sur voix de synthèse (24 nov. 2026) a montré que le mode limité aux mots-clés invente des mots-clés non prononcés et en rate d'autres ; le mode complet s'est moins trompé. À confirmer sur une vraie voix : les deux modes sont comparables dans l'APK de débogage.
+- Une pause alors que seuls des sons vocaux jouent reste une pause : le micro reste coupé jusqu'au play.

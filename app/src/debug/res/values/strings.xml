@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Réglages présents seulement dans l'APK de débogage. -->
+<resources>
+    <string name="debug_voice_title">Testing (debug build only)</string>
+    <string name="debug_transcript_switch">Record what is heard (text only)</string>
+    <plurals name="debug_transcript_lines">
+        <item quantity="one">%d sentence recorded</item>
+        <item quantity="other">%d sentences recorded</item>
+    </plurals>
+    <string name="debug_transcript_export">Export CSV</string>
+    <string name="debug_transcript_clear">Delete</string>
+    <string name="debug_recognition_mode">Recognition</string>
+    <string name="debug_mode_full">Whole sentence</string>
+    <string name="debug_mode_keywords">Keywords only</string>
+</resources>

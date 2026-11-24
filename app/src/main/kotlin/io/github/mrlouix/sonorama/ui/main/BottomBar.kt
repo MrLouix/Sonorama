@@ -15,11 +15,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Mic
+import androidx.compose.material.icons.rounded.MicOff
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -35,16 +39,21 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.mrlouix.sonorama.R
 import io.github.mrlouix.sonorama.audio.MixMode
 import io.github.mrlouix.sonorama.audio.MixState
+import io.github.mrlouix.sonorama.voice.VoiceState
 
 // Largeurs que demandent les éléments à la taille de police normale ; elles grandissent avec elle.
 private val MODE_WIDTH = 146.dp
 private val COUNTER_WIDTH = 80.dp
+private val MIC_WIDTH = 56.dp
 private val PLAY_WIDE = 96.dp
 private val PLAY_NARROW = 72.dp
 private val GAP = 12.dp
@@ -56,6 +65,8 @@ private val GAP = 12.dp
 @Composable
 fun BottomBar(
     mix: MixState,
+    voice: VoiceState,
+    onVoice: () -> Unit,
     onTogglePlayback: () -> Unit,
     onMode: (MixMode) -> Unit,
     onOpenNowPlaying: () -> Unit,
@@ -65,13 +76,14 @@ fun BottomBar(
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 3.dp) {
         BoxWithConstraints(Modifier.navigationBarsPadding().padding(horizontal = 12.dp, vertical = 10.dp)) {
             val fontScale = LocalDensity.current.fontScale
-            val sides = (MODE_WIDTH + COUNTER_WIDTH) * fontScale
+            val sides = (MODE_WIDTH + COUNTER_WIDTH) * fontScale + MIC_WIDTH
             val playWidth = when {
                 maxWidth >= sides + PLAY_WIDE + GAP * 2 -> PLAY_WIDE
                 maxWidth >= sides + PLAY_NARROW + GAP * 2 -> PLAY_NARROW
                 else -> null
             }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (voice.enabled) VoiceStatus(voice)
                 if (mix.plan.isNotEmpty()) {
                     PlanActions(mix.plan.size, stacked = playWidth == null, onApply = onApply, onCancel = onCancel)
                 }
@@ -79,6 +91,8 @@ fun BottomBar(
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) { ModeSwitch(mix.mode, onMode) }
                         PlayButton(mix.playing, onTogglePlayback, Modifier.padding(horizontal = GAP).size(playWidth, 64.dp))
+                        MicButton(voice, onVoice)
+                        Spacer(Modifier.width(8.dp))
                         Counter(mix.active.size, onOpenNowPlaying)
                     }
                 } else {
@@ -86,6 +100,8 @@ fun BottomBar(
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         PlayButton(mix.playing, onTogglePlayback, Modifier.weight(1f).height(64.dp))
                         Spacer(Modifier.width(GAP))
+                        MicButton(voice, onVoice)
+                        Spacer(Modifier.width(8.dp))
                         Counter(mix.active.size, onOpenNowPlaying)
                     }
                 }
@@ -150,6 +166,49 @@ private fun PlayButton(playing: Boolean, onClick: () -> Unit, modifier: Modifier
             modifier = Modifier.size(36.dp),
         )
     }
+}
+
+/** Allume et éteint le mode vocal ; plein quand le micro écoute. */
+@Composable
+private fun MicButton(voice: VoiceState, onClick: () -> Unit) {
+    val label = stringResource(R.string.action_voice)
+    val state = stringResource(
+        when {
+            !voice.enabled -> R.string.voice_state_off
+            voice.paused -> R.string.voice_state_paused
+            else -> R.string.voice_state_on
+        },
+    )
+    val modifier = Modifier.size(48.dp).semantics { stateDescription = state }
+    when {
+        !voice.enabled -> IconButton(onClick = onClick, modifier = modifier) {
+            Icon(Icons.Rounded.MicOff, contentDescription = label)
+        }
+        voice.paused -> FilledTonalIconButton(onClick = onClick, modifier = modifier) {
+            Icon(Icons.Rounded.MicOff, contentDescription = label)
+        }
+        else -> FilledIconButton(onClick = onClick, modifier = modifier) {
+            Icon(Icons.Rounded.Mic, contentDescription = label)
+        }
+    }
+}
+
+/** Ce que fait le micro, et le dernier mot-clé entendu. */
+@Composable
+private fun VoiceStatus(voice: VoiceState) {
+    val text = when {
+        voice.paused -> stringResource(R.string.voice_status_paused)
+        !voice.listening -> stringResource(R.string.voice_status_starting)
+        voice.lastKeyword != null -> stringResource(R.string.voice_last_keyword, voice.lastKeyword)
+        else -> pluralStringResource(R.plurals.voice_keyword_count, voice.keywordCount, voice.keywordCount)
+    }
+    Text(
+        text,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 2,
+        modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
+    )
 }
 
 @Composable

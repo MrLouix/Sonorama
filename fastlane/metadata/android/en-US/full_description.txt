@@ -4,6 +4,7 @@ Sonorama plays looping ambient sounds and mixes them live from pages of touch ca
 • A plan mode: prepare several changes, then apply them together with a crossfade.
 • A volume per card: long-press, then slide up or down.
 • Up to 12 sounds at once, across several pages.
+• A voice mode: while you read, the app recognises the page's keywords and plays the matching sounds for a few seconds. Recognition runs on the phone, offline.
 • Your own pages: gather your favourite cards, save a whole mix as a single card.
 • Plays with the screen off, with controls on the lock screen and headsets.
 • 24 sounds included: nature, city, technology, weather, transport.

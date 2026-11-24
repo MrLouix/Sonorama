@@ -41,7 +41,8 @@ Seuls les fichiers déclarés dans le manifeste, et `LICENSES.md`, sont copiés 
       "page": "maison",
       "author": "Jeanne Martin",
       "license": "CC-BY-4.0",
-      "source": "https://exemple.org/sons/cheminee"
+      "source": "https://exemple.org/sons/cheminee",
+      "keywords": { "fr": ["cheminée", "feu de bois", "bûches"], "en": ["fireplace", "logs"] }
     }
   ]
 }
@@ -83,6 +84,17 @@ Un son peut aussi rejoindre une page déjà fournie par l'appli, sans la déclar
 | `license` | oui | Voir ci-dessous ; 64 caractères au plus |
 | `source` | non | Adresse d'origine du son ; 500 caractères au plus |
 | `sha256` | pack signé | Empreinte SHA-256 du fichier audio, en hexadécimal minuscule. Vérifiée à l'import dès qu'elle est présente |
+| `keywords` | non | Mots-clés du mode vocal, par code de langue à deux lettres (`fr`, `en`) : 30 au plus par langue, 40 caractères au plus chacun. Voir ci-dessous |
+
+### Mots-clés du mode vocal
+
+Le mode vocal lance une carte quand il entend un de ses mots-clés. Le champ est facultatif ; les versions de l'appli antérieures au mode vocal l'ignorent, et il ne demande pas de nouveau numéro de format.
+
+- Casse, accents et ponctuation sont ignorés ; un mot-clé peut compter plusieurs mots (`"feu de camp"`).
+- Aucune variante n'est déduite : déclarer chaque forme utile (`"loup"`, `"loups"`).
+- Un mot absent du vocabulaire du modèle Vosk ne sera jamais reconnu ; l'appli le grise dans l'écran des mots-clés. Les noms propres et les mots inventés sont les cas habituels.
+- Les mots-clés font partie du manifeste : la signature d'un pack les couvre.
+- Un utilisateur qui modifie les mots-clés d'une carte garde les siens à la mise à jour du pack.
 
 Les champs inconnus sont ignorés, pour permettre des ajouts futurs.
 

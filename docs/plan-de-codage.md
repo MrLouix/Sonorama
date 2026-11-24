@@ -11,6 +11,7 @@ Ce plan traduit la [spécification](specification.md) en modules, en ordre de co
 | Interface | Jetpack Compose, Material 3 | BOM 2026.09.00 |
 | Audio | Media3 ExoPlayer + Media3 Session | 1.11.1 |
 | Données | Room, DataStore Preferences, kotlinx.serialization (manifestes, export de pages) | 2.8.5 / 1.3.0 / 1.13.0 |
+| Reconnaissance vocale | Vosk (Android) et JNA, modèle `vosk-model-small-fr-0.22` intégré | 0.3.75 / 5.18.1 |
 | SDK | `minSdk` 26, `compileSdk` et `targetSdk` 37 | |
 
 Aucune dépendance à Google Play Services, aucune permission réseau. Pas de bibliothèque d'injection : un conteneur manuel (`AppContainer`) suffit à cette taille.
@@ -34,7 +35,14 @@ io.github.mrlouix.sonorama
 │   ├── LibraryRepository         source unique : flux `Library`, écritures transactionnelles
 │   ├── SettingsStore             DataStore : fondus, thème, langue, dernier mix
 │   ├── pack/                     manifeste, validation, import ZIP, pack de base
+│   ├── Keywords                  mots-clés : stockage, nettoyage, forme normalisée
 │   └── PageExchange              export et import de pages (JSON)
+├── voice/
+│   ├── KeywordMatcher            repère les mots-clés dans le texte reconnu
+│   ├── SpeechEngine(+Vosk…)      reconnaissance abstraite (testable) et implémentation Vosk
+│   ├── SpeechModels              modèles acceptés (empreintes), extraction, import
+│   ├── VoiceController           état du mode vocal, page affichée, pause, arrêt automatique
+│   └── VoiceService              service au premier plan de type « micro »
 └── ui/
     ├── MainViewModel             état d'écran unique, événements, navigation
     ├── main/                     pages, grille, carte, barre basse, panneau « En cours »
@@ -56,6 +64,15 @@ Flux unidirectionnel : l'interface envoie des commandes au `MainViewModel`, qui 
 - Pause : rampe du fondu général vers 0 puis `pause()` des lecteurs ; les cartes restent actives. En pause, les voix ajoutées ne créent leurs lecteurs qu'au prochain *play*.
 - Limite de 12 sons vérifiée à l'activation (mode direct) et à la mise au plan (mix projeté).
 - Le moteur vit dans l'`Application` ; le service ne fait qu'exposer play/pause à la session média.
+- Mode vocal : `trigger(cartes, durée)` lance des voix minutées (fondus fixes de 0,5 s et 1 s), prolongées si le mot revient. Elles comptent dans la limite ; à la limite, la plus ancienne voix minutée cède sa place. Elles ne sont jamais enregistrées comme dernier mix. Une pause les arrête ; `paused` reste vrai même si le mix s'est vidé, pour que le micro reste coupé. `keep(carte)` retire le minutage : la voix devient une voix ordinaire.
+
+### Mode vocal
+
+- `VoiceController` observe le mix, la bibliothèque et les réglages ; il ouvre le micro quand le mode est allumé et hors pause, le ferme sinon. Le micro rouvert après une pause relance le délai d'arrêt automatique (5 min sans mot-clé).
+- Le texte partiel est comparé aux mots-clés de la page affichée (`KeywordMatcher`) : un mot-clé déclenche quand son nombre d'occurrences dans la phrase augmente, ce qui absorbe les répétitions et corrections des résultats partiels.
+- Vosk : `AudioRecord` 16 kHz mono, source `VOICE_RECOGNITION`, annulation d'écho si disponible. La grammaire est envoyée en UTF-8 brut (les échappements `\u00ea` font ignorer le mot). `vosk_model_find_word`, absente de l'API Java, est appelée par JNA pour repérer les mots inconnus.
+- Le modèle français est téléchargé par Gradle (`downloadVoskModel`, empreinte vérifiée, cache dans le dossier Gradle de l'utilisateur) puis placé dans les assets ; il s'extrait dans le dossier privé au premier usage. Le modèle anglais s'importe : seule l'empreinte d'un modèle officiel connu est acceptée.
+- La transcription n'existe que dans `src/debug/` (`VariantFeatures`) ; `src/release/` en fournit une version vide.
 
 ### Décisions prises (toutes réversibles)
 
@@ -70,14 +87,18 @@ Flux unidirectionnel : l'interface envoie des commandes au `MainViewModel`, qui 
 | Permission `WAKE_LOCK` | Ajoutée | Nécessaire à la lecture écran éteint pendant 2 h ; permission normale, sans invite |
 | Réordonnancement | Glisser-déposer **et** boutons monter/descendre | Alternative accessible |
 | Navigation | Pile d'écrans dans le ViewModel, sans bibliothèque de navigation | Six écrans, aucune URL profonde |
+| Garder un son vocal | Un appui sur la carte la garde, un second l'arrête ; l'anneau porte une épingle | Aucun bouton de plus ; une cible minuscule ferait arrêter le son par erreur pendant la lecture |
+| Mots-clés | Modifiés depuis l'onglet de la page (appui long, « Mots-clés »), carte par carte | L'appui long sur une carte règle déjà le volume |
+| Reconnaissance | Phrase entière par défaut ; mode limité aux mots-clés comparable dans l'APK de débogage | Essai sur voix de synthèse : le mode limité invente des mots-clés |
+| APK | Un APK par processeur, codes de version `version × 10 + processeur` | Vosk ajoute environ 10 Mo de code natif par processeur |
 
 ## 3. Modèle de données
 
 | Table | Colonnes principales |
 | --- | --- |
 | `packs` | id, version, noms fr/en, intégré, installé, clé du signataire, empreinte de l'archive |
-| `sounds` | id (`pack/son`), pack, URI, noms fr/en, symbole, volume par défaut, auteur, licence, source, page, disponible |
-| `cards` | id, composée, noms, symbole, volume d'ensemble |
+| `sounds` | id (`pack/son`), pack, URI, noms fr/en, symbole, volume par défaut, auteur, licence, source, page, disponible, mots-clés du pack |
+| `cards` | id, composée, noms, symbole, volume d'ensemble, mots-clés de l'utilisateur (null : ceux du pack) |
 | `card_sounds` | carte, son, volume relatif, position |
 | `pages` | id, noms, symbole, intégrée, position |
 | `page_cards` | page, carte, position |
@@ -98,13 +119,15 @@ Une carte simple a l'identifiant `s:<id du son>` : réimporter un pack retrouve 
 | 7 | Pages personnalisées, sélecteur, cartes composées, scènes | Essai sur appareil |
 | 8 | Réglages, langues, export/import de pages | Lint (chaînes manquantes) |
 | 9 | Fichiers du dépôt : README, licence, contribution, modèles, métadonnées F-Droid | Relecture |
+| 10 | Mode vocal : voix minutées, mots-clés, Vosk, service micro, transcription de débogage | Tests JVM (`VoiceTest`, `MixEngineTest`) ; essai sur appareil |
 
 ## 5. Stratégie de test
 
 - **Tests JVM** (`./gradlew testDebugUnitTest`) : `MixEngine` avec de faux lecteurs et un temps virtuel, courbe de volume, validation des manifestes, contrôle des chemins d'archive, export de pages.
 - **Tests d'écran sur JVM** (Robolectric) : l'appli réelle — base, pack de base, moteur — pilotée à travers l'interface Compose : pages intégrées, mode direct, mode plan, création d'une page, écrans secondaires. Chaque test écrit une capture dans `app/build/screens/`.
 - **Lint Android** (`./gradlew lint`) : chaînes non traduites, permissions, API.
-- **Essais sur appareil** (non automatisés) : raccord des boucles, charge de 12 lecteurs, lecture écran éteint, notification et casque Bluetooth, TalkBack. Ce sont les critères de sortie des lots 0 et 1 ; ils ne peuvent pas être validés sans téléphone.
+- **Mode vocal sur JVM** : `VoiceTest` pilote `VoiceController` avec un faux reconnaisseur (page, pause, arrêt automatique, transcription) ; Vosk lui-même n'est pas chargé.
+- **Essais sur appareil** (non automatisés) : raccord des boucles, charge de 12 lecteurs, lecture écran éteint, notification et casque Bluetooth, TalkBack, reconnaissance vocale réelle (précision, délai, écran éteint). Ce sont les critères de sortie des lots 0 et 1 ; ils ne peuvent pas être validés sans téléphone.
 
 ## 6. Correspondance avec les lots
 
