@@ -37,6 +37,8 @@ data class ManifestSound(
     val author: String = "",
     val license: String,
     val source: String = "",
+    /** Empreinte SHA-256 du fichier audio, en hexadécimal ; obligatoire dans un pack signé. */
+    val sha256: String? = null,
 )
 
 /** Raison précise d'un refus d'import, affichée dans le bilan. */
@@ -57,15 +59,28 @@ enum class PackError {
     FILE_MISSING,
     TOO_LARGE,
     RESERVED_ID,
+    FIELD_TOO_LONG,
+    HASH_MISMATCH,
+    SIGNATURE_INVALID,
+    SIGNATURE_REQUIRED,
+    CHANGED_DURING_IMPORT,
     IO,
 }
 
 class PackException(val error: PackError, val detail: String = "") : Exception("$error $detail")
 
 object PackFormat {
-    const val VERSION = 1
+    /** Versions de format lisibles ; la 2 ajoute les empreintes et la signature. */
+    val VERSIONS = setOf(1, 2)
     const val MANIFEST = "manifest.json"
     const val LICENSES = "LICENSES.md"
+    const val SIGNATURE = "manifest.sig"
+    const val SIGNING_KEY = "signing-key.pub"
+    const val MAX_SIGNATURE_BYTES = 16 * 1024
+    const val MAX_SYMBOL = 64
+    const val MAX_AUTHOR = 200
+    const val MAX_LICENSE = 64
+    const val MAX_SOURCE = 500
     const val MAX_UNCOMPRESSED_BYTES = 500L * 1024 * 1024
     const val MAX_MANIFEST_BYTES = 1024 * 1024
     const val MAX_SOUNDS = 500
@@ -75,6 +90,11 @@ object PackFormat {
     val BUILT_IN_PAGES = setOf("nature", "ville", "technologique", "meteo", "transports")
 
     private val ID = Regex("[a-z0-9][a-z0-9._-]{0,63}")
+    private val SHA256 = Regex("[0-9a-f]{64}")
+
+    // Liste fermée : CC0, domaine public, CC BY et CC BY-SA, avec version et juridiction éventuelles.
+    private val LICENSE = Regex("CC0(-1\\.0)?|PUBLIC-DOMAIN|CC-BY(-SA)?(-[1-4]\\.[0-9](-[A-Z]{2,3})?)?")
+    private val RESTRICTED = Regex("(^|-)(NC|ND|NONCOMMERCIAL|NODERIVS|NODERIVATIVES)(-|$)")
     private val json = Json { ignoreUnknownKeys = true }
 
     fun parse(text: String): PackManifest = try {
@@ -85,7 +105,7 @@ object PackFormat {
 
     /** Vérifie tout ce qui peut l'être sans ouvrir les fichiers audio. */
     fun validate(manifest: PackManifest) {
-        if (manifest.format != VERSION) throw PackException(PackError.UNKNOWN_FORMAT, manifest.format.toString())
+        if (manifest.format !in VERSIONS) throw PackException(PackError.UNKNOWN_FORMAT, manifest.format.toString())
         if (!ID.matches(manifest.id)) throw PackException(PackError.INVALID_ID, manifest.id)
         if (manifest.version < 1) throw PackException(PackError.INVALID_ID, "version ${manifest.version}")
         requireName(manifest.name, manifest.id)
@@ -95,6 +115,7 @@ object PackFormat {
         for (page in manifest.pages) {
             if (!ID.matches(page.id)) throw PackException(PackError.INVALID_ID, page.id)
             requireName(page.name, page.id)
+            requireLength(page.symbol, MAX_SYMBOL, page.id)
             pages += page.id
         }
         val ids = HashSet<String>()
@@ -111,13 +132,24 @@ object PackFormat {
             if (sound.page !in pages && sound.page !in BUILT_IN_PAGES) {
                 throw PackException(PackError.UNKNOWN_PAGE, sound.page)
             }
+            requireLength(sound.license, MAX_LICENSE, sound.id)
             if (!isLicenseAllowed(sound.license)) throw PackException(PackError.FORBIDDEN_LICENSE, sound.license)
+            requireLength(sound.symbol, MAX_SYMBOL, sound.id)
+            requireLength(sound.author, MAX_AUTHOR, sound.id)
+            requireLength(sound.source, MAX_SOURCE, sound.id)
+            if (sound.sha256 != null && !SHA256.matches(sound.sha256)) {
+                throw PackException(PackError.HASH_MISMATCH, sound.file)
+            }
         }
     }
 
     private fun requireName(name: ManifestName, owner: String) {
         if (name.fr.isBlank() && name.en.isBlank()) throw PackException(PackError.INVALID_NAME, owner)
         if (name.fr.length > 60 || name.en.length > 60) throw PackException(PackError.INVALID_NAME, owner)
+    }
+
+    private fun requireLength(value: String, max: Int, owner: String) {
+        if (value.length > max) throw PackException(PackError.FIELD_TOO_LONG, owner)
     }
 
     /** Chemin relatif simple : pas de remontée, pas de racine, pas de lecteur, pas d'antislash. */
@@ -128,11 +160,10 @@ object PackFormat {
         return path.split('/').none { it.isEmpty() || it == "." || it == ".." }
     }
 
-    /** CC0 et CC BY (et CC BY-SA) sont acceptées ; jamais « NC » ni « ND ». */
+    /** CC0, domaine public, CC BY et CC BY-SA sont acceptées ; rien d'autre, jamais « NC » ni « ND ». */
     fun isLicenseAllowed(license: String): Boolean {
         val id = license.trim().uppercase().replace(' ', '-')
-        if (id.isEmpty()) return false
-        if (Regex("(^|-)N[CD](-|$)").containsMatchIn(id)) return false
-        return id.startsWith("CC0") || id.startsWith("CC-BY") || id == "PUBLIC-DOMAIN"
+        if (RESTRICTED.containsMatchIn(id)) return false
+        return LICENSE.matches(id)
     }
 }

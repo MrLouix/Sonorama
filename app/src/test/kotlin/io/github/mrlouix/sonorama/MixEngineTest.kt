@@ -26,7 +26,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class MixEngineTest {
 
-    private class FakePlayer(val uri: String) : LoopPlayer {
+    private class FakePlayer(val uri: String, val fail: () -> Unit) : LoopPlayer {
         var gain = 0f
             private set
         var playing = false
@@ -63,7 +63,7 @@ class MixEngineTest {
 
         val engine = MixEngine(
             scope = scope.backgroundScope,
-            players = LoopPlayerFactory { uri -> FakePlayer(uri).also { it.isReady = readyOnCreate; players += it } },
+            players = LoopPlayerFactory { uri, onError -> FakePlayer(uri, onError).also { it.isReady = readyOnCreate; players += it } },
             cards = { cards[it] },
             persistence = object : MixPersistence {
                 override fun saveVolume(cardId: String, volume: Int) {
@@ -149,7 +149,9 @@ class MixEngineTest {
         assertEquals(listOf("rain", "wind"), h.engine.state.value.active)
         assertTrue(h.live().all { it.playing })
         advanceTimeBy(600)
-        assertTrue(h.live().all { !it.playing && it.gain == 0f })
+        // En pause, les lecteurs sont rendus au système après le fondu, à gain nul.
+        assertTrue(h.live().isEmpty())
+        assertTrue(h.players.all { it.released && it.gain == 0f })
 
         h.engine.resume()
         assertTrue(h.live().all { it.playing })
@@ -403,5 +405,49 @@ class MixEngineTest {
         assertTrue(state.active.isEmpty() && state.plan.isEmpty())
         assertTrue(h.players.all { it.released })
         assertEquals(emptyList<String>(), h.savedMix)
+    }
+
+    @Test
+    fun `a sound that fails to play stops its card instead of leaving it silently active`() = runTest {
+        val h = Harness(this)
+        h.card("rain")
+        h.card("broken")
+        h.engine.tap("rain")
+        h.engine.tap("broken")
+        advanceTimeBy(600)
+
+        h.player("broken-1").fail()
+        assertEquals(listOf("rain"), h.engine.state.value.active)
+        assertTrue(h.player("broken-1").released)
+        assertTrue(MixEvent.PLAYBACK_FAILED in h.events)
+        assertTrue(h.engine.state.value.playing)
+        assertEquals(listOf("rain"), h.savedMix)
+
+        // Le dernier son qui échoue vide le mix, qui repasse à l'arrêt.
+        h.player("rain-1").fail()
+        assertFalse(h.engine.state.value.playing)
+    }
+
+    @Test
+    fun `the limit is checked again when the plan is applied`() = runTest {
+        val h = Harness(this)
+        h.card("scene", sounds = 10)
+        h.card("x", sounds = 2)
+        h.card("y")
+        h.engine.tap("scene")
+        h.engine.setMode(MixMode.PLAN)
+        h.engine.tap("x")
+        // La carte grossit entre sa mise au plan et la validation (carte composée modifiée).
+        h.card("x", sounds = 12)
+        h.engine.setVolume("scene", 40, commit = true)
+        h.engine.applyPlan()
+        advanceTimeBy(3000)
+
+        assertEquals(listOf("scene"), h.engine.state.value.active)
+        assertEquals(10, h.engine.state.value.soundCount)
+        assertEquals(10, h.live().size)
+        assertTrue(MixEvent.LIMIT_REACHED in h.events)
+        // Le reste du plan est appliqué.
+        assertEquals(40, h.savedVolumes["scene"])
     }
 }

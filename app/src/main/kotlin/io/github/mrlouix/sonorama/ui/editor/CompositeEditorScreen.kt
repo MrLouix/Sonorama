@@ -51,6 +51,7 @@ import io.github.mrlouix.sonorama.R
 import io.github.mrlouix.sonorama.data.Library
 import io.github.mrlouix.sonorama.data.Limits
 import io.github.mrlouix.sonorama.ui.CompositeDraft
+import io.github.mrlouix.sonorama.ui.AppSnackbarHost
 import io.github.mrlouix.sonorama.ui.MainViewModel
 import io.github.mrlouix.sonorama.ui.ScreenTopBar
 import io.github.mrlouix.sonorama.ui.Symbols
@@ -68,6 +69,7 @@ fun CompositeEditorScreen(viewModel: MainViewModel) {
     var confirmDelete by remember { mutableStateOf(false) }
 
     Scaffold(
+        snackbarHost = { AppSnackbarHost() },
         topBar = {
             ScreenTopBar(
                 title = stringResource(

@@ -22,4 +22,6 @@ signalements portant sur :
 
 - une archive qui écrit hors du dossier privé de l'appli (traversée de chemin) ;
 - une archive qui épuise le stockage ou la mémoire (bombe de décompression) ;
-- un manifeste ou un fichier de page qui fait planter l'appli ou corrompt la bibliothèque.
+- un manifeste ou un fichier de page qui fait planter l'appli ou corrompt la bibliothèque ;
+- un contournement de la signature des packs ou de la clé mémorisée au premier import
+  (voir [docs/format-pack.md](docs/format-pack.md)).

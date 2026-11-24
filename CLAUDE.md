@@ -40,3 +40,6 @@ Les tests d'écran (`ScreensTest`, Robolectric) écrivent des captures dans `app
 - Les cartes de la grille portent leur nom dans leur description d'accessibilité : dans les tests, les chercher avec `hasContentDescription`, pas `onNodeWithText`.
 - `InputStream.readNBytes` n'existe qu'à partir d'Android 13 : utiliser `readAtMost` (`PackArchive.kt`).
 - L'appli n'a pas encore été essayée sur un appareil ; les sons du pack de base sont synthétisés.
+- Toute modification du schéma Room demande une migration et un cas dans `MigrationTest` ; le schéma exporté est dans `app/schemas/`.
+- Une clé privée de signature de pack (`*.pem`) ne se commite jamais et ne se crée pas dans une session d'assistant : `OFFICIAL_KEYS` ne reçoit que des empreintes fournies par le propriétaire.
+- Les clés des listes Compose (`LazyColumn`, `LazyVerticalGrid`) viennent d'identifiants, jamais de noms affichés : un pack peut répéter un nom.

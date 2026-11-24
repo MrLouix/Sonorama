@@ -5,18 +5,24 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Color
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import io.github.mrlouix.sonorama.audio.PlaybackService
+import io.github.mrlouix.sonorama.data.ThemeMode
 import io.github.mrlouix.sonorama.ui.MainViewModel
 import io.github.mrlouix.sonorama.ui.SonoramaRoot
 import java.util.Locale
@@ -45,7 +51,25 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // Les touches de volume règlent toujours le volume média, même sans son en cours.
         volumeControlStream = AudioManager.STREAM_MUSIC
-        setContent { SonoramaRoot(viewModel, onLanguageChanged = ::recreate) }
+        setContent {
+            val theme = viewModel.settings.collectAsStateWithLifecycle().value.theme
+            val dark = when (theme) {
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+            }
+            // Les icônes des barres système suivent le thème choisi dans l'appli, pas celui du système.
+            DisposableEffect(dark) {
+                val style = if (dark) {
+                    SystemBarStyle.dark(Color.TRANSPARENT)
+                } else {
+                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+                }
+                enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
+                onDispose {}
+            }
+            SonoramaRoot(viewModel, onLanguageChanged = ::recreate)
+        }
         askForNotificationsOnce()
     }
 
@@ -57,6 +81,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onStop() {
+        // La pré-écoute n'a ni notification ni commande : elle ne doit pas survivre à la sortie de l'appli.
+        viewModel.stopPreview()
         controller?.let(MediaController::releaseFuture)
         controller = null
         super.onStop()

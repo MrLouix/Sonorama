@@ -75,7 +75,7 @@ Flux unidirectionnel : l'interface envoie des commandes au `MainViewModel`, qui 
 
 | Table | Colonnes principales |
 | --- | --- |
-| `packs` | id, version, noms fr/en, intégré, installé |
+| `packs` | id, version, noms fr/en, intégré, installé, clé du signataire, empreinte de l'archive |
 | `sounds` | id (`pack/son`), pack, URI, noms fr/en, symbole, volume par défaut, auteur, licence, source, page, disponible |
 | `cards` | id, composée, noms, symbole, volume d'ensemble |
 | `card_sounds` | carte, son, volume relatif, position |

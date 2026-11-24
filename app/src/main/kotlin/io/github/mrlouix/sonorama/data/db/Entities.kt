@@ -12,6 +12,10 @@ data class PackEntity(
     val nameEn: String,
     val builtIn: Boolean,
     val installed: Boolean,
+    /** Empreinte de la clé qui a signé le pack, mémorisée au premier import ; null s'il n'est pas signé. */
+    val signerKey: String? = null,
+    /** Empreinte SHA-256 de l'archive ZIP importée ; null pour le pack de base. */
+    val archiveSha256: String? = null,
 )
 
 @Entity(tableName = "sounds", indices = [Index("packId")])

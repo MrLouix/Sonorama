@@ -23,13 +23,14 @@ de cartes, un bouton play/pause, aucun compte, aucune publicité, aucun accès r
 - **Arrière-plan** : lecture écran éteint, commandes dans la notification, sur l'écran verrouillé et au casque.
 - **Pages personnalisées** : vos cartes favorites sur une page à vous, exportable en fichier.
 - **Cartes composées et scènes** : plusieurs sons sous une seule carte, ou le mix en cours enregistré tel quel.
-- **Packs de sons** : 24 boucles fournies, d'autres par fichiers ZIP importés depuis le téléphone.
+- **Packs de sons** : 24 boucles fournies, d'autres par fichiers ZIP importés depuis le téléphone ; les
+  packs peuvent être signés, et toute mise à jour demande confirmation.
 - **Accessibilité** : TalkBack, grandes cibles tactiles, thèmes clair et sombre, français et anglais.
 
 ## État du projet
 
 Le code couvre les lots 0 à 3 de la [spécification](docs/specification.md). Il compile, passe le lint et
-32 tests automatisés, dont des tests d'écran qui pilotent l'appli réelle sur JVM.
+45 tests automatisés, dont des tests d'écran qui pilotent l'appli réelle sur JVM.
 
 **Il n'a pas encore tourné sur un téléphone.** Restent donc à valider sur appareil, avant toute publication :
 
@@ -64,14 +65,15 @@ Le pack de base se régénère avec `python3 tools/generate_base_pack.py` (Pytho
 | `app/src/main/assets/basepack` | Pack de base : manifeste, 24 boucles Ogg, licences |
 | `app/src/test` | Tests du moteur, des packs et des écrans |
 | `tools/generate_base_pack.py` | Synthèse des boucles du pack de base |
+| `tools/sign_pack.py` | Signature d'un pack de sons |
 | `docs/` | [Spécification](docs/specification.md), [plan de codage](docs/plan-de-codage.md), [format des packs](docs/format-pack.md) |
 | `fastlane/metadata` | Fiche de l'appli pour F-Droid |
 
 ## Fabriquer un pack de sons
 
 Un pack est une archive ZIP contenant un `manifest.json`, des boucles Ogg Vorbis et un `LICENSES.md`.
-Le format est décrit dans [docs/format-pack.md](docs/format-pack.md) ; c'est aussi la voie pour ajouter
-ses propres sons.
+Le format est décrit dans [docs/format-pack.md](docs/format-pack.md), avec la signature des packs ; c'est
+aussi la voie pour ajouter ses propres sons.
 
 ## Vie privée
 

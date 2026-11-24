@@ -1,5 +1,7 @@
 package io.github.mrlouix.sonorama.data
 
+import io.github.mrlouix.sonorama.data.pack.PackTrust
+
 /** Texte disponible en français et en anglais. */
 data class LocalizedName(val fr: String, val en: String) {
     fun get(french: Boolean): String = if (french) fr.ifBlank { en } else en.ifBlank { fr }
@@ -12,6 +14,11 @@ data class Pack(
     val builtIn: Boolean,
     val installed: Boolean,
     val soundCount: Int,
+    val trust: PackTrust,
+    /** Empreinte de la clé du signataire ; null si le pack n'est pas signé. */
+    val signerKey: String?,
+    /** Empreinte SHA-256 de l'archive importée ; null pour le pack de base. */
+    val archiveSha256: String?,
 )
 
 data class Sound(
