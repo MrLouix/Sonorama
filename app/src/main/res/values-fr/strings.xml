@@ -205,4 +205,53 @@
         <item quantity="many">%d changements préparés ne sont pas encore appliqués. Les appliquer maintenant ou les abandonner ?</item>
         <item quantity="other">%d changements préparés ne sont pas encore appliqués. Les appliquer maintenant ou les abandonner ?</item>
     </plurals>
+
+    <!-- Mode vocal -->
+    <string name="action_voice">Mode vocal</string>
+    <string name="voice_state_off">Éteint</string>
+    <string name="voice_state_on">À l\'écoute</string>
+    <string name="voice_state_paused">En pause, micro coupé</string>
+    <string name="voice_status_starting">Démarrage du micro…</string>
+    <string name="voice_status_paused">En pause : le micro est coupé jusqu\'à la reprise</string>
+    <string name="voice_last_keyword">Dernier mot-clé entendu : %1$s</string>
+    <plurals name="voice_keyword_count">
+        <item quantity="one">À l\'écoute de %d mot-clé sur cette page</item>
+        <item quantity="many">À l\'écoute de %d mots-clés sur cette page</item>
+        <item quantity="other">À l\'écoute de %d mots-clés sur cette page</item>
+    </plurals>
+    <string name="voice_channel">Mode vocal</string>
+    <string name="voice_notification_title">Micro actif</string>
+    <string name="voice_notification_paused">Micro coupé (pause)</string>
+    <string name="voice_stop">Couper</string>
+    <string name="card_state_voice">lancée à la voix</string>
+    <string name="action_keywords">Mots-clés</string>
+    <string name="keywords_title">Mots-clés · %1$s</string>
+    <string name="keywords_intro">Le mode vocal lance une carte quand il entend un de ses mots-clés. Langue de l\'histoire : %1$s.</string>
+    <string name="keywords_field">Mots-clés</string>
+    <string name="keywords_hint">Séparés par des virgules. Indiquez chaque forme : loup, loups.</string>
+    <string name="keyword_unknown">inconnu du modèle vocal</string>
+    <string name="keywords_unknown_warning">Les mots grisés sont inconnus du modèle vocal : ils ne seront jamais entendus.</string>
+    <string name="action_reset_keywords">Mots du pack</string>
+    <string name="message_voice_no_model">Aucun modèle vocal pour la langue de l\'histoire. Importez-en un dans les réglages.</string>
+    <string name="message_voice_no_keywords">Aucune carte de cette page n\'a encore de mot-clé.</string>
+    <string name="message_voice_auto_stopped">Mode vocal éteint après 5 minutes sans mot-clé.</string>
+    <string name="message_voice_failed">Le micro n\'a pas pu être utilisé. Le mode vocal est éteint.</string>
+    <string name="message_mic_denied">Le mode vocal a besoin du micro.</string>
+    <string name="message_mic_denied_forever">L\'accès au micro est bloqué. Autorisez-le dans les réglages d\'Android.</string>
+    <string name="action_open_settings">Ouvrir</string>
+    <string name="message_model_installed">Modèle vocal installé.</string>
+    <string name="message_model_unknown">Ce fichier n\'est pas un modèle Vosk officiel connu de Sonorama.</string>
+    <string name="message_model_too_large">Ce fichier est trop gros pour être un modèle vocal.</string>
+    <string name="message_model_unreadable">Le modèle vocal n\'a pas pu être lu.</string>
+    <string name="settings_voice">Mode vocal</string>
+    <string name="settings_voice_duration">Durée d\'un son lancé à la voix</string>
+    <string name="seconds_whole">%1$d s</string>
+    <string name="settings_story_language">Langue de l\'histoire</string>
+    <string name="settings_follow_app">Celle de l\'appli</string>
+    <string name="settings_voice_models">Modèles vocaux</string>
+    <string name="model_bundled">Intégré à l\'appli</string>
+    <string name="model_installed">Installé</string>
+    <string name="model_missing">Non installé</string>
+    <string name="action_import">Importer</string>
+    <string name="model_how_to">Téléchargez %1$s sur %2$s, puis importez-le ici. Seuls les modèles officiels sont acceptés.</string>
 </resources>

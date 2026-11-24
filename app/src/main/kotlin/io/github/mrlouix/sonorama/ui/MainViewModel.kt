@@ -22,6 +22,10 @@ import io.github.mrlouix.sonorama.data.Settings
 import io.github.mrlouix.sonorama.data.ThemeMode
 import io.github.mrlouix.sonorama.data.pack.ImportState
 import io.github.mrlouix.sonorama.data.pack.readAtMost
+import io.github.mrlouix.sonorama.voice.ModelImportError
+import io.github.mrlouix.sonorama.voice.ModelImportException
+import io.github.mrlouix.sonorama.voice.VoiceNotice
+import io.github.mrlouix.sonorama.voice.VoiceState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,6 +45,7 @@ sealed interface Screen {
     data object PageEditor : Screen
     data object CardPicker : Screen
     data object CompositeEditor : Screen
+    data object Keywords : Screen
 }
 
 /** Page en cours d'édition ; [pageId] nul pour une nouvelle page. */
@@ -59,7 +64,7 @@ data class CompositeDraft(
         get() = name.isNotBlank() && sounds.size in Limits.COMPOSITE_SOUNDS_MIN..Limits.COMPOSITE_SOUNDS_MAX
 }
 
-enum class MessageAction { OPEN_PACKS }
+enum class MessageAction { OPEN_PACKS, OPEN_APP_SETTINGS, OPEN_SETTINGS }
 
 data class UiMessage(
     @StringRes val text: Int,
@@ -73,11 +78,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val engine: MixEngine = container.engine
     private val repository = container.repository
     private val preview = container.preview
+    private val voice = container.voice
 
     val library: StateFlow<Library> = repository.library
     val mix: StateFlow<MixState> = engine.state
     val settings: StateFlow<Settings> = container.settings
     val importState: StateFlow<ImportState> = container.importer.state
+    val voiceState: StateFlow<VoiceState> = voice.state
+    /** Langues dont le modèle de reconnaissance est prêt. */
+    val speechModels: StateFlow<Set<String>> = container.speechModels.installed
+
+    /** Page dont on modifie les mots-clés. */
+    private val _keywordsPage = MutableStateFlow<String?>(null)
+    val keywordsPage: StateFlow<String?> = _keywordsPage.asStateFlow()
 
     private val _backStack = MutableStateFlow<List<Screen>>(listOf(Screen.Main))
     val backStack: StateFlow<List<Screen>> = _backStack.asStateFlow()
@@ -107,6 +120,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     MixEvent.CARD_UNAVAILABLE -> say(R.string.message_card_unavailable)
                     MixEvent.CHANGED_WHILE_PAUSED -> say(R.string.message_paused)
                     MixEvent.PLAYBACK_FAILED -> say(R.string.message_playback_failed)
+                }
+            }
+        }
+        viewModelScope.launch {
+            voice.notices.collect { notice ->
+                when (notice) {
+                    VoiceNotice.NO_MODEL -> _messages.tryEmit(
+                        UiMessage(R.string.message_voice_no_model, actionLabel = R.string.settings_title, action = MessageAction.OPEN_SETTINGS),
+                    )
+                    VoiceNotice.NO_KEYWORDS -> say(R.string.message_voice_no_keywords)
+                    VoiceNotice.AUTO_STOPPED -> say(R.string.message_voice_auto_stopped)
+                    VoiceNotice.FAILED -> say(R.string.message_voice_failed)
                 }
             }
         }
@@ -140,6 +165,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _compositeDraft.value = null
             }
             Screen.PageEditor -> _pageDraft.value = null
+            Screen.Keywords -> _keywordsPage.value = null
             else -> Unit
         }
         _backStack.value = stack.dropLast(1)
@@ -169,7 +195,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setVolume(cardId: String, volume: Int, commit: Boolean) = engine.setVolume(cardId, volume, commit)
 
     fun togglePlayback() {
-        if (mix.value.active.isEmpty()) say(R.string.message_empty_mix) else engine.togglePlayback()
+        val state = mix.value
+        if (state.active.isEmpty() && !state.paused) say(R.string.message_empty_mix) else engine.togglePlayback()
     }
 
     /** Renvoie faux si le plan n'est pas vide : l'écran demande alors quoi en faire. */
@@ -183,6 +210,72 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun stopCard(cardId: String) {
         if (mix.value.isActive(cardId)) engine.tap(cardId)
+    }
+
+    // -------------------------------------------------------------- mode vocal
+
+    /** Page affichée : le mode vocal n'écoute que ses mots-clés. */
+    fun setVisiblePage(pageId: String?) = voice.setPage(pageId)
+
+    /** À appeler une fois la permission du micro accordée, appli visible. */
+    fun toggleVoice() = voice.toggle()
+
+    fun micDenied(permanently: Boolean) {
+        if (permanently) {
+            _messages.tryEmit(
+                UiMessage(R.string.message_mic_denied_forever, actionLabel = R.string.action_open_settings, action = MessageAction.OPEN_APP_SETTINGS),
+            )
+        } else {
+            say(R.string.message_mic_denied)
+        }
+    }
+
+    fun openKeywords(pageId: String) {
+        _keywordsPage.value = pageId
+        open(Screen.Keywords)
+    }
+
+    fun storyLanguage(): String = voice.language()
+
+    fun setCardKeywords(cardId: String, language: String, words: List<String>) {
+        viewModelScope.launch { repository.setCardKeywords(cardId, language, words) }
+    }
+
+    fun resetCardKeywords(cardId: String) {
+        viewModelScope.launch { repository.resetCardKeywords(cardId) }
+    }
+
+    /** Mots que le modèle ne reconnaîtra jamais. */
+    suspend fun unknownWords(language: String, words: Collection<String>): Set<String> = voice.unknownWords(language, words)
+
+    fun setVoiceDuration(seconds: Int) {
+        viewModelScope.launch { container.settingsStore.setVoiceDuration(seconds) }
+    }
+
+    fun setStoryLanguage(language: String) {
+        viewModelScope.launch { container.settingsStore.setStoryLanguage(language) }
+    }
+
+    fun importSpeechModel(uri: Uri) {
+        viewModelScope.launch {
+            try {
+                container.speechModels.import(uri)
+                say(R.string.message_model_installed)
+            } catch (e: ModelImportException) {
+                say(
+                    when (e.error) {
+                        ModelImportError.UNKNOWN_MODEL -> R.string.message_model_unknown
+                        ModelImportError.TOO_LARGE -> R.string.message_model_too_large
+                        ModelImportError.UNREADABLE -> R.string.message_model_unreadable
+                    },
+                )
+            }
+        }
+    }
+
+    fun deleteSpeechModel(language: String) {
+        if (voiceState.value.enabled && voiceState.value.language == language) voice.disable()
+        viewModelScope.launch { container.speechModels.delete(language) }
     }
 
     // ------------------------------------------------------------------ pages

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="debug_voice_title">Essais (version de débogage seulement)</string>
+    <string name="debug_transcript_switch">Enregistrer le texte entendu (texte seul)</string>
+    <plurals name="debug_transcript_lines">
+        <item quantity="one">%d phrase enregistrée</item>
+        <item quantity="many">%d phrases enregistrées</item>
+        <item quantity="other">%d phrases enregistrées</item>
+    </plurals>
+    <string name="debug_transcript_export">Exporter en CSV</string>
+    <string name="debug_transcript_clear">Effacer</string>
+    <string name="debug_recognition_mode">Reconnaissance</string>
+    <string name="debug_mode_full">Phrase entière</string>
+    <string name="debug_mode_keywords">Mots-clés seulement</string>
+</resources>

@@ -33,6 +33,8 @@ data class Sound(
     val source: String,
     val pageId: String,
     val available: Boolean,
+    /** Mots-clés du pack, par langue. */
+    val keywords: Map<String, List<String>> = emptyMap(),
 )
 
 data class CardSound(val soundId: String, val relativeVolume: Int)
@@ -50,6 +52,10 @@ data class Card(
     val themePageId: String?,
     /** Pack d'origine d'une carte simple, pour proposer de le réimporter. */
     val packId: String?,
+    /** Mots-clés du mode vocal, par langue : ceux de l'utilisateur s'il en a choisi, sinon ceux du pack. */
+    val keywords: Map<String, List<String>> = emptyMap(),
+    /** Vrai si l'utilisateur a modifié les mots-clés : une mise à jour du pack ne les touche pas. */
+    val customKeywords: Boolean = false,
 )
 
 data class Page(

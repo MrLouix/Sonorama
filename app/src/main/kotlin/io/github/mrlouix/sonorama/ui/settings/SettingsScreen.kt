@@ -1,5 +1,7 @@
 package io.github.mrlouix.sonorama.ui.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -41,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.mrlouix.sonorama.BuildConfig
 import io.github.mrlouix.sonorama.R
+import io.github.mrlouix.sonorama.data.Settings
 import io.github.mrlouix.sonorama.data.SettingsStore
 import io.github.mrlouix.sonorama.data.ThemeMode
 import io.github.mrlouix.sonorama.ui.AppSnackbarHost
@@ -48,6 +52,8 @@ import io.github.mrlouix.sonorama.ui.MainViewModel
 import io.github.mrlouix.sonorama.ui.Screen
 import io.github.mrlouix.sonorama.ui.ScreenTopBar
 import io.github.mrlouix.sonorama.ui.isFrench
+import io.github.mrlouix.sonorama.voice.SpeechModels
+import io.github.mrlouix.sonorama.voice.VariantFeatures
 import kotlin.math.roundToInt
 
 @Composable
@@ -85,6 +91,8 @@ fun SettingsScreen(viewModel: MainViewModel, onLanguageChanged: () -> Unit) {
                 }
             }
 
+            VoiceSettings(viewModel, settings)
+
             Spacer(Modifier.height(16.dp))
             HorizontalDivider()
             Row(
@@ -105,6 +113,78 @@ fun SettingsScreen(viewModel: MainViewModel, onLanguageChanged: () -> Unit) {
             Text(stringResource(R.string.about_text), color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
+}
+
+@Composable
+private fun VoiceSettings(viewModel: MainViewModel, settings: Settings) {
+    val installed by viewModel.speechModels.collectAsStateWithLifecycle()
+    val importModel = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) viewModel.importSpeechModel(uri)
+    }
+    SectionTitle(R.string.settings_voice)
+    var seconds by remember(settings.voiceDurationSec) { mutableFloatStateOf(settings.voiceDurationSec.toFloat()) }
+    val durationLabel = stringResource(R.string.settings_voice_duration)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(durationLabel, modifier = Modifier.weight(1f))
+        Text(stringResource(R.string.seconds_whole, seconds.roundToInt()), style = MaterialTheme.typography.labelLarge)
+    }
+    Slider(
+        value = seconds,
+        onValueChange = { seconds = it.roundToInt().toFloat() },
+        onValueChangeFinished = { viewModel.setVoiceDuration(seconds.roundToInt()) },
+        valueRange = Settings.MIN_VOICE_SECONDS.toFloat()..Settings.MAX_VOICE_SECONDS.toFloat(),
+        steps = Settings.MAX_VOICE_SECONDS - Settings.MIN_VOICE_SECONDS - 1,
+        modifier = Modifier.semantics { contentDescription = durationLabel },
+    )
+
+    Text(stringResource(R.string.settings_story_language), modifier = Modifier.padding(top = 8.dp))
+    Column(Modifier.selectableGroup()) {
+        for ((code, label) in listOf("" to R.string.settings_follow_app, "fr" to R.string.language_french, "en" to R.string.language_english)) {
+            Choice(label, settings.storyLanguage == code) { viewModel.setStoryLanguage(code) }
+        }
+    }
+
+    Text(stringResource(R.string.settings_voice_models), modifier = Modifier.padding(top = 8.dp))
+    for (model in SpeechModels.KNOWN) {
+        val name = stringResource(if (model.language == "fr") R.string.language_french else R.string.language_english)
+        val ready = model.language in installed
+        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(name)
+                Text(
+                    stringResource(
+                        when {
+                            model.bundled -> R.string.model_bundled
+                            ready -> R.string.model_installed
+                            else -> R.string.model_missing
+                        },
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (!model.bundled) {
+                if (ready) {
+                    OutlinedButton(onClick = { viewModel.deleteSpeechModel(model.language) }) {
+                        Text(stringResource(R.string.action_delete))
+                    }
+                } else {
+                    OutlinedButton(onClick = { importModel.launch(arrayOf("application/zip", "application/octet-stream")) }) {
+                        Text(stringResource(R.string.action_import))
+                    }
+                }
+            }
+        }
+        if (!model.bundled && !ready) {
+            Text(
+                stringResource(R.string.model_how_to, model.fileName, SpeechModels.DOWNLOAD_PAGE),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+    Spacer(Modifier.height(12.dp))
+    VariantFeatures.VoiceTestSettings()
 }
 
 @Composable

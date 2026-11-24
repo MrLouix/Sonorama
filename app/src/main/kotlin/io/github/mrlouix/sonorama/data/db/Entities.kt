@@ -1,5 +1,6 @@
 package io.github.mrlouix.sonorama.data.db
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -34,6 +35,8 @@ data class SoundEntity(
     val pageId: String,
     val position: Int,
     val available: Boolean,
+    /** Mots-clés du mode vocal déclarés par le pack, encodés par [Keywords]. */
+    @ColumnInfo(defaultValue = "") val keywords: String = "",
 )
 
 @Entity(tableName = "cards")
@@ -45,6 +48,8 @@ data class CardEntity(
     val symbol: String,
     val volume: Int,
     val createdAt: Long,
+    /** Mots-clés choisis par l'utilisateur, encodés par [Keywords] ; null : ceux du pack. */
+    val keywords: String? = null,
 )
 
 @Entity(tableName = "card_sounds", primaryKeys = ["cardId", "position"], indices = [Index("soundId")])

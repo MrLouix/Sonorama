@@ -16,6 +16,9 @@ import kotlinx.coroutines.runBlocking
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+/** Mode vocal : reconnaissance de toute la phrase, ou limitée aux mots-clés de la page. */
+enum class RecognitionMode { FULL, KEYWORDS_ONLY }
+
 data class Settings(
     val fades: FadeSettings = FadeSettings(),
     val theme: ThemeMode = ThemeMode.SYSTEM,
@@ -23,7 +26,18 @@ data class Settings(
     val language: String = "",
     val lastMix: List<String> = emptyList(),
     val notificationsAsked: Boolean = false,
-)
+    /** Durée de jeu d'une carte déclenchée à la voix. */
+    val voiceDurationSec: Int = DEFAULT_VOICE_SECONDS,
+    /** Langue de l'histoire (`fr`, `en`) ; chaîne vide pour suivre la langue de l'appli. */
+    val storyLanguage: String = "",
+    val recognitionMode: RecognitionMode = RecognitionMode.FULL,
+) {
+    companion object {
+        const val MIN_VOICE_SECONDS = 3
+        const val MAX_VOICE_SECONDS = 30
+        const val DEFAULT_VOICE_SECONDS = 5
+    }
+}
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("settings")
 
@@ -45,6 +59,10 @@ class SettingsStore(context: Context) {
         language = p[LANGUAGE].orEmpty(),
         lastMix = p[LAST_MIX].orEmpty().split('\n').filter { it.isNotEmpty() },
         notificationsAsked = p[NOTIFICATIONS_ASKED] ?: false,
+        voiceDurationSec = (p[VOICE_SECONDS] ?: Settings.DEFAULT_VOICE_SECONDS)
+            .coerceIn(Settings.MIN_VOICE_SECONDS, Settings.MAX_VOICE_SECONDS),
+        storyLanguage = p[STORY_LANGUAGE].orEmpty(),
+        recognitionMode = RecognitionMode.entries.firstOrNull { it.name == p[RECOGNITION_MODE] } ?: RecognitionMode.FULL,
     )
 
     suspend fun setFades(fades: FadeSettings) = store.edit {
@@ -61,6 +79,14 @@ class SettingsStore(context: Context) {
 
     suspend fun setNotificationsAsked() = store.edit { it[NOTIFICATIONS_ASKED] = true }
 
+    suspend fun setVoiceDuration(seconds: Int) = store.edit {
+        it[VOICE_SECONDS] = seconds.coerceIn(Settings.MIN_VOICE_SECONDS, Settings.MAX_VOICE_SECONDS)
+    }
+
+    suspend fun setStoryLanguage(language: String) = store.edit { it[STORY_LANGUAGE] = language }
+
+    suspend fun setRecognitionMode(mode: RecognitionMode) = store.edit { it[RECOGNITION_MODE] = mode.name }
+
     companion object {
         const val MAX_FADE_MS = 5000
         private val FADE_IN = intPreferencesKey("fade_in_ms")
@@ -70,5 +96,8 @@ class SettingsStore(context: Context) {
         private val LANGUAGE = stringPreferencesKey("language")
         private val LAST_MIX = stringPreferencesKey("last_mix")
         private val NOTIFICATIONS_ASKED = booleanPreferencesKey("notifications_asked")
+        private val VOICE_SECONDS = intPreferencesKey("voice_seconds")
+        private val STORY_LANGUAGE = stringPreferencesKey("story_language")
+        private val RECOGNITION_MODE = stringPreferencesKey("recognition_mode")
     }
 }

@@ -31,7 +31,12 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowLooper
+import io.github.mrlouix.sonorama.voice.SpeechEngine
+import io.github.mrlouix.sonorama.voice.SpeechListener
+import io.github.mrlouix.sonorama.voice.SpeechSession
+import java.io.File
 
 /**
  * Tests d'écran sur JVM : l'appli réelle (base, pack de base, moteur) derrière l'interface Compose.
@@ -117,6 +122,9 @@ class ScreensTest {
         rule.runOnUiThread { viewModel.open(Screen.Settings) }
         rule.onNodeWithText("Fondus").assertExists()
         capture("settings")
+        rule.onNodeWithText("Enregistrer le texte entendu (texte seul)").performScrollTo()
+        rule.onNodeWithText("Modèles vocaux").assertExists()
+        capture("settings-voice")
         rule.runOnUiThread {
             viewModel.back()
             viewModel.open(Screen.Packs)
@@ -194,5 +202,48 @@ class ScreensTest {
         card("Oiseaux").performClick()
         rule.onNodeWithText("Appliquer 1 changement").assertExists()
         capture("big-font")
+    }
+
+    /** Reconnaisseur factice : pas de micro ni de code natif sur la JVM. */
+    private class ScriptedSpeech : SpeechEngine {
+        var listener: SpeechListener? = null
+
+        override fun start(modelDir: File, grammar: List<String>?, transcribe: Boolean, listener: SpeechListener): SpeechSession {
+            this.listener = listener
+            return SpeechSession { this.listener = null }
+        }
+
+        override fun unknownWords(modelDir: File, words: Collection<String>): Set<String> =
+            words.filterTo(HashSet()) { it.equals("grignotin", ignoreCase = true) }
+    }
+
+    @Test
+    fun `voice mode starts a card for a while and keywords are edited per page`() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        shadowOf(app).grantPermissions(android.Manifest.permission.RECORD_AUDIO)
+        val speech = ScriptedSpeech()
+        (app as SonoramaApp).container.speechEngine = { speech }
+
+        rule.onNodeWithContentDescription("Mode vocal").performClick()
+        waitFor { viewModel.voiceState.value.listening }
+        speech.listener!!.onPartial("il entendit un oiseau")
+        waitFor { "s:sonorama.base/birds" in viewModel.mix.value.timed }
+        rule.onNodeWithText("Dernier mot-clé entendu : oiseau").assertExists()
+        capture("voice")
+
+        viewModel.openKeywords("nature")
+        rule.waitForIdle()
+        rule.onNodeWithText("Mots-clés · Nature").assertExists()
+        capture("keywords")
+
+        viewModel.setCardKeywords("s:sonorama.base/birds", "fr", listOf("merle", "Grignotin"))
+        waitFor { viewModel.library.value.cards.getValue("s:sonorama.base/birds").customKeywords }
+        waitFor { rule.onAllNodes(hasText("Les mots grisés", substring = true)).fetchSemanticsNodes().isNotEmpty() }
+        capture("keywords-edited")
+        viewModel.resetCardKeywords("s:sonorama.base/birds")
+        waitFor { !viewModel.library.value.cards.getValue("s:sonorama.base/birds").customKeywords }
+        viewModel.back()
+        viewModel.toggleVoice()
+        waitFor { !viewModel.voiceState.value.enabled }
     }
 }

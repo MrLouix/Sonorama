@@ -75,6 +75,7 @@ class MixEngineTest {
                 }
             },
             fades = { fades },
+            clock = { scope.testScheduler.currentTime },
         )
 
         init {
@@ -449,5 +450,161 @@ class MixEngineTest {
         assertTrue(MixEvent.LIMIT_REACHED in h.events)
         // Le reste du plan est appliqué.
         assertEquals(40, h.savedVolumes["scene"])
+    }
+
+    // ------------------------------------------------------------- mode vocal
+
+    @Test
+    fun `a voice trigger plays the card for the set duration with short fades`() = runTest {
+        val h = Harness(this)
+        h.card("wolf")
+        h.engine.trigger(listOf("wolf"), 5000)
+        val player = h.player("wolf-1")
+        assertTrue(h.engine.state.value.playing)
+        assertEquals(5000L, h.engine.state.value.timed["wolf"]?.durationMs)
+        assertEquals(5000L, h.engine.state.value.timed["wolf"]?.endsAtMs)
+        advanceTimeBy(560)
+        assertEquals(1f, player.gain, 1e-4f)
+        advanceTimeBy(4500)
+        assertTrue(player.gain < 1f)
+        assertTrue(h.engine.state.value.timed.isEmpty())
+        advanceTimeBy(1100)
+        assertTrue(player.released)
+        assertFalse(h.engine.state.value.playing)
+        // Un son vocal ne fait pas partie du mix restauré au lancement.
+        assertEquals(emptyList<String>(), h.savedMix)
+    }
+
+    @Test
+    fun `hearing the keyword again restarts the countdown`() = runTest {
+        val h = Harness(this)
+        h.card("wolf")
+        h.engine.trigger(listOf("wolf"), 5000)
+        advanceTimeBy(4000)
+        h.engine.trigger(listOf("wolf"), 5000)
+        assertEquals(1, h.players.size)
+        advanceTimeBy(4000)
+        assertTrue("wolf" in h.engine.state.value.active)
+        assertEquals(1f, h.player("wolf-1").gain, 1e-4f)
+        advanceTimeBy(2200)
+        assertFalse("wolf" in h.engine.state.value.active)
+    }
+
+    @Test
+    fun `a card already in the mix is left alone by the voice`() = runTest {
+        val h = Harness(this)
+        h.card("rain")
+        h.engine.tap("rain")
+        advanceTimeBy(600)
+        h.engine.trigger(listOf("rain"), 5000)
+        assertTrue(h.engine.state.value.timed.isEmpty())
+        advanceTimeBy(6000)
+        assertEquals(listOf("rain"), h.engine.state.value.active)
+        assertEquals(1, h.players.size)
+    }
+
+    @Test
+    fun `nothing is triggered while paused`() = runTest {
+        val h = Harness(this)
+        h.card("rain")
+        h.card("wolf")
+        h.engine.tap("rain")
+        advanceTimeBy(600)
+        h.engine.pause()
+        h.engine.trigger(listOf("wolf"), 5000)
+        assertEquals(listOf("rain"), h.engine.state.value.active)
+        assertTrue(h.players.none { it.uri == "wolf-1" })
+    }
+
+    @Test
+    fun `pausing stops voice sounds and keeps the mix`() = runTest {
+        val h = Harness(this)
+        h.card("rain")
+        h.card("wolf")
+        h.engine.tap("rain")
+        advanceTimeBy(600)
+        h.engine.trigger(listOf("wolf"), 10_000)
+        advanceTimeBy(600)
+        h.engine.pause()
+        advanceTimeBy(600)
+        assertEquals(listOf("rain"), h.engine.state.value.active)
+        assertTrue(h.player("wolf-1").released)
+        h.engine.resume()
+        advanceTimeBy(600)
+        assertEquals(listOf("rain"), h.engine.state.value.active)
+    }
+
+    @Test
+    fun `a pause with only voice sounds stops playback`() = runTest {
+        val h = Harness(this)
+        h.card("wolf")
+        h.engine.trigger(listOf("wolf"), 10_000)
+        advanceTimeBy(600)
+        h.engine.pause()
+        assertFalse(h.engine.state.value.playing)
+        assertTrue(h.engine.state.value.active.isEmpty())
+        // La pause tient même mix vide : rien ne se déclenche avant la reprise.
+        assertTrue(h.engine.state.value.paused)
+        h.engine.trigger(listOf("wolf"), 5000)
+        assertTrue(h.engine.state.value.active.isEmpty())
+        h.engine.resume()
+        assertFalse(h.engine.state.value.paused)
+        h.engine.trigger(listOf("wolf"), 5000)
+        assertEquals(listOf("wolf"), h.engine.state.value.active)
+    }
+
+    @Test
+    fun `at the limit the oldest voice sound makes room, mix sounds never do`() = runTest {
+        val h = Harness(this)
+        h.card("mix", sounds = 10)
+        h.card("a")
+        h.card("b")
+        h.card("c")
+        h.engine.tap("mix")
+        h.engine.trigger(listOf("a"), 5000)
+        advanceTimeBy(100)
+        h.engine.trigger(listOf("b"), 5000)
+        h.engine.trigger(listOf("c"), 5000)
+        assertEquals(listOf("mix", "b", "c"), h.engine.state.value.active)
+        assertEquals(12, h.engine.state.value.soundCount)
+
+        h.card("big", sounds = 3)
+        h.engine.trigger(listOf("big"), 5000)
+        assertTrue(MixEvent.LIMIT_REACHED in h.events)
+        assertTrue("mix" in h.engine.state.value.active)
+    }
+
+    @Test
+    fun `one keyword can start several cards together`() = runTest {
+        val h = Harness(this)
+        h.card("rain")
+        h.card("thunder")
+        h.engine.trigger(listOf("rain", "thunder"), 5000)
+        assertEquals(listOf("rain", "thunder"), h.engine.state.value.active)
+        assertEquals(setOf("rain", "thunder"), h.engine.state.value.timed.keys)
+    }
+
+    @Test
+    fun `voice triggers are immediate in plan mode and leave the plan alone`() = runTest {
+        val h = Harness(this)
+        h.card("rain")
+        h.card("wolf")
+        h.engine.setMode(MixMode.PLAN)
+        h.engine.tap("rain")
+        h.engine.trigger(listOf("wolf"), 5000)
+        assertEquals(listOf("wolf"), h.engine.state.value.active)
+        assertEquals(setOf("rain"), h.engine.state.value.plan.keys)
+    }
+
+    @Test
+    fun `tapping a voice card stops it like any active card`() = runTest {
+        val h = Harness(this)
+        h.card("wolf")
+        h.engine.trigger(listOf("wolf"), 5000)
+        advanceTimeBy(600)
+        h.engine.tap("wolf")
+        assertTrue(h.engine.state.value.timed.isEmpty())
+        advanceTimeBy(6000)
+        assertTrue(h.engine.state.value.active.isEmpty())
     }
 }

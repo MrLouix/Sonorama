@@ -39,6 +39,8 @@ data class ManifestSound(
     val source: String = "",
     /** Empreinte SHA-256 du fichier audio, en hexadécimal ; obligatoire dans un pack signé. */
     val sha256: String? = null,
+    /** Mots-clés du mode vocal, par code de langue (`fr`, `en`) ; facultatif, ignoré des anciennes versions. */
+    val keywords: Map<String, List<String>> = emptyMap(),
 )
 
 /** Raison précise d'un refus d'import, affichée dans le bilan. */
@@ -81,6 +83,8 @@ object PackFormat {
     const val MAX_AUTHOR = 200
     const val MAX_LICENSE = 64
     const val MAX_SOURCE = 500
+    const val MAX_KEYWORDS = 30
+    const val MAX_KEYWORD = 40
     const val MAX_UNCOMPRESSED_BYTES = 500L * 1024 * 1024
     const val MAX_MANIFEST_BYTES = 1024 * 1024
     const val MAX_SOUNDS = 500
@@ -91,6 +95,7 @@ object PackFormat {
 
     private val ID = Regex("[a-z0-9][a-z0-9._-]{0,63}")
     private val SHA256 = Regex("[0-9a-f]{64}")
+    private val LANGUAGE = Regex("[a-z]{2}")
 
     // Liste fermée : CC0, domaine public, CC BY et CC BY-SA, avec version et juridiction éventuelles.
     private val LICENSE = Regex("CC0(-1\\.0)?|PUBLIC-DOMAIN|CC-BY(-SA)?(-[1-4]\\.[0-9](-[A-Z]{2,3})?)?")
@@ -139,6 +144,12 @@ object PackFormat {
             requireLength(sound.source, MAX_SOURCE, sound.id)
             if (sound.sha256 != null && !SHA256.matches(sound.sha256)) {
                 throw PackException(PackError.HASH_MISMATCH, sound.file)
+            }
+            for ((language, words) in sound.keywords) {
+                if (!LANGUAGE.matches(language) || words.size > MAX_KEYWORDS) {
+                    throw PackException(PackError.FIELD_TOO_LONG, sound.id)
+                }
+                words.forEach { requireLength(it, MAX_KEYWORD, sound.id) }
             }
         }
     }

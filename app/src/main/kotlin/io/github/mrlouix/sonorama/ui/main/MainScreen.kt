@@ -1,5 +1,8 @@
 package io.github.mrlouix.sonorama.ui.main
 
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -54,7 +57,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -86,6 +92,8 @@ fun MainScreen(viewModel: MainViewModel) {
     val library by viewModel.library.collectAsStateWithLifecycle()
     val mix by viewModel.mix.collectAsStateWithLifecycle()
     val pageToShow by viewModel.pageToShow.collectAsStateWithLifecycle()
+    val voice by viewModel.voiceState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val pages = library.pages
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState { pages.size }
@@ -106,6 +114,27 @@ fun MainScreen(viewModel: MainViewModel) {
     }
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) viewModel.importPage(uri)
+    }
+
+    val micLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            viewModel.toggleVoice()
+        } else {
+            // Sans explication à proposer, Android ne redemandera plus : il faut passer par ses réglages.
+            val activity = context as? Activity
+            val permanently = activity != null &&
+                !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.RECORD_AUDIO)
+            viewModel.micDenied(permanently)
+        }
+    }
+    val onVoice = {
+        val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        if (voice.enabled || granted) viewModel.toggleVoice() else micLauncher.launch(Manifest.permission.RECORD_AUDIO)
+    }
+
+    // Le mode vocal n'écoute que les mots-clés de la page affichée.
+    LaunchedEffect(pagerState.currentPage, pages) {
+        viewModel.setVisiblePage(pages.getOrNull(pagerState.currentPage)?.id)
     }
 
     LaunchedEffect(pageToShow, pages) {
@@ -146,6 +175,8 @@ fun MainScreen(viewModel: MainViewModel) {
         bottomBar = {
             BottomBar(
                 mix = mix,
+                voice = voice,
+                onVoice = onVoice,
                 onTogglePlayback = viewModel::togglePlayback,
                 onMode = { mode -> if (!viewModel.setMode(mode)) askPlan = true },
                 onOpenNowPlaying = { sheetOpen = true },
@@ -171,6 +202,7 @@ fun MainScreen(viewModel: MainViewModel) {
                             onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
                             onEdit = { viewModel.editPage(page.id) },
                             onDuplicate = { pageToDuplicate = page },
+                            onKeywords = { viewModel.openKeywords(page.id) },
                             onExport = {
                                 pageToExport = page.id
                                 exportLauncher.launch("${page.name.fr}.sonorama-page.json")
@@ -312,6 +344,7 @@ private fun PageTab(
     onClick: () -> Unit,
     onEdit: () -> Unit,
     onDuplicate: () -> Unit,
+    onKeywords: () -> Unit,
     onExport: () -> Unit,
     onDelete: () -> Unit,
     onMove: (Int) -> Unit,
@@ -369,6 +402,7 @@ private fun PageTab(
             )
             if (!page.builtIn) item(R.string.action_edit, onEdit)
             item(R.string.action_duplicate, onDuplicate)
+            item(R.string.action_keywords, onKeywords)
             if (!page.builtIn) item(R.string.action_export, onExport)
             if (canMoveLeft) item(R.string.action_move_left) { onMove(-1) }
             if (canMoveRight) item(R.string.action_move_right) { onMove(1) }
@@ -427,6 +461,7 @@ private fun PageGrid(page: Page, library: Library, mix: MixState, viewModel: Mai
                 volume = change?.volume ?: mix.volumes[card.id] ?: card.volume,
                 volumePlanned = change?.volume != null,
                 available = card.available,
+                timed = mix.timed[card.id],
                 onTap = { viewModel.tapCard(card) },
                 onVolumeChange = { viewModel.setVolume(card.id, it, false) },
                 onVolumeCommit = { viewModel.setVolume(card.id, it, true) },

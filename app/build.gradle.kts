@@ -1,3 +1,7 @@
+import java.io.File
+import java.net.URI
+import java.security.MessageDigest
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -41,13 +45,24 @@ android {
 
     androidResources {
         // Les boucles Ogg sont déjà compressées : les stocker telles quelles permet la lecture directe.
-        noCompress += "ogg"
+        // Le modèle vocal est un ZIP : le recompresser ne gagnerait rien.
+        noCompress += listOf("ogg", "zip")
     }
 
     bundle {
         // La langue se choisit dans l'appli : toutes les langues restent dans le paquet.
         language {
             enableSplit = false
+        }
+    }
+
+    splits {
+        // Vosk embarque environ 10 Mo de code natif par processeur : un APK par processeur.
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
+            isUniversalApk = false
         }
     }
 
@@ -75,6 +90,76 @@ android {
         // Les chaînes « %d sur %d » ne sont pas des pluriels.
         disable += "PluralsCandidate"
         abortOnError = true
+    }
+}
+
+// ---------------------------------------------------------------- modèle vocal
+
+/** Modèle Vosk intégré à l'APK : téléchargé une fois, vérifié par son empreinte, gardé en cache. */
+abstract class DownloadVoskModel : DefaultTask() {
+    @get:Input abstract val url: Property<String>
+
+    @get:Input abstract val sha256: Property<String>
+
+    @get:Internal abstract val cacheDir: DirectoryProperty
+
+    @get:OutputDirectory abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun download() {
+        val name = url.get().substringAfterLast('/')
+        val cached = cacheDir.get().file(name).asFile
+        fun sha(file: File): String {
+            val digest = MessageDigest.getInstance("SHA-256")
+            file.inputStream().use { input ->
+                val buffer = ByteArray(1 shl 16)
+                while (true) {
+                    val read = input.read(buffer)
+                    if (read < 0) break
+                    digest.update(buffer, 0, read)
+                }
+            }
+            return digest.digest().joinToString("") { "%02x".format(it) }
+        }
+        if (!cached.isFile || sha(cached) != sha256.get()) {
+            cached.parentFile.mkdirs()
+            val partial = File(cached.path + ".part")
+            logger.lifecycle("Téléchargement du modèle vocal ${url.get()}")
+            URI(url.get()).toURL().openStream().use { input -> partial.outputStream().use { input.copyTo(it) } }
+            val actual = sha(partial)
+            if (actual != sha256.get()) {
+                partial.delete()
+                throw GradleException("Empreinte inattendue pour $name : $actual")
+            }
+            partial.renameTo(cached)
+        }
+        val target = outputDir.get().dir("vosk").asFile
+        target.deleteRecursively()
+        target.mkdirs()
+        cached.copyTo(File(target, name))
+    }
+}
+
+val voskModel = tasks.register<DownloadVoskModel>("downloadVoskModel") {
+    // Doit rester identique à SpeechModels.BUNDLED (app/src/main/kotlin/.../voice/SpeechModels.kt).
+    url = "https://alphacephei.com/vosk/models/vosk-model-small-fr-0.22.zip"
+    sha256 = "cabf6180e177eb9b3a9a9d43a437bd5e549f3a7d09525e5d69a3fed787be12ad"
+    cacheDir = layout.dir(provider { gradle.gradleUserHomeDir.resolve("caches/sonorama-vosk") })
+    outputDir = layout.buildDirectory.dir("generated/vosk")
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.sources.assets?.addGeneratedSourceDirectory(voskModel, DownloadVoskModel::outputDir)
+        // Un code de version distinct par processeur, comme l'attendent les magasins d'applis.
+        val abiCodes = mapOf("armeabi-v7a" to 1, "arm64-v8a" to 2, "x86" to 3, "x86_64" to 4)
+        variant.outputs.forEach { output ->
+            val abi = output.filters.firstOrNull {
+                it.filterType == com.android.build.api.variant.FilterConfiguration.FilterType.ABI
+            }?.identifier
+            val code = abiCodes[abi] ?: 0
+            output.versionCode.set((android.defaultConfig.versionCode ?: 1) * 10 + code)
+        }
     }
 }
 
@@ -108,6 +193,10 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.guava)
+
+    // Reconnaissance vocale hors ligne. JNA est pris en AAR, avec ses bibliothèques natives Android.
+    implementation(libs.vosk.android) { exclude(group = "net.java.dev.jna") }
+    implementation(libs.jna) { artifact { type = "aar" } }
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
