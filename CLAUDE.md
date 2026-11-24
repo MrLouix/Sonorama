@@ -22,7 +22,11 @@ Prérequis : JDK 21 et SDK Android (plateforme 37).
 ./gradlew assembleDebug
 ./gradlew assembleRelease               # APK optimisés, un par processeur, non signés
 python3 tools/generate_base_pack.py     # régénère les 24 boucles (numpy, ffmpeg)
+python3 tools/prepare_loop.py src out.ogg   # boucle prête pour un pack ; --check pour contrôler
+python3 tools/check_pack.py dossier/ --zip  # vérifie un pack comme l'appli, puis le zippe
 ```
+
+Pour un pack de sons, suivre les skills `.claude/skills/constituer-pack` et `.claude/skills/generer-sons-ia`.
 
 Les tests d'écran (`ScreensTest`, Robolectric) écrivent des captures dans `app/build/screens/` : les regarder après tout changement d'interface.
 
@@ -45,4 +49,6 @@ Les tests d'écran (`ScreensTest`, Robolectric) écrivent des captures dans `app
 - La première compilation télécharge le modèle Vosk français depuis alphacephei.com (empreinte vérifiée, cache `~/.gradle/caches/sonorama-vosk`) : l'hôte doit être joignable.
 - La transcription du mode vocal vit dans `src/debug/` et ne doit jamais passer dans `src/main/` : l'APK de publication ne la contient pas. `src/release/` en garde une version vide de même signature.
 - Une grammaire Vosk s'envoie en UTF-8 brut : un mot échappé (`\u00ea`) est ignoré.
+- `tools/check_pack.py` recopie les règles de `PackManifest.kt` : toute règle d'import modifiée se reporte dans les deux.
+- Aucun son ElevenLabs dans un pack : ses conditions interdisent la distribution des effets seuls ou en collection.
 - Les clés des listes Compose (`LazyColumn`, `LazyVerticalGrid`) viennent d'identifiants, jamais de noms affichés : un pack peut répéter un nom.

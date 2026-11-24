@@ -15,6 +15,10 @@ le projet applique le [versionnage sémantique](https://semver.org/lang/fr/).
 - Modèle vocal français intégré ; modèle anglais officiel importable. Langue de l'histoire réglable.
 - Version de débogage seulement : transcription du texte entendu, exportable en CSV.
 - Un APK par type de processeur.
+- Outils de pack : `tools/prepare_loop.py` (boucle sans raccord, niveau et Ogg du pack de base, contrôle),
+  `tools/check_pack.py` (règles de l'appli, durée et format audio, symboles, vocabulaire Vosk, ZIP),
+  `tools/generate_ambience.py` (Stable Audio Open en local).
+- Skills Claude Code `constituer-pack` et `generer-sons-ia`.
 
 - Signature des packs (ECDSA P-256) : mention « officiel », « signé » ou « non signé », clé mémorisée au
   premier import, outil `tools/sign_pack.py`. Format de pack 2, le format 1 reste lisible.

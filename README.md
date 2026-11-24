@@ -76,6 +76,10 @@ Le pack de base se régénère avec `python3 tools/generate_base_pack.py` (Pytho
 | `app/src/test` | Tests du moteur, des packs et des écrans |
 | `tools/generate_base_pack.py` | Synthèse des boucles du pack de base |
 | `tools/sign_pack.py` | Signature d'un pack de sons |
+| `tools/prepare_loop.py` | Fichier audio → boucle Ogg prête pour un pack (raccord, niveau, compression) |
+| `tools/check_pack.py` | Vérification d'un dossier de pack avant publication, et fabrication du ZIP |
+| `tools/generate_ambience.py` | Génération d'extraits d'ambiance par IA (Stable Audio Open, en local) |
+| `.claude/skills/` | Skills Claude Code : constituer un pack, générer des sons par IA |
 | `docs/` | [Spécification](docs/specification.md), [plan de codage](docs/plan-de-codage.md), [format des packs](docs/format-pack.md) |
 | `fastlane/metadata` | Fiche de l'appli pour F-Droid |
 
@@ -84,6 +88,15 @@ Le pack de base se régénère avec `python3 tools/generate_base_pack.py` (Pytho
 Un pack est une archive ZIP contenant un `manifest.json`, des boucles Ogg Vorbis et un `LICENSES.md`.
 Le format est décrit dans [docs/format-pack.md](docs/format-pack.md), avec la signature des packs ; c'est
 aussi la voie pour ajouter ses propres sons.
+
+```bash
+python3 tools/prepare_loop.py source.wav mon-pack/audio/pluie.ogg   # boucle de 60 s, niveau et Ogg du pack de base
+python3 tools/check_pack.py mon-pack/ --zip                         # mêmes règles que l'appli, puis mon-pack.zip
+```
+
+Avec Claude Code, les skills `constituer-pack` et `generer-sons-ia` guident toute la démarche. Les sons
+générés par ElevenLabs ne peuvent pas entrer dans un pack : ses conditions interdisent de les distribuer
+seuls ou en collection.
 
 ## Vie privée
 
