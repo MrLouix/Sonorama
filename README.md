@@ -32,7 +32,7 @@ de cartes, un bouton play/pause, aucun compte, aucune publicité, aucun accès r
 ## État du projet
 
 Le code couvre les lots 0 à 3 de la [spécification](docs/specification.md) et le mode vocal (section 14). Il
-compile, passe le lint et 69 tests automatisés, dont des tests d'écran qui pilotent l'appli réelle sur JVM.
+compile, passe le lint et 71 tests automatisés, dont des tests d'écran qui pilotent l'appli réelle sur JVM.
 
 **Il n'a pas encore tourné sur un téléphone.** Restent donc à valider sur appareil, avant toute publication :
 
@@ -54,7 +54,7 @@ Prérequis : JDK 21 et SDK Android (plateforme 37). Avec Android Studio, ouvrez 
 ./gradlew assembleDebug        # app/build/outputs/apk/debug/app-<processeur>-debug.apk
 ./gradlew testDebugUnitTest    # tests ; captures d'écran dans app/build/screens/
 ./gradlew lintDebug
-./gradlew assembleRelease      # APK optimisés, un par processeur, non signés
+./gradlew assembleRelease      # APK optimisés (environ 64 Mo, dont 42 de modèle vocal), non signés
 ```
 
 Un APK est produit par type de processeur : `arm64-v8a` convient à presque tous les téléphones récents.
