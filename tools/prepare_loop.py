@@ -9,7 +9,7 @@
   4. bouclage par fondu enchaîné à puissance constante : la fin est fondue dans le début,
      si bien que le dernier échantillon enchaîne naturellement sur le premier ;
   5. recentrage de la stéréo au-delà de 2 dB d'écart entre les canaux ;
-  6. normalisation au niveau du pack de base (−23 LUFS, crête réelle ≤ −1,5 dBTP, limiteur) ;
+  6. normalisation au niveau du pack de base (−17 LUFS, crête réelle ≤ −1,5 dBTP, limiteur) ;
   7. encodage Ogg Vorbis (qualité 4, environ 128 kbit/s), sans métadonnées ;
   8. contrôle : saut au point de bouclage, écart de niveau entre la fin et le début.
 
@@ -37,7 +37,7 @@ import numpy as np
 SR = 44100
 MIN_DURATION = 30.0
 MAX_DURATION = 120.0
-LOUDNESS = -23.0  # LUFS intégrés (ITU-R BS.1770)
+LOUDNESS = -17.0  # LUFS intégrés (ITU-R BS.1770)
 PEAK_DB = -1.5  # crête réelle (suréchantillonnée 4 fois)
 MAX_LIMITING_DB = 8.0  # au-delà, le limiteur s'entendrait : on laisse le son plus bas
 MAX_BALANCE_DB = 2.0

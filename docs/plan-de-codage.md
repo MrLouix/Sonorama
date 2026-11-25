@@ -82,7 +82,7 @@ Flux unidirectionnel : l'interface envoie des commandes au `MainViewModel`, qui 
 | Mix vide | La première carte activée lance la lecture ; un mix qui se vide repasse à l'arrêt | « Chaque action a un effet audible en moins d'une seconde » |
 | Activation en pause | Silencieuse (spécification), avec un message « En pause » | Éviter de croire à une panne |
 | Pack de base | 33 boucles sous CC0 : 19 enregistrements de Freesound (`tools/prepare_recordings.py`) et 14 sons **synthétisés** (`tools/generate_base_pack.py`) | Un son synthétisé est remplacé quand un enregistrement libre a été écouté et accepté ; sources hors de Git, recette versionnée dans `tools/recordings.json` |
-| Niveau des sons | −23 LUFS intégrés, crête réelle ≤ −1,5 dBTP | À RMS égal, l'écart perçu dépassait 17 LU entre un son grave et un son aigu |
+| Niveau des sons | −17 LUFS intégrés, crête réelle ≤ −1,5 dBTP | À RMS égal, l'écart perçu dépassait 17 LU entre un son grave et un son aigu |
 | Format de pack | Un manifeste peut déclarer plusieurs pages ; le pack de base utilise le même format | Un seul chemin de code pour l'APK et les ZIP |
 | Symboles | Jeu Material Icons (Apache 2.0) via `material-icons-extended`, identifiés par leur nom Material | Même licence et mêmes noms que Material Symbols, sans embarquer de police |
 | Permission `WAKE_LOCK` | Ajoutée | Nécessaire à la lecture écran éteint pendant 2 h ; permission normale, sans invite |
