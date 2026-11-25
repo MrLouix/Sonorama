@@ -20,13 +20,30 @@ chaque nouveau pack** et prévenir l'utilisateur si une condition a changé.
 | **Stable Audio Open 1.0**, en local (`tools/generate_ambience.py`) | **Recommandé** | Stability AI Community License : les sons produits appartiennent à l'utilisateur, redistribuables. Gratuit sous un plafond de chiffre d'affaires (1 M$ par an) ; https://stability.ai/license |
 | Stable Audio 3.0 (Small, Medium, Small SFX), poids ouverts | Possible | Même licence ; le script vise la 1.0, l'adapter si `diffusers` prend en charge la 3.0 |
 | Synthèse procédurale (`tools/generate_base_pack.py`) | Possible | Sons originaux, CC0 sans réserve ; rendu plus artificiel |
-| **ElevenLabs** (effets sonores) | **Exclu** | Les conditions ElevenCreative interdisent de distribuer les effets seuls, en fichiers isolés ou dans une collection ou banque de sons : c'est ce qu'est un pack. Offre gratuite : ni usage commercial ni absence d'attribution. ElevenLabs peut aussi partager les sons générés avec d'autres utilisateurs. https://elevenlabs.io/creative-terms, https://elevenlabs.io/sound-effects-terms |
+| **ElevenLabs** (effets sonores) | **Exclu**, pack comme sons intégrés, sauf accord écrit | Conditions ElevenCreative (9 oct. 2026), Exhibit 4, section 2 : ni distribution des effets seuls, même gratuite, ni fichiers isolés, ni banque ou collection de sons. Voir « ElevenLabs » ci-dessous. https://elevenlabs.io/sound-effects-terms |
 | Meta AudioGen (AudioCraft) | À éviter | Poids sous CC BY-NC 4.0 ; rien ne garantit que les sons produits puissent passer sous CC0 |
 | Adobe Firefly (effets sonores) | À éviter | « Libres de droits pour un usage commercial », mais la redistribution des fichiers seuls n'est pas clarifiée |
 
-Si l'utilisateur tient à ElevenLabs : lui expliquer l'exclusion ci-dessus, avec le lien vers les conditions,
-et lui proposer Stable Audio Open. Ne pas générer de son ElevenLabs destiné à un pack, même privé : le
-manifeste exige une licence (CC0, CC BY) que ces sons ne peuvent pas porter.
+### ElevenLabs
+
+Conditions relues le 25 nov. 2026, par extraits (leur centre d'aide était inaccessible) ; ceci n'est pas un avis juridique.
+
+- **Pack indépendant** : interdit. C'est une collection de fichiers isolés, et le manifeste exige une licence
+  (CC0, CC BY, CC BY-SA) que ces sons ne peuvent pas porter. Vaut aussi pour un pack privé.
+- **Sons intégrés à l'APK** : les conditions autorisent l'usage dans une application, mais seulement combiné à
+  d'autres éléments. « Intégré et non téléchargeable » ne suffit pas, et Sonorama ne remplit pas la condition :
+  - les `.ogg` intégrés sont versionnés dans un dépôt public, donc téléchargeables un par un ;
+  - le pack de base est déclaré CC0, or ElevenLabs interdit d'accorder une licence sur un son isolé ou à des
+    conditions plus larges que les siennes ;
+  - la publication F-Droid prévue suppose des sons libres ;
+  - chaque carte joue un son seul : « collection de sons » ou produit concurrent, le texte ne tranche pas ;
+  - leur politique d'usage interdit les applis destinées aux moins de 18 ans sans accord écrit, et Sonorama sert
+    à lire des histoires aux enfants.
+- **Offre gratuite** : usage non commercial seulement.
+- **Seule voie** : un accord écrit (legal@elevenlabs.io) qui décrive l'appli, le dépôt public et F-Droid.
+
+Si l'utilisateur tient à ElevenLabs : lui expliquer ce qui précède, avec le lien vers les conditions, et lui
+proposer Stable Audio Open ou des enregistrements CC0 ou CC BY. Sans accord écrit, ne préparer aucun son ElevenLabs.
 
 **Licence à déclarer** : `CC0-1.0`. Un son généré sans apport créatif humain n'est en général pas protégé
 par le droit d'auteur (U.S. Copyright Office, rapport de janvier 2025) ; Creative Commons recommande CC0
