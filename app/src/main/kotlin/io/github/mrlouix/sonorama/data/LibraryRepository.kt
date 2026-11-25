@@ -12,6 +12,7 @@ import io.github.mrlouix.sonorama.data.db.PageEntity
 import io.github.mrlouix.sonorama.data.db.SoundEntity
 import io.github.mrlouix.sonorama.data.pack.KnownPack
 import io.github.mrlouix.sonorama.data.pack.ManifestSound
+import io.github.mrlouix.sonorama.data.pack.PackFormat
 import io.github.mrlouix.sonorama.data.pack.PackSignature
 import io.github.mrlouix.sonorama.data.pack.PackTrust
 import io.github.mrlouix.sonorama.data.pack.PackManifest
@@ -121,12 +122,16 @@ class LibraryRepository(private val db: AppDatabase, scope: CoroutineScope) {
             )
             dao.markSoundsUnavailable(packId)
             for (page in manifest.pages) {
+                if (page.id in PackFormat.MERGED_PAGES) continue
                 if (dao.page(page.id) == null) {
                     dao.upsertPage(
                         PageEntity(page.id, page.name.fr, page.name.en, page.symbol, true, dao.lastPagePosition() + 1),
                     )
+                } else if (builtIn) {
+                    dao.describePage(page.id, page.name.fr, page.name.en, page.symbol)
                 }
             }
+            if (builtIn) absorbMergedPages()
             var added = 0
             val now = System.currentTimeMillis()
             val entities = manifest.sounds.mapIndexed { index, s ->
@@ -135,7 +140,7 @@ class LibraryRepository(private val db: AppDatabase, scope: CoroutineScope) {
                 SoundEntity(
                     id = id, packId = packId, uri = uriOf(s), nameFr = s.name.fr, nameEn = s.name.en,
                     symbol = s.symbol, defaultVolume = s.defaultVolume.coerceIn(0, 100), author = s.author,
-                    license = s.license, source = s.source, pageId = s.page, position = index, available = true,
+                    license = s.license, source = s.source, pageId = PackFormat.pageId(s.page), position = index, available = true,
                     keywords = Keywords.encode(s.keywords),
                 )
             }
@@ -167,6 +172,21 @@ class LibraryRepository(private val db: AppDatabase, scope: CoroutineScope) {
             }
             added
         }
+
+    /** Vide les anciennes pages intégrées dans celle qui les remplace, à la suite de ses cartes. */
+    private suspend fun absorbMergedPages() {
+        for ((old, target) in PackFormat.MERGED_PAGES) {
+            if (dao.page(old) == null || dao.page(target) == null) continue
+            val present = dao.cardsOfPage(target)
+            val presentIds = present.map { it.cardId }.toSet()
+            var next = (present.maxOfOrNull { it.position } ?: -1) + 1
+            val moved = dao.cardsOfPage(old).filter { it.cardId !in presentIds }
+            dao.insertPageCards(moved.map { PageCardEntity(target, it.cardId, next++) })
+            dao.moveSounds(old, target)
+            dao.clearPage(old)
+            dao.deletePage(old)
+        }
+    }
 
     /** Marque le pack désinstallé ; ses cartes restent, grisées, sur les pages personnalisées. */
     suspend fun uninstallPack(packId: String) = db.withTransaction {

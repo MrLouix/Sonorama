@@ -31,8 +31,8 @@ le projet applique le [versionnage sémantique](https://semver.org/lang/fr/).
 - Mode plan : changements préparés sur plusieurs pages, appliqués ensemble en fondu croisé.
 - Volume par carte, par appui long puis glissement vertical, mémorisé entre les sessions.
 - Lecture en arrière-plan avec notification média, écran verrouillé et casque Bluetooth.
-- Pack de base de 33 boucles sous CC0 (Nature, Ville, Technologique, Météo, Transports, Féerique) : 19 enregistrements
-  de Freesound et 14 sons synthétisés, au niveau visé de −23 LUFS (la grotte reste plus basse).
+- Pack de base de 33 boucles sous CC0 (Nature et météo, Ville et machines, Féerique) : 19 enregistrements
+  de Freesound et 14 sons synthétisés, au niveau visé de −17 LUFS (la grotte reste plus basse).
 - Pages personnalisées : création, édition, réordonnancement, duplication, export et import.
 - Cartes composées et scènes (enregistrement du mix en cours).
 - Import de packs ZIP depuis le téléphone, avec vérifications et bilan ; écran des licences des sons.

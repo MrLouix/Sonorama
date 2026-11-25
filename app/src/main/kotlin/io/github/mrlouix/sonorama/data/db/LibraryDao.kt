@@ -45,6 +45,9 @@ interface LibraryDao {
     @Upsert
     suspend fun upsertSounds(sounds: List<SoundEntity>)
 
+    @Query("UPDATE sounds SET pageId = :to WHERE pageId = :from")
+    suspend fun moveSounds(from: String, to: String)
+
     @Query("UPDATE sounds SET available = 0 WHERE packId = :packId")
     suspend fun markSoundsUnavailable(packId: String)
 
@@ -94,6 +97,9 @@ interface LibraryDao {
 
     @Upsert
     suspend fun upsertPages(pages: List<PageEntity>)
+
+    @Query("UPDATE pages SET nameFr = :nameFr, nameEn = :nameEn, symbol = :symbol WHERE id = :id")
+    suspend fun describePage(id: String, nameFr: String, nameEn: String, symbol: String)
 
     @Query("DELETE FROM pages WHERE id = :id")
     suspend fun deletePage(id: String)
