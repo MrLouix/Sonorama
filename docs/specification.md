@@ -55,6 +55,7 @@ L'appli tient en un écran principal : des pages que l'on fait défiler horizont
 - Chaque carte montre un symbole et un nom sur deux lignes au plus.
 - États visuels : inactive, active (fond coloré et jauge de volume discrète), en attente d'activation, en attente d'arrêt. L'état ne repose jamais sur la couleur seule.
 - Appui court : activer ou désactiver. Appui long : réglage du volume (section 5).
+- Mode paramétrage (bouton de la barre haute) : un appui sur une carte, court ou long, ouvre ses mots-clés au lieu de la lancer ; un crayon sur chaque carte et un bandeau le rappellent. Le son en cours continue. On en sort par le bouton, « Terminé » ou le retour ; il n'est pas mémorisé d'une ouverture à l'autre.
 
 **Barre basse**
 
@@ -358,7 +359,7 @@ Ajouté le 24 nov. 2026. L'appli écoute la personne qui lit l'histoire et décl
 
 **Mots-clés**
 
-- Le pack déclare des mots-clés par son et par langue ; ils se modifient carte par carte depuis l'onglet de la page (appui long, « Mots-clés »), l'appui long sur une carte restant le réglage du volume. Les mots-clés modifiés priment et survivent aux mises à jour du pack ; un bouton rétablit ceux du pack.
+- Le pack déclare des mots-clés par son et par langue ; ils se modifient en touchant une carte en mode paramétrage, ou pour toute la page depuis son onglet (appui long, « Mots-clés ») ; l'appui long sur une carte reste le réglage du volume. Les mots-clés modifiés priment et survivent aux mises à jour du pack ; un bouton rétablit ceux du pack.
 - Une carte composée n'a que les mots-clés qu'on lui donne.
 - Casse et accents ignorés ; un mot-clé peut compter plusieurs mots ; les variantes (singulier, pluriel) sont déclarées une à une.
 - Un mot que le modèle de langue ne connaît pas est signalé et grisé : il ne sera jamais reconnu.

@@ -88,7 +88,7 @@ Flux unidirectionnel : l'interface envoie des commandes au `MainViewModel`, qui 
 | Réordonnancement | Glisser-déposer **et** boutons monter/descendre | Alternative accessible |
 | Navigation | Pile d'écrans dans le ViewModel, sans bibliothèque de navigation | Six écrans, aucune URL profonde |
 | Garder un son vocal | Un appui sur la carte la garde, un second l'arrête ; l'anneau porte une épingle | Aucun bouton de plus ; une cible minuscule ferait arrêter le son par erreur pendant la lecture |
-| Mots-clés | Modifiés depuis l'onglet de la page (appui long, « Mots-clés »), carte par carte | L'appui long sur une carte règle déjà le volume |
+| Mots-clés | Mode paramétrage : un appui sur une carte ouvre ses mots-clés ; toute la page depuis son onglet (appui long, « Mots-clés ») | L'appui long sur une carte règle déjà le volume |
 | Reconnaissance | Phrase entière par défaut ; mode limité aux mots-clés comparable dans l'APK de débogage | Essai sur voix de synthèse : le mode limité invente des mots-clés |
 | APK | Un APK par processeur, codes de version `version × 10 + processeur` | Vosk ajoute environ 10 Mo de code natif par processeur |
 

@@ -50,20 +50,22 @@ import io.github.mrlouix.sonorama.ui.Symbols
 import io.github.mrlouix.sonorama.ui.text
 import kotlinx.coroutines.delay
 
-/** Mots-clés du mode vocal pour chaque carte d'une page, dans la langue de l'histoire. */
+/** Mots-clés du mode vocal d'une carte, ou de chaque carte d'une page, dans la langue de l'histoire. */
 @Composable
 fun KeywordsScreen(viewModel: MainViewModel) {
     val library by viewModel.library.collectAsStateWithLifecycle()
     val pageId by viewModel.keywordsPage.collectAsStateWithLifecycle()
+    val cardId by viewModel.keywordsCard.collectAsStateWithLifecycle()
     val voice by viewModel.voiceState.collectAsStateWithLifecycle()
     val page = library.page(pageId ?: "")
     val language = voice.language
-    val cards = page?.cardIds.orEmpty().mapNotNull { library.cards[it] }
+    val single = cardId?.let { library.cards[it] }
+    val cards = if (cardId != null) listOfNotNull(single) else page?.cardIds.orEmpty().mapNotNull { library.cards[it] }
     Scaffold(
         snackbarHost = { AppSnackbarHost() },
         topBar = {
             ScreenTopBar(
-                stringResource(R.string.keywords_title, page?.name?.text().orEmpty()),
+                stringResource(R.string.keywords_title, (single?.name ?: page?.name)?.text().orEmpty()),
                 onBack = { viewModel.back() },
             )
         },

@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AddCircle
 import androidx.compose.material.icons.rounded.CloudOff
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.icons.rounded.RemoveCircle
@@ -82,6 +83,7 @@ private const val VOLUME_STEP = 10
 /**
  * Une carte de la grille. Appui court : [onTap]. Appui long puis glissement vertical :
  * réglage du volume, [onVolumeChange] pendant le geste et [onVolumeCommit] au relâchement.
+ * En paramétrage ([setup]), il n'y a plus de geste de volume : tout appui, court ou long, est un [onTap].
  */
 @Composable
 fun CardTile(
@@ -93,6 +95,8 @@ fun CardTile(
     available: Boolean,
     /** Carte lancée à la voix : un anneau montre le temps restant. */
     timed: TimedPlay?,
+    /** Mode paramétrage : l'appui ouvre les mots-clés de la carte. */
+    setup: Boolean,
     onTap: () -> Unit,
     onVolumeChange: (Int) -> Unit,
     onVolumeCommit: (Int) -> Unit,
@@ -136,10 +140,11 @@ fun CardTile(
         }
     }
     val voiceText = if (timed != null) ", " + stringResource(R.string.card_state_voice) else ""
-    val voiceCard = timed != null && status == CardStatus.ACTIVE
+    val voiceCard = timed != null && status == CardStatus.ACTIVE && !setup
     // Sur une carte lancée à la voix, l'appui la garde en lecture ; un second appui l'arrête.
     val toggleLabel = stringResource(
         when {
+            setup -> R.string.action_edit_keywords
             voiceCard -> R.string.action_keep_voice_card
             lit -> R.string.action_deactivate
             else -> R.string.action_activate
@@ -171,10 +176,14 @@ fun CardTile(
                     )
                 }
             }
-            .pointerInput(available) {
+            .pointerInput(available, setup) {
                 val travel = VOLUME_TRAVEL.toPx()
                 awaitEachGesture {
                     val down = awaitFirstDown()
+                    if (setup) {
+                        if (waitForUpOrCancellation() != null) currentTap()
+                        return@awaitEachGesture
+                    }
                     var longPress = false
                     var released = false
                     try {
@@ -215,12 +224,12 @@ fun CardTile(
             .clearAndSetSemantics {
                 contentDescription = "$name, $volumeText"
                 stateDescription = statusText + voiceText
-                role = Role.Switch
+                role = if (setup) Role.Button else Role.Switch
                 onClick(label = toggleLabel) {
                     currentTap()
                     true
                 }
-                if (available) {
+                if (available && !setup) {
                     customActions = listOf(
                         CustomAccessibilityAction(louder) {
                             currentCommit((currentVolume + VOLUME_STEP).coerceAtMost(VolumeCurve.MAX_VOLUME))
@@ -262,6 +271,7 @@ fun CardTile(
 
         // L'état se lit aussi par une icône, jamais par la couleur seule.
         val badge = when {
+            setup -> Icons.Rounded.Edit
             !available -> Icons.Rounded.CloudOff
             voiceCard -> null
             status == CardStatus.ACTIVE -> Icons.Rounded.GraphicEq

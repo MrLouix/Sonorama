@@ -92,6 +92,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _keywordsPage = MutableStateFlow<String?>(null)
     val keywordsPage: StateFlow<String?> = _keywordsPage.asStateFlow()
 
+    /** Carte dont on modifie les mots-clés, seule à l'écran ; nul pour toute la page. */
+    private val _keywordsCard = MutableStateFlow<String?>(null)
+    val keywordsCard: StateFlow<String?> = _keywordsCard.asStateFlow()
+
+    /** Mode paramétrage : toucher une carte ouvre ses mots-clés au lieu de la lancer. */
+    private val _setupMode = MutableStateFlow(false)
+    val setupMode: StateFlow<Boolean> = _setupMode.asStateFlow()
+
+    /** Dernière page affichée sur l'écran principal. */
+    var visiblePage: String? = null
+        private set
+
     private val _backStack = MutableStateFlow<List<Screen>>(listOf(Screen.Main))
     val backStack: StateFlow<List<Screen>> = _backStack.asStateFlow()
 
@@ -165,7 +177,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _compositeDraft.value = null
             }
             Screen.PageEditor -> _pageDraft.value = null
-            Screen.Keywords -> _keywordsPage.value = null
+            Screen.Keywords -> {
+                _keywordsPage.value = null
+                _keywordsCard.value = null
+            }
             else -> Unit
         }
         _backStack.value = stack.dropLast(1)
@@ -220,7 +235,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // -------------------------------------------------------------- mode vocal
 
     /** Page affichée : le mode vocal n'écoute que ses mots-clés. */
-    fun setVisiblePage(pageId: String?) = voice.setPage(pageId)
+    fun setVisiblePage(pageId: String?) {
+        visiblePage = pageId
+        voice.setPage(pageId)
+    }
 
     /** À appeler une fois la permission du micro accordée, appli visible. */
     fun toggleVoice() = voice.toggle()
@@ -238,6 +256,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun openKeywords(pageId: String) {
         _keywordsPage.value = pageId
         open(Screen.Keywords)
+    }
+
+    fun openCardKeywords(cardId: String) {
+        // Un double appui ne doit pas empiler l'écran deux fois.
+        if (_backStack.value.last() == Screen.Keywords) return
+        _keywordsCard.value = cardId
+        open(Screen.Keywords)
+    }
+
+    fun setSetupMode(enabled: Boolean) {
+        _setupMode.value = enabled
     }
 
     fun storyLanguage(): String = voice.language()

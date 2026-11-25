@@ -10,8 +10,8 @@ le projet applique le [versionnage sémantique](https://semver.org/lang/fr/).
 - Mode vocal : bouton micro dans la barre du bas ; les cartes de la page affichée dont un mot-clé est
   entendu jouent pendant une durée réglable (3 à 30 s), en plus du mix. Reconnaissance hors ligne par Vosk,
   écoute écran éteint, micro coupé en pause, arrêt automatique après 5 minutes sans mot-clé.
-- Mots-clés par carte et par langue, déclarés par les packs (champ `keywords`) et modifiables depuis
-  l'onglet d'une page ; mots inconnus du modèle signalés. Mots-clés fournis pour les 24 sons du pack de base.
+- Mots-clés par carte et par langue, déclarés par les packs (champ `keywords`) et modifiables en
+  touchant une carte en mode paramétrage, ou depuis l'onglet d'une page ; mots inconnus du modèle signalés. Mots-clés fournis pour les 24 sons du pack de base.
 - Modèle vocal français intégré ; modèle anglais officiel importable. Langue de l'histoire réglable.
 - Version de débogage seulement : transcription du texte entendu, exportable en CSV.
 - Un APK par type de processeur.

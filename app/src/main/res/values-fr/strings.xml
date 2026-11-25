@@ -226,6 +226,9 @@
     <string name="card_state_voice">lancée à la voix</string>
     <string name="action_keep_voice_card">Garder en lecture</string>
     <string name="action_keywords">Mots-clés</string>
+    <string name="action_edit_keywords">Modifier les mots-clés</string>
+    <string name="action_setup_mode">Mode paramétrage</string>
+    <string name="setup_hint">Touchez une carte pour modifier ses mots-clés.</string>
     <string name="keywords_title">Mots-clés · %1$s</string>
     <string name="keywords_intro">Le mode vocal lance une carte quand il entend un de ses mots-clés. Langue de l\'histoire : %1$s.</string>
     <string name="keywords_field">Mots-clés</string>

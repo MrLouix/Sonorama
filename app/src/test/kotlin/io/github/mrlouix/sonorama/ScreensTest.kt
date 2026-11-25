@@ -1,10 +1,13 @@
 package io.github.mrlouix.sonorama
 
 import android.app.Application
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
@@ -12,6 +15,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.test.core.app.ApplicationProvider
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -202,6 +206,42 @@ class ScreensTest {
         card("Oiseaux").performClick()
         rule.onNodeWithText("Appliquer 1 changement").assertExists()
         capture("big-font")
+    }
+
+    @Test
+    fun `setup mode opens the keywords of a card in one tap and comes back to its page`() {
+        rule.onNodeWithText("Ville").performClick()
+        waitFor { viewModel.visiblePage == "ville" }
+        rule.onNodeWithContentDescription("Mode paramétrage").performClick()
+        rule.onNodeWithText("Touchez une carte pour modifier ses mots-clés.").assertExists()
+        capture("setup")
+
+        val first = viewModel.library.value.run { cards.getValue(page("ville")!!.cardIds.first()) }
+        val volume = first.volume
+        // Même un appui prolongé, qui réglerait le volume hors paramétrage, ouvre les mots-clés.
+        card(first.name.fr).performTouchInput { longClick(durationMillis = 800) }
+        rule.waitForIdle()
+        rule.onNodeWithText("Mots-clés · ${first.name.fr}").assertExists()
+        rule.onAllNodes(hasSetTextAction()).assertCountEquals(1)
+        capture("setup-keywords")
+
+        rule.runOnUiThread { viewModel.back() }
+        waitFor { rule.onAllNodes(hasContentDescription(first.name.fr, substring = true)).fetchSemanticsNodes().isNotEmpty() }
+        assertEquals("ville", viewModel.visiblePage)
+        assertTrue(viewModel.setupMode.value)
+        card(first.name.fr).performTouchInput { click() }
+        rule.waitForIdle()
+        rule.onNodeWithText("Mots-clés · ${first.name.fr}").assertExists()
+        rule.runOnUiThread { viewModel.back() }
+        rule.waitForIdle()
+        assertTrue(viewModel.mix.value.active.isEmpty())
+        assertEquals(volume, viewModel.library.value.cards.getValue(first.id).volume)
+
+        rule.onNodeWithText("Terminé").performClick()
+        card(first.name.fr).performClick()
+        waitFor { first.id in viewModel.mix.value.active }
+        rule.runOnUiThread { viewModel.stopAll() }
+        waitFor { viewModel.mix.value.active.isEmpty() }
     }
 
     /** Reconnaisseur factice : pas de micro ni de code natif sur la JVM. */

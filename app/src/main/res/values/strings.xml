@@ -222,6 +222,9 @@
     <string name="card_state_voice">started by voice</string>
     <string name="action_keep_voice_card">Keep playing</string>
     <string name="action_keywords">Keywords</string>
+    <string name="action_edit_keywords">Edit keywords</string>
+    <string name="action_setup_mode">Setup mode</string>
+    <string name="setup_hint">Tap a card to edit its keywords.</string>
     <string name="keywords_title">Keywords · %1$s</string>
     <string name="keywords_intro">Voice mode starts a card when it hears one of its keywords. Story language: %1$s.</string>
     <string name="keywords_field">Keywords</string>

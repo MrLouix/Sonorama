@@ -3,6 +3,7 @@ package io.github.mrlouix.sonorama.ui.main
 import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -30,6 +31,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -38,11 +40,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -93,10 +97,14 @@ fun MainScreen(viewModel: MainViewModel) {
     val mix by viewModel.mix.collectAsStateWithLifecycle()
     val pageToShow by viewModel.pageToShow.collectAsStateWithLifecycle()
     val voice by viewModel.voiceState.collectAsStateWithLifecycle()
+    val setup by viewModel.setupMode.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val pages = library.pages
     val scope = rememberCoroutineScope()
-    val pagerState = rememberPagerState { pages.size }
+    // Au retour d'un autre écran, on retrouve la page que l'on a quittée.
+    val pagerState = rememberPagerState(
+        initialPage = remember { pages.indexOfFirst { it.id == viewModel.visiblePage }.coerceAtLeast(0) },
+    ) { pages.size }
 
     var menuOpen by remember { mutableStateOf(false) }
     var sheetOpen by rememberSaveable { mutableStateOf(false) }
@@ -145,11 +153,16 @@ fun MainScreen(viewModel: MainViewModel) {
         }
     }
 
+    BackHandler(enabled = setup) { viewModel.setSetupMode(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
+                    IconToggleButton(checked = setup, onCheckedChange = viewModel::setSetupMode) {
+                        Icon(Icons.Rounded.Tune, contentDescription = stringResource(R.string.action_setup_mode))
+                    }
                     IconButton(onClick = { menuOpen = true }) {
                         Icon(Icons.Rounded.MoreVert, contentDescription = stringResource(R.string.action_menu))
                     }
@@ -187,6 +200,7 @@ fun MainScreen(viewModel: MainViewModel) {
         snackbarHost = { AppSnackbarHost() },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
+            if (setup) SetupBanner(onDone = { viewModel.setSetupMode(false) })
             if (pages.isNotEmpty()) {
                 PrimaryScrollableTabRow(
                     selectedTabIndex = pagerState.currentPage.coerceIn(0, pages.lastIndex),
@@ -227,7 +241,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     key = { pages.getOrNull(it)?.id ?: it },
                 ) { index ->
                     val page = pages.getOrNull(index) ?: return@HorizontalPager
-                    PageGrid(page, library, mix, viewModel)
+                    PageGrid(page, library, mix, setup, viewModel)
                 }
             }
         }
@@ -414,8 +428,26 @@ private fun PageTab(
     }
 }
 
+/** Rappelle que les appuis sur les cartes ne lancent plus de son, et permet d'en sortir. */
 @Composable
-private fun PageGrid(page: Page, library: Library, mix: MixState, viewModel: MainViewModel) {
+private fun SetupBanner(onDone: () -> Unit) {
+    Surface(color = MaterialTheme.colorScheme.tertiaryContainer, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                stringResource(R.string.setup_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = onDone) { Text(stringResource(R.string.action_done)) }
+        }
+    }
+}
+
+@Composable
+private fun PageGrid(page: Page, library: Library, mix: MixState, setup: Boolean, viewModel: MainViewModel) {
     val cards = page.cardIds.mapNotNull { library.cards[it] }
     if (cards.isEmpty()) {
         Column(
@@ -462,7 +494,8 @@ private fun PageGrid(page: Page, library: Library, mix: MixState, viewModel: Mai
                 volumePlanned = change?.volume != null,
                 available = card.available,
                 timed = mix.timed[card.id],
-                onTap = { viewModel.tapCard(card) },
+                setup = setup,
+                onTap = { if (setup) viewModel.openCardKeywords(card.id) else viewModel.tapCard(card) },
                 onVolumeChange = { viewModel.setVolume(card.id, it, false) },
                 onVolumeCommit = { viewModel.setVolume(card.id, it, true) },
                 modifier = Modifier.fillMaxWidth(),
