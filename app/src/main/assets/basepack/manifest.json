@@ -1,7 +1,7 @@
 {
   "format": 1,
   "id": "sonorama.base",
-  "version": 2,
+  "version": 3,
   "name": {
     "fr": "Pack de base",
     "en": "Base pack"
@@ -46,6 +46,14 @@
         "en": "Transport"
       },
       "symbol": "train"
+    },
+    {
+      "id": "feerique",
+      "name": {
+        "fr": "Féerique",
+        "en": "Fairytale"
+      },
+      "symbol": "auto_fix_high"
     }
   ],
   "sounds": [
@@ -59,9 +67,9 @@
       "symbol": "flutter_dash",
       "defaultVolume": 60,
       "page": "nature",
-      "author": "Sonorama",
+      "author": "Magnesus",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/723913/",
       "keywords": {
         "fr": [
           "oiseau",
@@ -99,15 +107,13 @@
           "ruisseau",
           "rivière",
           "torrent",
-          "source",
-          "cascade"
+          "source"
         ],
         "en": [
           "stream",
           "brook",
           "river",
-          "creek",
-          "waterfall"
+          "creek"
         ]
       }
     },
@@ -121,9 +127,9 @@
       "symbol": "waves",
       "defaultVolume": 70,
       "page": "nature",
-      "author": "Sonorama",
+      "author": "Noted451",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/531015/",
       "keywords": {
         "fr": [
           "vague",
@@ -185,23 +191,184 @@
       "symbol": "bug_report",
       "defaultVolume": 50,
       "page": "nature",
-      "author": "Sonorama",
+      "author": "Defelozedd94",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/522298/",
       "keywords": {
         "fr": [
           "grillon",
           "grillons",
-          "nuit d'été",
-          "cigale",
-          "cigales"
+          "nuit d'été"
         ],
         "en": [
           "cricket",
           "crickets",
-          "summer night",
+          "summer night"
+        ]
+      }
+    },
+    {
+      "id": "frogs",
+      "file": "audio/frogs.ogg",
+      "name": {
+        "fr": "Grenouilles",
+        "en": "Frogs"
+      },
+      "symbol": "eco",
+      "defaultVolume": 50,
+      "page": "nature",
+      "author": "CHallSmith",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/870580/",
+      "keywords": {
+        "fr": [
+          "grenouille",
+          "grenouilles",
+          "crapaud",
+          "crapauds",
+          "étang",
+          "mare"
+        ],
+        "en": [
+          "frog",
+          "frogs",
+          "toad",
+          "toads",
+          "pond"
+        ]
+      }
+    },
+    {
+      "id": "cicadas",
+      "file": "audio/cicadas.ogg",
+      "name": {
+        "fr": "Cigales",
+        "en": "Cicadas"
+      },
+      "symbol": "wb_sunny",
+      "defaultVolume": 50,
+      "page": "nature",
+      "author": "SamuelGremaud",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/543958/",
+      "keywords": {
+        "fr": [
+          "cigale",
+          "cigales",
+          "Provence",
+          "garrigue"
+        ],
+        "en": [
           "cicada",
           "cicadas"
+        ]
+      }
+    },
+    {
+      "id": "cave",
+      "file": "audio/cave.ogg",
+      "name": {
+        "fr": "Grotte",
+        "en": "Cave"
+      },
+      "symbol": "terrain",
+      "defaultVolume": 60,
+      "page": "nature",
+      "author": "Sclolex",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/177958/",
+      "keywords": {
+        "fr": [
+          "grotte",
+          "grottes",
+          "caverne",
+          "cavernes",
+          "souterrain"
+        ],
+        "en": [
+          "cave",
+          "caves",
+          "cavern"
+        ]
+      }
+    },
+    {
+      "id": "waterfall",
+      "file": "audio/waterfall.ogg",
+      "name": {
+        "fr": "Cascade",
+        "en": "Waterfall"
+      },
+      "symbol": "water_drop",
+      "defaultVolume": 60,
+      "page": "nature",
+      "author": "Nox_Sound",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/511075/",
+      "keywords": {
+        "fr": [
+          "cascade",
+          "cascades",
+          "chute d'eau"
+        ],
+        "en": [
+          "waterfall",
+          "waterfalls"
+        ]
+      }
+    },
+    {
+      "id": "underwater",
+      "file": "audio/underwater.ogg",
+      "name": {
+        "fr": "Sous l'eau",
+        "en": "Underwater"
+      },
+      "symbol": "anchor",
+      "defaultVolume": 60,
+      "page": "nature",
+      "author": "Fission9",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/504641/",
+      "keywords": {
+        "fr": [
+          "sous l'eau",
+          "sous-marin",
+          "plongée",
+          "sirène"
+        ],
+        "en": [
+          "underwater",
+          "submarine",
+          "mermaid"
+        ]
+      }
+    },
+    {
+      "id": "seagulls",
+      "file": "audio/seagulls.ogg",
+      "name": {
+        "fr": "Mouettes",
+        "en": "Seagulls"
+      },
+      "symbol": "beach_access",
+      "defaultVolume": 55,
+      "page": "nature",
+      "author": "Ambientsoundapp",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/537853/",
+      "keywords": {
+        "fr": [
+          "mouette",
+          "mouettes",
+          "goéland",
+          "goélands"
+        ],
+        "en": [
+          "seagull",
+          "seagulls",
+          "gull",
+          "gulls"
         ]
       }
     },
@@ -215,9 +382,9 @@
       "symbol": "traffic",
       "defaultVolume": 60,
       "page": "ville",
-      "author": "Sonorama",
+      "author": "chimerical",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/106839/",
       "keywords": {
         "fr": [
           "circulation",
@@ -275,9 +442,9 @@
       "symbol": "water_drop",
       "defaultVolume": 60,
       "page": "ville",
-      "author": "Sonorama",
+      "author": "martats",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/156969/",
       "keywords": {
         "fr": [
           "fontaine",
@@ -329,9 +496,9 @@
       "symbol": "nights_stay",
       "defaultVolume": 65,
       "page": "ville",
-      "author": "Sonorama",
+      "author": "Nimlos",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/454822/",
       "keywords": {
         "fr": [
           "nuit en ville",
@@ -344,6 +511,32 @@
           "sleeping city",
           "empty street",
           "streetlight"
+        ]
+      }
+    },
+    {
+      "id": "cafe",
+      "file": "audio/cafe.ogg",
+      "name": {
+        "fr": "Café",
+        "en": "Café"
+      },
+      "symbol": "local_cafe",
+      "defaultVolume": 55,
+      "page": "ville",
+      "author": "waweee",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/370973/",
+      "keywords": {
+        "fr": [
+          "café",
+          "taverne",
+          "auberge"
+        ],
+        "en": [
+          "cafe",
+          "tavern",
+          "inn"
         ]
       }
     },
@@ -505,9 +698,9 @@
       "symbol": "water_drop",
       "defaultVolume": 65,
       "page": "meteo",
-      "author": "Sonorama",
+      "author": "Ryding",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/96729/",
       "keywords": {
         "fr": [
           "pluie",
@@ -595,9 +788,9 @@
       "symbol": "thunderstorm",
       "defaultVolume": 70,
       "page": "meteo",
-      "author": "Sonorama",
+      "author": "Soojay",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/319565/",
       "keywords": {
         "fr": [
           "orage",
@@ -625,9 +818,9 @@
       "symbol": "ac_unit",
       "defaultVolume": 60,
       "page": "meteo",
-      "author": "Sonorama",
+      "author": "DBlover",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/505999/",
       "keywords": {
         "fr": [
           "blizzard",
@@ -685,9 +878,9 @@
       "symbol": "flight",
       "defaultVolume": 60,
       "page": "transports",
-      "author": "Sonorama",
+      "author": "richwise",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/451741/",
       "keywords": {
         "fr": [
           "avion",
@@ -759,6 +952,61 @@
           "sailboat",
           "pirates",
           "harbor"
+        ]
+      }
+    },
+    {
+      "id": "wind_chimes",
+      "file": "audio/wind_chimes.ogg",
+      "name": {
+        "fr": "Carillons",
+        "en": "Wind chimes"
+      },
+      "symbol": "notifications",
+      "defaultVolume": 50,
+      "page": "feerique",
+      "author": "MrCisum",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/336664/",
+      "keywords": {
+        "fr": [
+          "carillon",
+          "carillons",
+          "clochettes"
+        ],
+        "en": [
+          "chime",
+          "chimes",
+          "little bells"
+        ]
+      }
+    },
+    {
+      "id": "shimmer",
+      "file": "audio/shimmer.ogg",
+      "name": {
+        "fr": "Scintillements",
+        "en": "Shimmer"
+      },
+      "symbol": "auto_awesome",
+      "defaultVolume": 45,
+      "page": "feerique",
+      "author": "opticaillusions",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/521882/",
+      "keywords": {
+        "fr": [
+          "magie",
+          "magique",
+          "fée",
+          "fées",
+          "sortilège"
+        ],
+        "en": [
+          "magic",
+          "fairy",
+          "fairies",
+          "spell"
         ]
       }
     }

@@ -25,7 +25,7 @@ de cartes, un bouton play/pause, aucun compte, aucune publicité, aucun accès r
 - **Cartes composées et scènes** : plusieurs sons sous une seule carte, ou le mix en cours enregistré tel quel.
 - **Mode vocal** : l'appli écoute la personne qui lit et lance pendant quelques secondes les cartes dont elle
   entend un mot-clé, en plus du mix en cours. Reconnaissance hors ligne (Vosk), micro coupé en pause.
-- **Packs de sons** : 24 boucles fournies, d'autres par fichiers ZIP importés depuis le téléphone ; les
+- **Packs de sons** : 33 boucles fournies, d'autres par fichiers ZIP importés depuis le téléphone ; les
   packs peuvent être signés, et toute mise à jour demande confirmation.
 - **Accessibilité** : TalkBack, grandes cibles tactiles, thèmes clair et sombre, français et anglais.
 
@@ -41,10 +41,10 @@ compile, passe le lint et 71 tests automatisés, dont des tests d'écran qui pil
 - le geste de volume et le parcours TalkBack ;
 - la reconnaissance vocale réelle : précision sur une vraie voix, délai, écoute écran éteint, sons de l'appli
   captés par le micro ;
-- la qualité des 24 sons du pack de base, qui sont **synthétisés** et n'ont pas été écoutés ni comparés à
-  des enregistrements.
+- la qualité des 14 sons du pack de base encore **synthétisés**, qui n'ont pas été comparés à des
+  enregistrements ; les 19 sons enregistrés ont été écoutés en boucle sur ordinateur, pas dans l'appli.
 
-Les points ouverts de la spécification (marque « Sonorama », pack de base enregistré) restent à traiter.
+Les points ouverts de la spécification (marque « Sonorama », fin du pack de base enregistré) restent à traiter.
 
 ## Compiler
 
@@ -61,7 +61,8 @@ Un APK est produit par type de processeur : `arm64-v8a` convient à presque tous
 La première compilation télécharge le modèle vocal français officiel de Vosk (42 Mo, depuis alphacephei.com),
 vérifie son empreinte et le garde en cache dans le dossier Gradle de l'utilisateur.
 
-Le pack de base se régénère avec `python3 tools/generate_base_pack.py` (Python 3.10+, numpy, ffmpeg).
+Le pack de base se régénère avec `python3 tools/generate_base_pack.py` (Python 3.10+, numpy, ffmpeg) ; ses sons
+enregistrés, avec `python3 tools/prepare_recordings.py`, à partir des sources Freesound déposées dans `pack-sources/`.
 
 ## Organisation du dépôt
 
@@ -72,9 +73,10 @@ Le pack de base se régénère avec `python3 tools/generate_base_pack.py` (Pytho
 | `app/src/main/kotlin/…/ui` | Écrans Jetpack Compose et `MainViewModel` |
 | `app/src/main/kotlin/…/voice` | Mode vocal : reconnaissance Vosk, mots-clés, service micro |
 | `app/src/debug` | Transcription du texte entendu, présente seulement dans l'APK de débogage |
-| `app/src/main/assets/basepack` | Pack de base : manifeste, 24 boucles Ogg, licences |
+| `app/src/main/assets/basepack` | Pack de base : manifeste, 33 boucles Ogg, licences |
 | `app/src/test` | Tests du moteur, des packs et des écrans |
-| `tools/generate_base_pack.py` | Synthèse des boucles du pack de base |
+| `tools/generate_base_pack.py` | Synthèse des boucles du pack de base, manifeste et licences |
+| `tools/prepare_recordings.py`, `tools/recordings.json` | Boucles enregistrées du pack de base : script et recette |
 | `tools/sign_pack.py` | Signature d'un pack de sons |
 | `tools/prepare_loop.py` | Fichier audio → boucle Ogg prête pour un pack (raccord, niveau, compression) |
 | `tools/check_pack.py` | Vérification d'un dossier de pack avant publication, et fabrication du ZIP |
@@ -113,7 +115,8 @@ Les failles de sécurité se signalent en privé : [SECURITY.md](SECURITY.md).
 ## Licences
 
 - Code : [GNU GPL 3.0](LICENSE).
-- Sons du pack de base : [CC0 1.0](app/src/main/assets/basepack/LICENSES.md), créations originales synthétisées.
+- Sons du pack de base : [CC0 1.0](app/src/main/assets/basepack/LICENSES.md), 14 créations synthétisées et
+  19 enregistrements de Freesound, dont les auteurs sont cités.
 - Pictogrammes : Material Icons de Google, licence Apache 2.0.
 - Reconnaissance vocale : [Vosk](https://alphacephei.com/vosk/) et son modèle français
   `vosk-model-small-fr-0.22`, licence Apache 2.0 ; JNA, licence Apache 2.0.

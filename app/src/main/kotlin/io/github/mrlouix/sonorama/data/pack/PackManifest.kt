@@ -91,7 +91,7 @@ object PackFormat {
     const val BASE_PACK_ID = "sonorama.base"
 
     /** Pages intégrées à l'appli : un pack peut les compléter sans les déclarer. */
-    val BUILT_IN_PAGES = setOf("nature", "ville", "technologique", "meteo", "transports")
+    val BUILT_IN_PAGES = setOf("nature", "ville", "technologique", "meteo", "transports", "feerique")
 
     private val ID = Regex("[a-z0-9][a-z0-9._-]{0,63}")
     private val SHA256 = Regex("[0-9a-f]{64}")

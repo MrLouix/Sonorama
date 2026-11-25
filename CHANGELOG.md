@@ -11,7 +11,7 @@ le projet applique le [versionnage sémantique](https://semver.org/lang/fr/).
   entendu jouent pendant une durée réglable (3 à 30 s), en plus du mix. Reconnaissance hors ligne par Vosk,
   écoute écran éteint, micro coupé en pause, arrêt automatique après 5 minutes sans mot-clé.
 - Mots-clés par carte et par langue, déclarés par les packs (champ `keywords`) et modifiables en
-  touchant une carte en mode paramétrage, ou depuis l'onglet d'une page ; mots inconnus du modèle signalés. Mots-clés fournis pour les 24 sons du pack de base.
+  touchant une carte en mode paramétrage, ou depuis l'onglet d'une page ; mots inconnus du modèle signalés. Mots-clés fournis pour tous les sons du pack de base.
 - Modèle vocal français intégré ; modèle anglais officiel importable. Langue de l'histoire réglable.
 - Version de débogage seulement : transcription du texte entendu, exportable en CSV.
 - Un APK par type de processeur.
@@ -31,7 +31,8 @@ le projet applique le [versionnage sémantique](https://semver.org/lang/fr/).
 - Mode plan : changements préparés sur plusieurs pages, appliqués ensemble en fondu croisé.
 - Volume par carte, par appui long puis glissement vertical, mémorisé entre les sessions.
 - Lecture en arrière-plan avec notification média, écran verrouillé et casque Bluetooth.
-- Pack de base de 24 boucles synthétisées sous CC0 : Nature, Ville, Technologique, Météo, Transports.
+- Pack de base de 33 boucles sous CC0 (Nature, Ville, Technologique, Météo, Transports, Féerique) : 19 enregistrements
+  de Freesound et 14 sons synthétisés, au niveau visé de −23 LUFS (la grotte reste plus basse).
 - Pages personnalisées : création, édition, réordonnancement, duplication, export et import.
 - Cartes composées et scènes (enregistrement du mix en cours).
 - Import de packs ZIP depuis le téléphone, avec vérifications et bilan ; écran des licences des sons.

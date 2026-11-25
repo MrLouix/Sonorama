@@ -68,7 +68,7 @@ Seuls les fichiers déclarés dans le manifeste, et `LICENSES.md`, sont copiés 
 | `symbol` | non | Pictogramme (voir plus bas) ; `music_note` par défaut ; 64 caractères au plus |
 
 Un son peut aussi rejoindre une page déjà fournie par l'appli, sans la déclarer :
-`nature`, `ville`, `technologique`, `meteo`, `transports`. Si une page déclarée existe déjà, elle est complétée.
+`nature`, `ville`, `technologique`, `meteo`, `transports`, `feerique`. Si une page déclarée existe déjà, elle est complétée.
 
 ### Son
 
@@ -102,7 +102,7 @@ Les champs inconnus sont ignorés, pour permettre des ajouts futurs.
 
 - Ogg Vorbis, 44,1 kHz, stéréo, environ 128 kbit/s.
 - Boucles de 30 à 120 secondes dont la fin s'enchaîne avec le début sans raccord audible.
-- Niveau normalisé d'un son à l'autre (le pack de base vise −24 dBFS RMS).
+- Niveau normalisé d'un son à l'autre (le pack de base vise −23 LUFS, crête réelle ≤ −1,5 dBTP).
 - 500 Mo au plus une fois décompressé.
 
 Exemple d'encodage : `ffmpeg -i boucle.wav -c:a libvorbis -q:a 4 -ar 44100 -ac 2 audio/boucle.ogg`
