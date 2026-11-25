@@ -39,7 +39,8 @@ SHA256 = re.compile(r"[0-9a-f]{64}")
 LANGUAGE = re.compile(r"[a-z]{2}")
 LICENSE = re.compile(r"CC0(-1\.0)?|PUBLIC-DOMAIN|CC-BY(-SA)?(-[1-4]\.[0-9](-[A-Z]{2,3})?)?")
 RESTRICTED = re.compile(r"(^|-)(NC|ND|NONCOMMERCIAL|NODERIVS|NODERIVATIVES)(-|$)")
-BUILT_IN_PAGES = {"nature", "ville", "technologique", "meteo", "transports"}
+BUILT_IN_PAGES = {"nature", "ville", "feerique"}
+MERGED_PAGES = {"meteo": "nature", "technologique": "ville", "transports": "ville"}  # anciennes pages
 MAX_SOUNDS = 500
 MAX_NAME = 60
 MAX_SYMBOL = 64
@@ -229,7 +230,9 @@ def check(folder: Path, vocab: dict[str, object]) -> dict | None:
             error(f"{owner} : fichier {file} déjà utilisé")
         files.add(file)
         page = sound.get("page", "")
-        if page not in pages and page not in BUILT_IN_PAGES:
+        if page in MERGED_PAGES:
+            warn(f"{owner} : la page « {page} » a été fusionnée dans « {MERGED_PAGES[page]} »")
+        elif page not in pages and page not in BUILT_IN_PAGES:
             error(f"{owner} : page {page!r} ni déclarée ni intégrée à l'appli")
         license = sound.get("license", "")
         if len(license) > MAX_LICENSE or not license_allowed(license):

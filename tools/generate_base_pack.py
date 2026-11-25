@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Génère le pack de base de Sonorama : 24 boucles d'ambiance synthétisées.
+"""Génère le pack de base de Sonorama : boucles d'ambiance synthétisées, manifeste et licences.
 
 Chaque boucle est construite pour être périodique sur sa durée exacte :
   * les bruits sont filtrés dans le domaine fréquentiel (convolution circulaire) ;
@@ -7,7 +7,8 @@ Chaque boucle est construite pour être périodique sur sa durée exacte :
   * les évènements (gouttes, chants, crépitements) sont posés modulo la durée.
 Le raccord est donc inaudible par construction, sans fondu de bouclage.
 
-Les sons produits sont originaux et placés sous CC0 1.0.
+Les sons produits sont originaux et placés sous CC0 1.0. Un son remplacé par un enregistrement accepté
+(« accepted » dans tools/recordings.json) n'est plus synthétisé : son fichier vient de prepare_recordings.py.
 
 Dépendances : Python 3.10+, numpy, ffmpeg (avec libvorbis).
 Usage : python3 tools/generate_base_pack.py [--only nom] [--out dossier]
@@ -23,6 +24,9 @@ import wave
 from pathlib import Path
 
 import numpy as np
+
+import prepare_loop
+import prepare_recordings
 
 SR = 44100
 DURATION = 30.0
@@ -131,18 +135,9 @@ def circular_filter(signal: np.ndarray, shape: np.ndarray) -> np.ndarray:
     return np.fft.irfft(np.fft.rfft(signal, axis=-1) * shape, N, axis=-1)
 
 
-def finish(stereo: np.ndarray, rms_db: float = -24.0, peak_db: float = -1.5) -> np.ndarray:
-    """Normalise le niveau moyen (égalise les sons entre eux) en respectant une crête maximale."""
-    stereo = stereo - stereo.mean(axis=1, keepdims=True)
-    rms = np.sqrt(np.mean(stereo**2)) + 1e-12
-    stereo = stereo * (10 ** (rms_db / 20) / rms)
-    crest = np.abs(stereo).max()
-    limit = 10 ** (peak_db / 20)
-    if crest > limit:
-        # Limiteur doux : préserve le niveau moyen autant que possible.
-        stereo = np.tanh(stereo / limit * 0.9) * limit / np.tanh(0.9 * crest / limit) * (crest / limit)
-        stereo *= limit / np.abs(stereo).max()
-    return stereo
+def finish(stereo: np.ndarray) -> np.ndarray:
+    """Même niveau perçu et même limiteur que les boucles enregistrées."""
+    return prepare_loop.normalize(stereo)
 
 
 # ----------------------------------------------------------------------------- nature
@@ -557,79 +552,99 @@ def boat(rng):
 # ---------------------------------------------------------------------------- catalogue
 
 PAGES = [
-    ("nature", "Nature", "Nature", "forest"),
-    ("ville", "Ville", "City", "location_city"),
-    ("technologique", "Technologique", "Technology", "memory"),
-    ("meteo", "Météo", "Weather", "thunderstorm"),
-    ("transports", "Transports", "Transport", "train"),
+    ("nature", "Nature et météo", "Nature & weather", "forest"),
+    ("ville", "Ville et machines", "City & machines", "location_city"),
+    ("feerique", "Féerique", "Fairytale", "auto_fix_high"),
 ]
 
-# (identifiant, page, nom français, nom anglais, symbole, volume par défaut, générateur)
+# (identifiant, page, nom français, nom anglais, symbole, volume par défaut, générateur ; None : enregistrement seulement)
 SOUNDS = [
     ("birds", "nature", "Oiseaux", "Birds", "flutter_dash", 60, birds),
     ("stream", "nature", "Ruisseau", "Stream", "water", 65, stream),
     ("waves", "nature", "Vagues", "Waves", "waves", 70, waves),
     ("campfire", "nature", "Feu de camp", "Campfire", "local_fire_department", 70, campfire),
     ("crickets", "nature", "Grillons", "Crickets", "bug_report", 50, crickets),
+    ("frogs", "nature", "Grenouilles", "Frogs", "eco", 50, None),
+    ("owl", "nature", "Chouette", "Owl", "dark_mode", 55, None),
+    ("cicadas", "nature", "Cigales", "Cicadas", "wb_sunny", 50, None),
+    ("cave", "nature", "Grotte", "Cave", "terrain", 60, None),
+    ("waterfall", "nature", "Cascade", "Waterfall", "water_drop", 60, None),
+    ("underwater", "nature", "Sous l'eau", "Underwater", "anchor", 60, None),
+    ("seagulls", "nature", "Mouettes", "Seagulls", "beach_access", 55, None),
     ("traffic", "ville", "Circulation", "Traffic", "traffic", 60, traffic),
     ("crowd", "ville", "Foule", "Crowd", "groups", 60, crowd),
     ("fountain", "ville", "Fontaine", "Fountain", "water_drop", 60, fountain),
     ("pigeons", "ville", "Pigeons", "Pigeons", "emoji_nature", 55, pigeons),
     ("city_night", "ville", "Nuit en ville", "City night", "nights_stay", 65, city_night),
-    ("server_room", "technologique", "Salle des serveurs", "Server room", "dns", 60, server_room),
-    ("fan", "technologique", "Ventilateur", "Fan", "wind_power", 60, fan),
-    ("electric_hum", "technologique", "Bourdonnement électrique", "Electric hum", "bolt", 50, electric_hum),
-    ("spaceship", "technologique", "Vaisseau spatial", "Spaceship", "rocket_launch", 70, spaceship),
-    ("console_beeps", "technologique", "Bips de console", "Console beeps", "terminal", 50, console_beeps),
-    ("light_rain", "meteo", "Pluie légère", "Light rain", "water_drop", 65, light_rain),
-    ("heavy_rain", "meteo", "Pluie forte", "Heavy rain", "umbrella", 65, heavy_rain),
-    ("wind", "meteo", "Vent", "Wind", "air", 65, wind),
-    ("distant_storm", "meteo", "Orage lointain", "Distant storm", "thunderstorm", 70, distant_storm),
-    ("blizzard", "meteo", "Blizzard", "Blizzard", "ac_unit", 60, blizzard),
-    ("train", "transports", "Train", "Train", "train", 65, train),
-    ("plane_cabin", "transports", "Cabine d'avion", "Plane cabin", "flight", 60, plane_cabin),
-    ("car_interior", "transports", "Voiture", "Car", "directions_car", 65, car_interior),
-    ("boat", "transports", "Bateau", "Boat", "directions_boat", 65, boat),
+    ("cafe", "ville", "Café", "Café", "local_cafe", 55, None),
+    ("server_room", "ville", "Salle des serveurs", "Server room", "dns", 60, server_room),
+    ("fan", "ville", "Ventilateur", "Fan", "wind_power", 60, fan),
+    ("electric_hum", "ville", "Bourdonnement électrique", "Electric hum", "bolt", 50, electric_hum),
+    ("spaceship", "ville", "Vaisseau spatial", "Spaceship", "rocket_launch", 70, spaceship),
+    ("console_beeps", "ville", "Bips de console", "Console beeps", "terminal", 50, console_beeps),
+    ("light_rain", "nature", "Pluie légère", "Light rain", "grain", 65, light_rain),
+    ("heavy_rain", "nature", "Pluie forte", "Heavy rain", "umbrella", 65, heavy_rain),
+    ("wind", "nature", "Vent", "Wind", "air", 65, wind),
+    ("distant_storm", "nature", "Orage lointain", "Distant storm", "thunderstorm", 70, distant_storm),
+    ("blizzard", "nature", "Blizzard", "Blizzard", "ac_unit", 60, blizzard),
+    ("train", "ville", "Train", "Train", "train", 65, train),
+    ("plane_cabin", "ville", "Cabine d'avion", "Plane cabin", "flight", 60, plane_cabin),
+    ("car_interior", "ville", "Voiture", "Car", "directions_car", 65, car_interior),
+    ("boat", "ville", "Bateau", "Boat", "directions_boat", 65, boat),
+    ("wind_chimes", "feerique", "Carillons", "Wind chimes", "notifications", 50, None),
+    ("shimmer", "feerique", "Scintillements", "Shimmer", "auto_awesome", 45, None),
 ]
 
 # Mots-clés du mode vocal, vérifiés contre le vocabulaire des petits modèles Vosk français et anglais.
+# Ni homonyme (« mer » et « mère »), ni mot à plusieurs sens (« feu », « vol ») : une expression à la place.
 KEYWORDS = {
-    'birds': (["oiseau", "oiseaux", "chant des oiseaux", "gazouillis", "merle", "rossignol"], ["bird", "birds", "birdsong", "chirping", "robin", "nightingale"]),
-    'stream': (["ruisseau", "rivière", "torrent", "source", "cascade"], ["stream", "brook", "river", "creek", "waterfall"]),
-    'waves': (["vague", "vagues", "mer", "océan", "plage", "marée"], ["wave", "waves", "sea", "ocean", "beach", "tide"]),
-    'campfire': (["feu de camp", "feu", "flammes", "bûches", "cheminée", "braises"], ["campfire", "fire", "flames", "logs", "fireplace", "embers"]),
-    'crickets': (["grillon", "grillons", "nuit d'été", "cigale", "cigales"], ["cricket", "crickets", "summer night", "cicada", "cicadas"]),
-    'traffic': (["circulation", "voitures", "embouteillage", "klaxon", "boulevard"], ["traffic", "cars", "traffic jam", "honking", "boulevard"]),
-    'crowd': (["foule", "marché", "gens", "place du village", "fête"], ["crowd", "market", "people", "town square", "festival"]),
-    'fountain': (["fontaine", "jet d'eau", "bassin"], ["fountain", "water jet", "basin"]),
-    'pigeons': (["pigeon", "pigeons", "roucoule", "colombe"], ["pigeon", "pigeons", "dove", "cooing"]),
+    'birds': (["oiseau", "oiseaux", "chant des oiseaux", "gazouillis", "merle", "rossignol"], ["bird", "birds", "birdsong", "chirping", "nightingale"]),
+    'stream': (["ruisseau", "ruisseaux", "rivière", "rivières", "torrent"], ["brook", "river", "creek"]),
+    'waves': (["océan", "plage", "les vagues", "bord de mer", "marée haute", "marée basse"], ["ocean", "beach", "seaside", "high tide", "low tide", "crashing waves"]),
+    'campfire': (["feu de camp", "feu de bois", "flammes", "bûches", "cheminée", "braises"], ["campfire", "bonfire", "flames", "fireplace", "embers"]),
+    'crickets': (["grillon", "grillons", "nuit d'été"], ["crickets", "summer night"]),
+    'frogs': (["grenouille", "grenouilles", "crapaud", "crapauds", "nénuphars"], ["frog", "frogs", "toad", "toads", "pond"]),
+    'owl': (["chouette", "chouettes", "hibou", "hiboux"], ["owl", "owls", "hoot"]),
+    'cicadas': (["cigale", "cigales", "Provence", "garrigue"], ["cicada", "cicadas"]),
+    'cave': (["grotte", "grottes", "caverne", "cavernes"], ["cave", "caves", "cavern"]),
+    'waterfall': (["cascade", "cascades", "chute d'eau"], ["waterfall", "waterfalls"]),
+    'underwater': (["sous l'eau", "sous-marin", "fond des mers", "plongée sous-marine"], ["underwater", "submarine", "mermaid"]),
+    'seagulls': (["mouette", "mouettes", "goéland", "goélands"], ["seagull", "seagulls", "gull", "gulls"]),
+    'traffic': (["circulation", "embouteillage", "embouteillages", "klaxon", "boulevard"], ["traffic", "traffic jam", "honking", "boulevard"]),
+    'crowd': (["foule", "place du marché", "place du village"], ["crowd", "market square", "town square", "festival"]),
+    'fountain': (["fontaine", "fontaines", "jet d'eau"], ["fountain", "fountains", "water jet"]),
+    'pigeons': (["pigeon", "pigeons", "roucoule", "colombe"], ["pigeon", "pigeons", "doves", "cooing"]),
     'city_night': (["nuit en ville", "ville endormie", "rue déserte", "réverbère"], ["city at night", "sleeping city", "empty street", "streetlight"]),
-    'server_room': (["ordinateur", "ordinateurs", "serveur", "serveurs", "laboratoire"], ["computer", "computers", "server", "servers", "laboratory"]),
-    'fan': (["ventilateur", "climatisation", "souffle"], ["fan", "air conditioning", "blowing"]),
-    'electric_hum': (["électricité", "électrique", "courant", "bourdonnement", "machine"], ["electricity", "electric", "power", "humming", "machine"]),
-    'spaceship': (["vaisseau", "vaisseau spatial", "fusée", "espace", "étoiles"], ["spaceship", "spacecraft", "rocket", "space", "stars"]),
-    'console_beeps': (["robot", "robots", "bip", "bips", "ordinateur de bord", "console"], ["robot", "robots", "beep", "beeps", "control panel", "console"]),
-    'light_rain': (["pluie", "il pleut", "bruine", "gouttes", "averse"], ["rain", "raining", "drizzle", "drops", "shower"]),
-    'heavy_rain': (["déluge", "pluie battante", "trombes", "tempête", "pleuvait"], ["downpour", "pouring", "heavy rain", "storm", "rained"]),
-    'wind': (["vent", "souffle le vent", "rafale", "rafales", "bourrasque"], ["wind", "windy", "gust", "gusts", "breeze"]),
-    'distant_storm': (["orage", "tonnerre", "éclair", "éclairs", "gronde"], ["thunderstorm", "thunder", "lightning", "rumble", "storm"]),
-    'blizzard': (["blizzard", "neige", "tempête de neige", "glace", "hiver"], ["blizzard", "snow", "snowstorm", "ice", "winter"]),
-    'train': (["train", "gare", "locomotive", "wagon", "rails"], ["train", "station", "locomotive", "carriage", "railway"]),
-    'plane_cabin': (["avion", "vol", "aéroport", "pilote"], ["plane", "airplane", "flight", "airport", "pilot"]),
-    'car_interior': (["voiture", "en voiture", "route", "conduisait"], ["car", "drive", "road", "driving"]),
-    'boat': (["bateau", "navire", "voilier", "pirates", "port"], ["boat", "ship", "sailboat", "pirates", "harbor"]),
+    'cafe': (["au café", "terrasse de café", "taverne", "auberge"], ["cafe", "coffee shop", "tavern"]),
+    'server_room': (["ordinateur", "ordinateurs", "salle des serveurs", "laboratoire"], ["computer", "computers", "server room", "laboratory"]),
+    'fan': (["ventilateur", "ventilateurs", "climatisation"], ["ceiling fan", "electric fan", "air conditioning"]),
+    'electric_hum': (["électricité", "courant électrique", "haute tension", "bourdonnement"], ["electricity", "electric current", "high voltage"]),
+    'spaceship': (["vaisseau spatial", "fusée", "station spatiale", "voyage spatial"], ["spaceship", "spacecraft", "rocket", "outer space"]),
+    'console_beeps': (["robot", "robots", "bip", "bips", "tableau de bord"], ["robot", "robots", "beep", "beeps", "control panel"]),
+    'light_rain': (["pluie", "il pleut", "bruine", "gouttes de pluie", "averse"], ["raining", "rainy", "drizzle", "raindrops"]),
+    'heavy_rain': (["déluge", "pluie battante", "trombes d'eau", "pleuvait"], ["downpour", "pouring rain", "heavy rain", "rained"]),
+    'wind': (["le vent", "vent violent", "tempête", "coup de vent", "rafales de vent", "bourrasque", "bourrasques"], ["the wind", "windy", "gust", "gusts", "breeze"]),
+    'distant_storm': (["orage", "orages", "orageux", "tonnerre"], ["thunderstorm", "thunder", "lightning", "storm"]),
+    'blizzard': (["blizzard", "neige", "il neige", "tempête de neige"], ["blizzard", "snow", "snowing", "snowstorm"]),
+    'train': (["le train", "quai de gare", "chemin de fer", "locomotive", "wagon", "rails"], ["the train", "train station", "locomotive", "railway"]),
+    'plane_cabin': (["un avion", "en avion", "avion de ligne", "aéroport", "pilote"], ["airplane", "airplanes", "airport", "pilot"]),
+    'car_interior': (["voiture", "voitures", "en voiture", "autoroute"], ["car", "cars", "driving", "highway"]),
+    'boat': (["bateau", "bateaux", "navire", "voilier", "pirates"], ["boat", "boats", "sailboat", "sailing ship", "pirates", "harbor"]),
+    'wind_chimes': (["carillon", "carillons", "clochettes"], ["chimes", "little bells"]),
+    'shimmer': (["magie", "magique", "conte de fées", "baguette magique", "sortilège"], ["magic", "magical", "fairy tale", "enchanted"]),
 }
 
 SOURCE = "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
 
 LICENSES_MD = """# Licences des sons — pack de base Sonorama
 
-Tous les sons de ce pack sont des créations originales, synthétisées par le script
-`tools/generate_base_pack.py` du dépôt Sonorama. Ils sont placés dans le domaine public
-sous licence [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/deed.fr).
+Tous les sons de ce pack sont dans le domaine public, sous licence
+[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/deed.fr). Ceux de l'auteur « Sonorama » sont
+synthétisés par le script `tools/generate_base_pack.py` du dépôt. Les autres sont des enregistrements publiés
+sur Freesound, mis en boucle par `tools/prepare_recordings.py`. Merci à leurs auteurs.
 
-| Fichier | Nom | Auteur | Licence |
-| --- | --- | --- | --- |
+| Fichier | Nom | Auteur | Licence | Source |
+| --- | --- | --- | --- | --- |
 """
 
 
@@ -657,16 +672,23 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--only", action="append", help="ne régénérer que ce son (répétable)")
     parser.add_argument("--quality", type=float, default=3.0, help="qualité Vorbis (3 ≈ 112 kbit/s)")
-    parser.add_argument("--version", type=int, default=2, help="version du pack")
+    parser.add_argument("--version", type=int, default=4, help="version du pack")
     args = parser.parse_args()
 
     audio_dir = args.out / "audio"
     audio_dir.mkdir(parents=True, exist_ok=True)
     licenses = LICENSES_MD
+    recorded = {entry["id"]: entry for entry in prepare_recordings.load() if entry.get("accepted")}
     manifest_sounds = []
     for sound_id, page, name_fr, name_en, symbol, volume, generator in SOUNDS:
         file_name = f"audio/{sound_id}.ogg"
-        if not args.only or sound_id in args.only:
+        recording = recorded.get(sound_id)
+        if recording is None and generator is None:
+            continue
+        author, source = "Sonorama", SOURCE
+        if recording:
+            author, source = recording["author"], f"https://freesound.org/s/{recording['freesound']}/"
+        elif not args.only or sound_id in args.only:
             stereo = finish(generator(rng_for(sound_id)))
             edge = float(np.abs(stereo[:, 0] - stereo[:, -1]).max())
             write_ogg(stereo, args.out / file_name, args.quality)
@@ -680,13 +702,13 @@ def main() -> None:
                 "symbol": symbol,
                 "defaultVolume": volume,
                 "page": page,
-                "author": "Sonorama",
+                "author": author,
                 "license": "CC0-1.0",
-                "source": SOURCE,
+                "source": source,
                 "keywords": {"fr": KEYWORDS[sound_id][0], "en": KEYWORDS[sound_id][1]},
             }
         )
-        licenses += f"| `{file_name}` | {name_fr} | Sonorama | CC0 1.0 |\n"
+        licenses += f"| `{file_name}` | {name_fr} | {author} | CC0 1.0 | {source} |\n"
 
     manifest = {
         "format": 1,
@@ -696,8 +718,9 @@ def main() -> None:
         "pages": [{"id": i, "name": {"fr": fr, "en": en}, "symbol": s} for i, fr, en, s in PAGES],
         "sounds": manifest_sounds,
     }
-    (args.out / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    (args.out / "LICENSES.md").write_text(licenses, encoding="utf-8")
+    text = json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
+    (args.out / "manifest.json").write_text(text, encoding="utf-8", newline="\n")
+    (args.out / "LICENSES.md").write_text(licenses, encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

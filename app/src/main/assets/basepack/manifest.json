@@ -1,7 +1,7 @@
 {
   "format": 1,
   "id": "sonorama.base",
-  "version": 2,
+  "version": 4,
   "name": {
     "fr": "Pack de base",
     "en": "Base pack"
@@ -10,42 +10,26 @@
     {
       "id": "nature",
       "name": {
-        "fr": "Nature",
-        "en": "Nature"
+        "fr": "Nature et météo",
+        "en": "Nature & weather"
       },
       "symbol": "forest"
     },
     {
       "id": "ville",
       "name": {
-        "fr": "Ville",
-        "en": "City"
+        "fr": "Ville et machines",
+        "en": "City & machines"
       },
       "symbol": "location_city"
     },
     {
-      "id": "technologique",
+      "id": "feerique",
       "name": {
-        "fr": "Technologique",
-        "en": "Technology"
+        "fr": "Féerique",
+        "en": "Fairytale"
       },
-      "symbol": "memory"
-    },
-    {
-      "id": "meteo",
-      "name": {
-        "fr": "Météo",
-        "en": "Weather"
-      },
-      "symbol": "thunderstorm"
-    },
-    {
-      "id": "transports",
-      "name": {
-        "fr": "Transports",
-        "en": "Transport"
-      },
-      "symbol": "train"
+      "symbol": "auto_fix_high"
     }
   ],
   "sounds": [
@@ -59,9 +43,9 @@
       "symbol": "flutter_dash",
       "defaultVolume": 60,
       "page": "nature",
-      "author": "Sonorama",
+      "author": "Magnesus",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/723913/",
       "keywords": {
         "fr": [
           "oiseau",
@@ -76,7 +60,6 @@
           "birds",
           "birdsong",
           "chirping",
-          "robin",
           "nightingale"
         ]
       }
@@ -97,17 +80,15 @@
       "keywords": {
         "fr": [
           "ruisseau",
+          "ruisseaux",
           "rivière",
-          "torrent",
-          "source",
-          "cascade"
+          "rivières",
+          "torrent"
         ],
         "en": [
-          "stream",
           "brook",
           "river",
-          "creek",
-          "waterfall"
+          "creek"
         ]
       }
     },
@@ -121,25 +102,25 @@
       "symbol": "waves",
       "defaultVolume": 70,
       "page": "nature",
-      "author": "Sonorama",
+      "author": "Noted451",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/531015/",
       "keywords": {
         "fr": [
-          "vague",
-          "vagues",
-          "mer",
           "océan",
           "plage",
-          "marée"
+          "les vagues",
+          "bord de mer",
+          "marée haute",
+          "marée basse"
         ],
         "en": [
-          "wave",
-          "waves",
-          "sea",
           "ocean",
           "beach",
-          "tide"
+          "seaside",
+          "high tide",
+          "low tide",
+          "crashing waves"
         ]
       }
     },
@@ -159,7 +140,7 @@
       "keywords": {
         "fr": [
           "feu de camp",
-          "feu",
+          "feu de bois",
           "flammes",
           "bûches",
           "cheminée",
@@ -167,9 +148,8 @@
         ],
         "en": [
           "campfire",
-          "fire",
+          "bonfire",
           "flames",
-          "logs",
           "fireplace",
           "embers"
         ]
@@ -185,23 +165,181 @@
       "symbol": "bug_report",
       "defaultVolume": 50,
       "page": "nature",
-      "author": "Sonorama",
+      "author": "Defelozedd94",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/522298/",
       "keywords": {
         "fr": [
           "grillon",
           "grillons",
-          "nuit d'été",
-          "cigale",
-          "cigales"
+          "nuit d'été"
         ],
         "en": [
-          "cricket",
           "crickets",
-          "summer night",
+          "summer night"
+        ]
+      }
+    },
+    {
+      "id": "frogs",
+      "file": "audio/frogs.ogg",
+      "name": {
+        "fr": "Grenouilles",
+        "en": "Frogs"
+      },
+      "symbol": "eco",
+      "defaultVolume": 50,
+      "page": "nature",
+      "author": "CHallSmith",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/870580/",
+      "keywords": {
+        "fr": [
+          "grenouille",
+          "grenouilles",
+          "crapaud",
+          "crapauds",
+          "nénuphars"
+        ],
+        "en": [
+          "frog",
+          "frogs",
+          "toad",
+          "toads",
+          "pond"
+        ]
+      }
+    },
+    {
+      "id": "cicadas",
+      "file": "audio/cicadas.ogg",
+      "name": {
+        "fr": "Cigales",
+        "en": "Cicadas"
+      },
+      "symbol": "wb_sunny",
+      "defaultVolume": 50,
+      "page": "nature",
+      "author": "SamuelGremaud",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/543958/",
+      "keywords": {
+        "fr": [
+          "cigale",
+          "cigales",
+          "Provence",
+          "garrigue"
+        ],
+        "en": [
           "cicada",
           "cicadas"
+        ]
+      }
+    },
+    {
+      "id": "cave",
+      "file": "audio/cave.ogg",
+      "name": {
+        "fr": "Grotte",
+        "en": "Cave"
+      },
+      "symbol": "terrain",
+      "defaultVolume": 60,
+      "page": "nature",
+      "author": "Sclolex",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/177958/",
+      "keywords": {
+        "fr": [
+          "grotte",
+          "grottes",
+          "caverne",
+          "cavernes"
+        ],
+        "en": [
+          "cave",
+          "caves",
+          "cavern"
+        ]
+      }
+    },
+    {
+      "id": "waterfall",
+      "file": "audio/waterfall.ogg",
+      "name": {
+        "fr": "Cascade",
+        "en": "Waterfall"
+      },
+      "symbol": "water_drop",
+      "defaultVolume": 60,
+      "page": "nature",
+      "author": "Nox_Sound",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/511075/",
+      "keywords": {
+        "fr": [
+          "cascade",
+          "cascades",
+          "chute d'eau"
+        ],
+        "en": [
+          "waterfall",
+          "waterfalls"
+        ]
+      }
+    },
+    {
+      "id": "underwater",
+      "file": "audio/underwater.ogg",
+      "name": {
+        "fr": "Sous l'eau",
+        "en": "Underwater"
+      },
+      "symbol": "anchor",
+      "defaultVolume": 60,
+      "page": "nature",
+      "author": "Fission9",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/504641/",
+      "keywords": {
+        "fr": [
+          "sous l'eau",
+          "sous-marin",
+          "fond des mers",
+          "plongée sous-marine"
+        ],
+        "en": [
+          "underwater",
+          "submarine",
+          "mermaid"
+        ]
+      }
+    },
+    {
+      "id": "seagulls",
+      "file": "audio/seagulls.ogg",
+      "name": {
+        "fr": "Mouettes",
+        "en": "Seagulls"
+      },
+      "symbol": "beach_access",
+      "defaultVolume": 55,
+      "page": "nature",
+      "author": "Ambientsoundapp",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/537853/",
+      "keywords": {
+        "fr": [
+          "mouette",
+          "mouettes",
+          "goéland",
+          "goélands"
+        ],
+        "en": [
+          "seagull",
+          "seagulls",
+          "gull",
+          "gulls"
         ]
       }
     },
@@ -215,20 +353,19 @@
       "symbol": "traffic",
       "defaultVolume": 60,
       "page": "ville",
-      "author": "Sonorama",
+      "author": "chimerical",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/106839/",
       "keywords": {
         "fr": [
           "circulation",
-          "voitures",
           "embouteillage",
+          "embouteillages",
           "klaxon",
           "boulevard"
         ],
         "en": [
           "traffic",
-          "cars",
           "traffic jam",
           "honking",
           "boulevard"
@@ -251,15 +388,12 @@
       "keywords": {
         "fr": [
           "foule",
-          "marché",
-          "gens",
-          "place du village",
-          "fête"
+          "place du marché",
+          "place du village"
         ],
         "en": [
           "crowd",
-          "market",
-          "people",
+          "market square",
           "town square",
           "festival"
         ]
@@ -275,19 +409,19 @@
       "symbol": "water_drop",
       "defaultVolume": 60,
       "page": "ville",
-      "author": "Sonorama",
+      "author": "martats",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/156969/",
       "keywords": {
         "fr": [
           "fontaine",
-          "jet d'eau",
-          "bassin"
+          "fontaines",
+          "jet d'eau"
         ],
         "en": [
           "fountain",
-          "water jet",
-          "basin"
+          "fountains",
+          "water jet"
         ]
       }
     },
@@ -314,7 +448,7 @@
         "en": [
           "pigeon",
           "pigeons",
-          "dove",
+          "doves",
           "cooing"
         ]
       }
@@ -329,9 +463,9 @@
       "symbol": "nights_stay",
       "defaultVolume": 65,
       "page": "ville",
-      "author": "Sonorama",
+      "author": "Nimlos",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/454822/",
       "keywords": {
         "fr": [
           "nuit en ville",
@@ -348,6 +482,33 @@
       }
     },
     {
+      "id": "cafe",
+      "file": "audio/cafe.ogg",
+      "name": {
+        "fr": "Café",
+        "en": "Café"
+      },
+      "symbol": "local_cafe",
+      "defaultVolume": 55,
+      "page": "ville",
+      "author": "waweee",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/370973/",
+      "keywords": {
+        "fr": [
+          "au café",
+          "terrasse de café",
+          "taverne",
+          "auberge"
+        ],
+        "en": [
+          "cafe",
+          "coffee shop",
+          "tavern"
+        ]
+      }
+    },
+    {
       "id": "server_room",
       "file": "audio/server_room.ogg",
       "name": {
@@ -356,7 +517,7 @@
       },
       "symbol": "dns",
       "defaultVolume": 60,
-      "page": "technologique",
+      "page": "ville",
       "author": "Sonorama",
       "license": "CC0-1.0",
       "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
@@ -364,15 +525,13 @@
         "fr": [
           "ordinateur",
           "ordinateurs",
-          "serveur",
-          "serveurs",
+          "salle des serveurs",
           "laboratoire"
         ],
         "en": [
           "computer",
           "computers",
-          "server",
-          "servers",
+          "server room",
           "laboratory"
         ]
       }
@@ -386,20 +545,20 @@
       },
       "symbol": "wind_power",
       "defaultVolume": 60,
-      "page": "technologique",
+      "page": "ville",
       "author": "Sonorama",
       "license": "CC0-1.0",
       "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
       "keywords": {
         "fr": [
           "ventilateur",
-          "climatisation",
-          "souffle"
+          "ventilateurs",
+          "climatisation"
         ],
         "en": [
-          "fan",
-          "air conditioning",
-          "blowing"
+          "ceiling fan",
+          "electric fan",
+          "air conditioning"
         ]
       }
     },
@@ -412,24 +571,21 @@
       },
       "symbol": "bolt",
       "defaultVolume": 50,
-      "page": "technologique",
+      "page": "ville",
       "author": "Sonorama",
       "license": "CC0-1.0",
       "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
       "keywords": {
         "fr": [
           "électricité",
-          "électrique",
-          "courant",
-          "bourdonnement",
-          "machine"
+          "courant électrique",
+          "haute tension",
+          "bourdonnement"
         ],
         "en": [
           "electricity",
-          "electric",
-          "power",
-          "humming",
-          "machine"
+          "electric current",
+          "high voltage"
         ]
       }
     },
@@ -442,24 +598,22 @@
       },
       "symbol": "rocket_launch",
       "defaultVolume": 70,
-      "page": "technologique",
+      "page": "ville",
       "author": "Sonorama",
       "license": "CC0-1.0",
       "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
       "keywords": {
         "fr": [
-          "vaisseau",
           "vaisseau spatial",
           "fusée",
-          "espace",
-          "étoiles"
+          "station spatiale",
+          "voyage spatial"
         ],
         "en": [
           "spaceship",
           "spacecraft",
           "rocket",
-          "space",
-          "stars"
+          "outer space"
         ]
       }
     },
@@ -472,7 +626,7 @@
       },
       "symbol": "terminal",
       "defaultVolume": 50,
-      "page": "technologique",
+      "page": "ville",
       "author": "Sonorama",
       "license": "CC0-1.0",
       "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
@@ -482,16 +636,14 @@
           "robots",
           "bip",
           "bips",
-          "ordinateur de bord",
-          "console"
+          "tableau de bord"
         ],
         "en": [
           "robot",
           "robots",
           "beep",
           "beeps",
-          "control panel",
-          "console"
+          "control panel"
         ]
       }
     },
@@ -502,26 +654,25 @@
         "fr": "Pluie légère",
         "en": "Light rain"
       },
-      "symbol": "water_drop",
+      "symbol": "grain",
       "defaultVolume": 65,
-      "page": "meteo",
-      "author": "Sonorama",
+      "page": "nature",
+      "author": "Ryding",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/96729/",
       "keywords": {
         "fr": [
           "pluie",
           "il pleut",
           "bruine",
-          "gouttes",
+          "gouttes de pluie",
           "averse"
         ],
         "en": [
-          "rain",
           "raining",
+          "rainy",
           "drizzle",
-          "drops",
-          "shower"
+          "raindrops"
         ]
       }
     },
@@ -534,7 +685,7 @@
       },
       "symbol": "umbrella",
       "defaultVolume": 65,
-      "page": "meteo",
+      "page": "nature",
       "author": "Sonorama",
       "license": "CC0-1.0",
       "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
@@ -542,15 +693,13 @@
         "fr": [
           "déluge",
           "pluie battante",
-          "trombes",
-          "tempête",
+          "trombes d'eau",
           "pleuvait"
         ],
         "en": [
           "downpour",
-          "pouring",
+          "pouring rain",
           "heavy rain",
-          "storm",
           "rained"
         ]
       }
@@ -564,20 +713,22 @@
       },
       "symbol": "air",
       "defaultVolume": 65,
-      "page": "meteo",
+      "page": "nature",
       "author": "Sonorama",
       "license": "CC0-1.0",
       "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
       "keywords": {
         "fr": [
-          "vent",
-          "souffle le vent",
-          "rafale",
-          "rafales",
-          "bourrasque"
+          "le vent",
+          "vent violent",
+          "tempête",
+          "coup de vent",
+          "rafales de vent",
+          "bourrasque",
+          "bourrasques"
         ],
         "en": [
-          "wind",
+          "the wind",
           "windy",
           "gust",
           "gusts",
@@ -594,23 +745,21 @@
       },
       "symbol": "thunderstorm",
       "defaultVolume": 70,
-      "page": "meteo",
-      "author": "Sonorama",
+      "page": "nature",
+      "author": "Soojay",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/319565/",
       "keywords": {
         "fr": [
           "orage",
-          "tonnerre",
-          "éclair",
-          "éclairs",
-          "gronde"
+          "orages",
+          "orageux",
+          "tonnerre"
         ],
         "en": [
           "thunderstorm",
           "thunder",
           "lightning",
-          "rumble",
           "storm"
         ]
       }
@@ -624,24 +773,22 @@
       },
       "symbol": "ac_unit",
       "defaultVolume": 60,
-      "page": "meteo",
-      "author": "Sonorama",
+      "page": "nature",
+      "author": "DBlover",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/505999/",
       "keywords": {
         "fr": [
           "blizzard",
           "neige",
-          "tempête de neige",
-          "glace",
-          "hiver"
+          "il neige",
+          "tempête de neige"
         ],
         "en": [
           "blizzard",
           "snow",
-          "snowstorm",
-          "ice",
-          "winter"
+          "snowing",
+          "snowstorm"
         ]
       }
     },
@@ -654,23 +801,23 @@
       },
       "symbol": "train",
       "defaultVolume": 65,
-      "page": "transports",
+      "page": "ville",
       "author": "Sonorama",
       "license": "CC0-1.0",
       "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
       "keywords": {
         "fr": [
-          "train",
-          "gare",
+          "le train",
+          "quai de gare",
+          "chemin de fer",
           "locomotive",
           "wagon",
           "rails"
         ],
         "en": [
-          "train",
-          "station",
+          "the train",
+          "train station",
           "locomotive",
-          "carriage",
           "railway"
         ]
       }
@@ -684,21 +831,21 @@
       },
       "symbol": "flight",
       "defaultVolume": 60,
-      "page": "transports",
-      "author": "Sonorama",
+      "page": "ville",
+      "author": "richwise",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/451741/",
       "keywords": {
         "fr": [
-          "avion",
-          "vol",
+          "un avion",
+          "en avion",
+          "avion de ligne",
           "aéroport",
           "pilote"
         ],
         "en": [
-          "plane",
           "airplane",
-          "flight",
+          "airplanes",
           "airport",
           "pilot"
         ]
@@ -713,22 +860,22 @@
       },
       "symbol": "directions_car",
       "defaultVolume": 65,
-      "page": "transports",
+      "page": "ville",
       "author": "Sonorama",
       "license": "CC0-1.0",
       "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
       "keywords": {
         "fr": [
           "voiture",
+          "voitures",
           "en voiture",
-          "route",
-          "conduisait"
+          "autoroute"
         ],
         "en": [
           "car",
-          "drive",
-          "road",
-          "driving"
+          "cars",
+          "driving",
+          "highway"
         ]
       }
     },
@@ -741,24 +888,79 @@
       },
       "symbol": "directions_boat",
       "defaultVolume": 65,
-      "page": "transports",
+      "page": "ville",
       "author": "Sonorama",
       "license": "CC0-1.0",
       "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
       "keywords": {
         "fr": [
           "bateau",
+          "bateaux",
           "navire",
           "voilier",
-          "pirates",
-          "port"
+          "pirates"
         ],
         "en": [
           "boat",
-          "ship",
+          "boats",
           "sailboat",
+          "sailing ship",
           "pirates",
           "harbor"
+        ]
+      }
+    },
+    {
+      "id": "wind_chimes",
+      "file": "audio/wind_chimes.ogg",
+      "name": {
+        "fr": "Carillons",
+        "en": "Wind chimes"
+      },
+      "symbol": "notifications",
+      "defaultVolume": 50,
+      "page": "feerique",
+      "author": "MrCisum",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/336664/",
+      "keywords": {
+        "fr": [
+          "carillon",
+          "carillons",
+          "clochettes"
+        ],
+        "en": [
+          "chimes",
+          "little bells"
+        ]
+      }
+    },
+    {
+      "id": "shimmer",
+      "file": "audio/shimmer.ogg",
+      "name": {
+        "fr": "Scintillements",
+        "en": "Shimmer"
+      },
+      "symbol": "auto_awesome",
+      "defaultVolume": 45,
+      "page": "feerique",
+      "author": "opticaillusions",
+      "license": "CC0-1.0",
+      "source": "https://freesound.org/s/521882/",
+      "keywords": {
+        "fr": [
+          "magie",
+          "magique",
+          "conte de fées",
+          "baguette magique",
+          "sortilège"
+        ],
+        "en": [
+          "magic",
+          "magical",
+          "fairy tale",
+          "enchanted"
         ]
       }
     }

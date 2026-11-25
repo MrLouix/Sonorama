@@ -21,7 +21,8 @@ Prérequis : JDK 21 et SDK Android (plateforme 37).
 ./gradlew lintDebug testDebugUnitTest   # ce que lance la CI, avec assembleDebug
 ./gradlew assembleDebug
 ./gradlew assembleRelease               # APK optimisés, un par processeur, non signés
-python3 tools/generate_base_pack.py     # régénère les 24 boucles (numpy, ffmpeg)
+python3 tools/generate_base_pack.py     # boucles synthétisées, manifeste et licences (numpy, ffmpeg avec libvorbis)
+python3 tools/prepare_recordings.py     # boucles enregistrées acceptées, depuis pack-sources/ (non versionné)
 python3 tools/prepare_loop.py src out.ogg   # boucle prête pour un pack ; --check pour contrôler
 python3 tools/check_pack.py dossier/ --zip  # vérifie un pack comme l'appli, puis le zippe
 ```
@@ -43,12 +44,13 @@ Les tests d'écran (`ScreensTest`, Robolectric) écrivent des captures dans `app
 
 - Les cartes de la grille portent leur nom dans leur description d'accessibilité : dans les tests, les chercher avec `hasContentDescription`, pas `onNodeWithText`.
 - `InputStream.readNBytes` n'existe qu'à partir d'Android 13 : utiliser `readAtMost` (`PackArchive.kt`).
-- L'appli n'a pas encore été essayée sur un appareil ; les sons du pack de base sont synthétisés.
+- L'appli n'a pas encore été essayée sur un appareil ; 14 des 33 sons du pack de base sont encore synthétisés.
+- Un enregistrement n'entre dans le pack de base qu'une fois écouté par l'utilisateur : `accepted` dans `tools/recordings.json`. Augmenter alors `--version` dans `generate_base_pack.py`, sinon les appareils déjà installés gardent l'ancien manifeste.
 - Toute modification du schéma Room demande une migration et un cas dans `MigrationTest` ; le schéma exporté est dans `app/schemas/`.
 - Une clé privée de signature de pack (`*.pem`) ne se commite jamais et ne se crée pas dans une session d'assistant : `OFFICIAL_KEYS` ne reçoit que des empreintes fournies par le propriétaire.
 - La première compilation télécharge le modèle Vosk français depuis alphacephei.com (empreinte vérifiée, cache `~/.gradle/caches/sonorama-vosk`) : l'hôte doit être joignable.
 - La transcription du mode vocal vit dans `src/debug/` et ne doit jamais passer dans `src/main/` : l'APK de publication ne la contient pas. `src/release/` en garde une version vide de même signature.
 - Une grammaire Vosk s'envoie en UTF-8 brut : un mot échappé (`\u00ea`) est ignoré.
 - `tools/check_pack.py` recopie les règles de `PackManifest.kt` : toute règle d'import modifiée se reporte dans les deux.
-- Aucun son ElevenLabs dans un pack : ses conditions interdisent la distribution des effets seuls ou en collection.
+- Aucun son ElevenLabs dans un pack ni dans l'APK : ses conditions interdisent la distribution des effets seuls ou en collection.
 - Les clés des listes Compose (`LazyColumn`, `LazyVerticalGrid`) viennent d'identifiants, jamais de noms affichés : un pack peut répéter un nom.

@@ -50,8 +50,8 @@ Les sons se partagent sous forme de packs : voir le [format des packs](docs/form
 - Licences acceptées : **CC0** de préférence, **CC BY** avec attribution. Jamais « NC » ni « ND ».
 - Vous devez être l'auteur du son ou pouvoir citer sa source et sa licence.
 - Boucles Ogg Vorbis, 44,1 kHz, stéréo, de 30 à 120 s, sans raccord audible, niveau normalisé.
-- Les sons du pack de base sont produits par [`tools/generate_base_pack.py`](tools/generate_base_pack.py) ;
-  pour en remplacer un par un enregistrement, proposez le fichier, sa source et sa licence dans un ticket.
+- Les sons synthétisés du pack de base sont produits par [`tools/generate_base_pack.py`](tools/generate_base_pack.py),
+  ses sons enregistrés par [`tools/prepare_recordings.py`](tools/prepare_recordings.py) ; pour remplacer un son par un enregistrement, proposez le fichier, sa source et sa licence dans un ticket.
 
 ## Traduire
 

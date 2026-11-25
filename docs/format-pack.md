@@ -68,7 +68,7 @@ Seuls les fichiers déclarés dans le manifeste, et `LICENSES.md`, sont copiés 
 | `symbol` | non | Pictogramme (voir plus bas) ; `music_note` par défaut ; 64 caractères au plus |
 
 Un son peut aussi rejoindre une page déjà fournie par l'appli, sans la déclarer :
-`nature`, `ville`, `technologique`, `meteo`, `transports`. Si une page déclarée existe déjà, elle est complétée.
+`nature`, `ville`, `feerique`. Si une page déclarée existe déjà, elle est complétée. Les anciennes pages `meteo`, `technologique` et `transports` restent acceptées : leurs sons rejoignent `nature` (`meteo`) ou `ville`.
 
 ### Son
 
@@ -92,6 +92,7 @@ Le mode vocal lance une carte quand il entend un de ses mots-clés. Le champ est
 
 - Casse, accents et ponctuation sont ignorés ; un mot-clé peut compter plusieurs mots (`"feu de camp"`).
 - Aucune variante n'est déduite : déclarer chaque forme utile (`"loup"`, `"loups"`).
+- Éviter les homonymes (« mer » et « mère », « étang » et « étant ») et les mots à plusieurs sens (« feu », « vol ») : une expression (« bord de mer ») ne se déclenche pas par erreur.
 - Un mot absent du vocabulaire du modèle Vosk ne sera jamais reconnu ; l'appli le grise dans l'écran des mots-clés. Les noms propres et les mots inventés sont les cas habituels.
 - Les mots-clés font partie du manifeste : la signature d'un pack les couvre.
 - Un utilisateur qui modifie les mots-clés d'une carte garde les siens à la mise à jour du pack.
@@ -102,7 +103,7 @@ Les champs inconnus sont ignorés, pour permettre des ajouts futurs.
 
 - Ogg Vorbis, 44,1 kHz, stéréo, environ 128 kbit/s.
 - Boucles de 30 à 120 secondes dont la fin s'enchaîne avec le début sans raccord audible.
-- Niveau normalisé d'un son à l'autre (le pack de base vise −24 dBFS RMS).
+- Niveau normalisé d'un son à l'autre (le pack de base vise −17 LUFS, crête réelle ≤ −1,5 dBTP).
 - 500 Mo au plus une fois décompressé.
 
 Exemple d'encodage : `ffmpeg -i boucle.wav -c:a libvorbis -q:a 4 -ar 44100 -ac 2 audio/boucle.ogg`

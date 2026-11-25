@@ -7,7 +7,7 @@ Sonorama joue des sons d'ambiance en boucle et les mixe en direct depuis des pag
 • Un mode vocal : pendant que vous lisez, l'appli reconnaît les mots-clés de la page et lance les sons quelques secondes. Reconnaissance sur le téléphone, hors ligne.
 • Vos pages : rassemblez vos cartes favorites, enregistrez un mix complet en une carte.
 • Lecture écran éteint, commandes sur l'écran verrouillé et au casque.
-• 24 sons fournis : nature, ville, technologie, météo, transports.
+• 33 sons fournis : nature, ville, technologie, météo, transports, féerie.
 • D'autres sons par packs ZIP, importés depuis le téléphone ; le format est ouvert.
 
 Aucun compte, aucune publicité, aucune télémétrie. L'appli ne demande aucun accès réseau.

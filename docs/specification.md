@@ -45,7 +45,7 @@ L'appli tient en un écran principal : des pages que l'on fait défiler horizont
 **Pages**
 
 - Onglets en haut, balayage latéral pour passer d'une page à l'autre.
-- Pages intégrées au lancement : Nature, Ville, Technologique, Météo, Transports. Thèmes envisagés ensuite en packs : Maison, Fantastique. Pas de page Animaux : les cartes d'animaux sont réparties dans les autres thèmes.
+- Pages intégrées au lancement : Nature et météo, Ville et machines, Féerique. Peu de pages et bien remplies : le mode vocal n'écoute que les mots-clés de la page affichée. Thèmes envisagés ensuite en packs : Maison, Fantastique. Pas de page Animaux : les cartes d'animaux sont réparties dans les autres thèmes.
 - Les pages personnalisées apparaissent après les pages intégrées ; l'ordre des onglets est modifiable.
 - Un point sur l'onglet signale qu'au moins une carte de cette page est active.
 
@@ -186,7 +186,7 @@ L'appli embarque un petit pack de base pour fonctionner dès l'installation ; le
 
 **Pack de base (dans l'APK)**
 
-- 4 à 5 sons par page intégrée (Nature, Ville, Technologique, Météo, Transports), soit 20 à 25 sons.
+- 33 sons sur trois pages intégrées (Nature et météo, Ville et machines, Féerique) ; Féerique n'en compte que deux au départ.
 - Objectif : APK sous 30 Mo.
 
 **Import d'un pack**
@@ -317,7 +317,7 @@ Toutes les questions ouvertes ont été tranchées le 12 nov. 2026 ; trois point
 - Mode plan : tout s'applique à la validation, sauf le volume général du téléphone.
 - Scènes : un mix s'enregistre comme carte composée ; rappelée, elle s'ajoute au mix en cours.
 - Packs : ZIP publiés dans un dépôt Git public ou sur une page web, importés depuis Téléchargements.
-- Thèmes au lancement : Nature, Ville, Technologique, Météo, Transports ; les animaux sont répartis dans ces thèmes.
+- Thèmes au lancement : Nature et météo, Ville et machines, Féerique ; les animaux sont répartis dans ces thèmes.
 - Pas de minuterie d'arrêt, pas de verrouillage tactile.
 - Fondus réglables de 0 à 5 s, réglage global.
 - Grille adaptative en paysage et sur tablette, sans mise en page dédiée.
@@ -327,7 +327,7 @@ Toutes les questions ouvertes ont été tranchées le 12 nov. 2026 ; trois point
 
 - [ ] Vérifier les marques déposées « Sonorama » (INPI, EUIPO) avant publication.
 - [ ] Lever le risque audio par le prototype du lot 0 : raccord de boucle et 12 sons simultanés.
-- [ ] Constituer le pack de base : 20 à 25 boucles sous CC0 ou CC BY, normalisées.
+- [ ] Constituer le pack de base : boucles sous CC0 ou CC BY, normalisées. 19 enregistrements acceptés le 25 nov. 2026 ; 14 sons restent synthétisés.
 
 ## 14. Mode vocal
 

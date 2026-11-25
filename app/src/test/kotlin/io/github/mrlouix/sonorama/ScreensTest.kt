@@ -76,9 +76,9 @@ class ScreensTest {
     @Test
     fun `main screen shows the built-in pages and the base pack`() {
         val library = viewModel.library.value
-        assertEquals(listOf("nature", "ville", "technologique", "meteo", "transports"), library.pages.map { it.id })
-        assertEquals(24, library.cards.size)
-        rule.onNodeWithText("Météo").assertExists()
+        assertEquals(listOf("nature", "ville", "feerique"), library.pages.map { it.id })
+        assertEquals(33, library.cards.size)
+        rule.onNodeWithText("Ville et machines").assertExists()
         capture("main")
     }
 
@@ -110,7 +110,7 @@ class ScreensTest {
         rule.onNodeWithText("Terminé").performClick()
         capture("page-editor")
         rule.onNodeWithText("Enregistrer").performClick()
-        waitFor { viewModel.library.value.pages.size == 6 }
+        waitFor { viewModel.library.value.pages.size == 4 }
         val page = viewModel.library.value.pages.last()
         assertEquals("Soir d'orage", page.name.fr)
         assertEquals(2, page.cardIds.size)
@@ -158,17 +158,17 @@ class ScreensTest {
         waitFor { viewModel.mix.value.active.isEmpty() }
     }
 
-    /** Installe un pack dont deux pages portent le même nom que la page Nature. */
+    /** Installe un pack dont deux pages portent le même nom que la page Nature et météo. */
     private fun installPackWithDuplicatePageNames() {
         val app = ApplicationProvider.getApplicationContext<Application>() as SonoramaApp
         val manifest = PackFormat.parse(
             """{"format":1,"id":"jumeaux","version":1,"name":{"fr":"Jumeaux"},
-               "pages":[{"id":"p1","name":{"fr":"Nature"}},{"id":"p2","name":{"fr":"Nature"}}],
+               "pages":[{"id":"p1","name":{"fr":"Nature et météo"}},{"id":"p2","name":{"fr":"Nature et météo"}}],
                "sounds":[{"id":"a","file":"a.ogg","name":{"fr":"Son A"},"page":"p1","license":"CC0"},
                          {"id":"b","file":"b.ogg","name":{"fr":"Son B"},"page":"p2","license":"CC0"}]}""",
         ).also(PackFormat::validate)
         runBlocking { app.container.repository.installPack(manifest, builtIn = false) { "file:///absent/${it.file}" } }
-        waitFor { viewModel.library.value.cards.size == 26 }
+        waitFor { viewModel.library.value.cards.size == 35 }
     }
 
     @Test
@@ -182,7 +182,7 @@ class ScreensTest {
         rule.onNodeWithText("Son A").assertExists()
         rule.onNodeWithText("Son B").assertExists()
 
-        // 26 cartes installées pour 24 places : le refus s'affiche sur l'écran où il se produit.
+        // 35 cartes installées pour 24 places : le refus s'affiche sur l'écran où il se produit.
         rule.runOnUiThread { viewModel.library.value.cards.keys.forEach(viewModel::togglePageCard) }
         assertEquals(24, viewModel.pageDraft.value!!.cardIds.size)
         waitFor { rule.onAllNodes(hasText("Une page contient 24 cartes au plus.")).fetchSemanticsNodes().isNotEmpty() }
@@ -210,7 +210,7 @@ class ScreensTest {
 
     @Test
     fun `setup mode opens the keywords of a card in one tap and comes back to its page`() {
-        rule.onNodeWithText("Ville").performClick()
+        rule.onNodeWithText("Ville et machines").performClick()
         waitFor { viewModel.visiblePage == "ville" }
         rule.onNodeWithContentDescription("Mode paramétrage").performClick()
         rule.onNodeWithText("Touchez une carte pour modifier ses mots-clés.").assertExists()
@@ -279,7 +279,7 @@ class ScreensTest {
 
         viewModel.openKeywords("nature")
         rule.waitForIdle()
-        rule.onNodeWithText("Mots-clés · Nature").assertExists()
+        rule.onNodeWithText("Mots-clés · Nature et météo").assertExists()
         capture("keywords")
 
         viewModel.setCardKeywords("s:sonorama.base/birds", "fr", listOf("merle", "Grignotin"))

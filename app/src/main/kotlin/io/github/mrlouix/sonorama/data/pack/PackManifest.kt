@@ -91,7 +91,12 @@ object PackFormat {
     const val BASE_PACK_ID = "sonorama.base"
 
     /** Pages intégrées à l'appli : un pack peut les compléter sans les déclarer. */
-    val BUILT_IN_PAGES = setOf("nature", "ville", "technologique", "meteo", "transports")
+    val BUILT_IN_PAGES = setOf("nature", "ville", "feerique")
+
+    /** Anciennes pages intégrées, fusionnées dans une autre : un pack qui les cite rejoint la nouvelle. */
+    val MERGED_PAGES = mapOf("meteo" to "nature", "technologique" to "ville", "transports" to "ville")
+
+    fun pageId(id: String): String = MERGED_PAGES[id] ?: id
 
     private val ID = Regex("[a-z0-9][a-z0-9._-]{0,63}")
     private val SHA256 = Regex("[0-9a-f]{64}")
@@ -134,7 +139,7 @@ object PackFormat {
                 throw PackException(PackError.UNSUPPORTED_AUDIO, sound.file)
             }
             if (!files.add(sound.file)) throw PackException(PackError.DUPLICATE_SOUND, sound.file)
-            if (sound.page !in pages && sound.page !in BUILT_IN_PAGES) {
+            if (sound.page !in pages && pageId(sound.page) !in BUILT_IN_PAGES) {
                 throw PackException(PackError.UNKNOWN_PAGE, sound.page)
             }
             requireLength(sound.license, MAX_LICENSE, sound.id)

@@ -16,9 +16,9 @@ Les décisions de contenu (thème, sons retenus, noms, licences) sont les sienne
 
 Demander, en une fois :
 - le thème et l'usage (histoire pour enfants, jeu de rôle, quel univers) ;
-- la page : une page intégrée à compléter (`nature`, `ville`, `technologique`, `meteo`, `transports`)
+- la page : une page intégrée à compléter (`nature` : nature et météo, `ville` : ville et machines, `feerique`)
   ou une nouvelle page déclarée dans `pages` ;
-- le nombre de sons (4 à 8 par page se lisent bien ; 24 cartes au plus par page) ;
+- le nombre de sons (des pages bien remplies : le mode vocal n'écoute que la page affichée ; 24 cartes au plus) ;
 - l'origine des sons : générés par IA (skill `generer-sons-ia`), enregistrements libres existants, ou
   enregistrements de l'utilisateur ;
 - un identifiant de pack stable (`auteur.theme`, minuscules) : le garder d'une version à l'autre.
@@ -43,6 +43,8 @@ Présenter un tableau, un son par ligne :
 - 3 à 8 par langue ; noms et verbes qu'un conteur prononce vraiment (« il pleut », « l'orage gronde »).
 - Chaque forme utile séparément : singulier et pluriel (`loup`, `loups`), verbes conjugués courants.
 - Éviter les mots trop fréquents qui déclencheraient sans cesse (« eau », « nuit », « bruit », « temps »).
+- Ni homonyme (« mer »/« mère », « vent »/« vend », « étang »/« étant »), ni mot à plusieurs sens (« feu », « vol »,
+  « train » dans « en train de ») : une expression à la place (« bord de mer », « le vent », « quai de gare »).
 - Un même mot sur deux cartes d'une page les lance ensemble : le faire exprès (« orage » → pluie + tonnerre),
   jamais par accident.
 - Pas de noms propres ni de mots inventés : le modèle Vosk ne les connaît pas. Les vérifier avec
@@ -68,7 +70,7 @@ Exigences du format (spécification, section 8) et réglages du pack de base :
 | Échantillonnage | 44,1 kHz, stéréo (un mono est dupliqué) |
 | Durée de la boucle | 30 à 120 s ; **60 s conseillées**. Trop court : la répétition s'entend. Trop long : le pack grossit |
 | Raccord | Inaudible : fondu enchaîné de bouclage de 2 à 4 s, à puissance constante |
-| Niveau | RMS −24 dBFS, crête ≤ −1,5 dBFS : tous les sons au même niveau perçu |
+| Niveau | −17 LUFS, crête réelle ≤ −1,5 dBTP : tous les sons au même niveau perçu |
 | Compression | Vorbis qualité 4 (≈ 128 kbit/s), sans métadonnées : ≈ 1 Mo par minute |
 | Contenu | Pas de silence en tête ou en queue, pas de fondu d'entrée ou de sortie, pas d'évènement marquant près du raccord |
 
@@ -82,7 +84,10 @@ python3 tools/prepare_loop.py --check mon-pack/audio/*.ogg                      
 ```
 
 - Un `⚠` est bloquant tant qu'il n'est pas compris. « Saut au raccord » : augmenter `--crossfade`.
-  « Niveau change au raccord » : la source évolue trop (vent qui forcit) ; choisir un autre passage avec `--skip`.
+  « Niveau change au raccord » : l'outil a déjà cherché le meilleur passage ; en imposer un autre avec `--skip`, ou
+  laisser l'écoute trancher pour un son irrégulier (gouttes, vagues). « Niveau perçu » : des pics isolés bloquent le
+  limiteur ; augmenter `--limiting` (8 dB par défaut) si l'écoute le permet.
+- Une source de moins de 33 s demande `--repeat`.
 - `--concat` assemble des extraits différents : le passage de l'un à l'autre peut s'entendre. Préférer
   une seule source assez longue, sinon le signaler à l'utilisateur.
 - Les mesures ne remplacent pas l'écoute : demander à l'utilisateur d'écouter chaque boucle **en
@@ -127,4 +132,4 @@ phrase à voix haute. Pour une mise à jour : même `id`, `version` + 1, mêmes 
 - Mettre dans un pack un son dont la licence n'est pas écrite et compatible (CC0, CC BY, CC BY-SA).
 - Déclarer CC0 un son tiers qui ne l'est pas, ou effacer l'auteur d'un son CC BY.
 - Commiter un pack dans ce dépôt sans que l'utilisateur le demande (seul le pack de base y vit, régénéré
-  par `tools/generate_base_pack.py`).
+  par `tools/generate_base_pack.py` et `tools/prepare_recordings.py`).
