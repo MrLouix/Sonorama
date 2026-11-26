@@ -327,7 +327,7 @@ Toutes les questions ouvertes ont été tranchées le 12 nov. 2026 ; trois point
 
 - [ ] Vérifier les marques déposées « Sonorama » (INPI, EUIPO) avant publication.
 - [ ] Lever le risque audio par le prototype du lot 0 : raccord de boucle et 12 sons simultanés.
-- [ ] Constituer le pack de base : boucles sous CC0 ou CC BY, normalisées. 19 enregistrements acceptés le 25 nov. 2026 ; 14 sons restent synthétisés.
+- [ ] Constituer le pack de base : boucles sous CC0 ou CC BY, normalisées. 22 enregistrements acceptés les 25 et 26 nov. 2026 ; 11 sons restent synthétisés.
 
 ## 14. Mode vocal
 
@@ -352,7 +352,7 @@ Ajouté le 24 nov. 2026. L'appli écoute la personne qui lit l'histoire et décl
 
 **Écoute**
 
-- Reconnaissance hors ligne par Vosk, de toute la phrase, dont on extrait les mots-clés de la page ; déclenchement sur les résultats partiels, dès que le mot est entendu. L'APK de débogage permet de comparer avec une reconnaissance limitée aux mots-clés (voir « Décisions »).
+- Reconnaissance hors ligne par Vosk, de toute la phrase, dont on extrait les mots-clés de la page ; déclenchement sur les résultats partiels, dès que le mot est entendu avec une confiance d'au moins 0,6, ou qu'il tient 0,4 s. L'APK de débogage permet de comparer avec une reconnaissance limitée aux mots-clés (voir « Décisions »).
 - L'écoute démarre depuis l'appli ouverte et continue écran éteint, avec une notification « micro actif » qui permet de la couper.
 - Elle s'arrête d'elle-même après 5 minutes sans mot-clé reconnu.
 - Micro ouvert en mode « reconnaissance vocale », avec l'annulation d'écho du téléphone quand elle existe.
@@ -373,10 +373,12 @@ Ajouté le 24 nov. 2026. L'appli écoute la personne qui lit l'histoire et décl
 **Transcription (versions de test uniquement)**
 
 - Dans l'APK de débogage, un réglage enregistre le texte entendu, jamais l'audio, pour repérer les sons à ajouter.
-- Chaque phrase est horodatée, avec les cartes déclenchées ; export CSV par le sélecteur de fichiers, effacement en un bouton.
+- Chaque phrase est horodatée, avec les cartes déclenchées, la page affichée, les mots-clés reconnus et la phrase en cours au moment du déclenchement, la confiance de chaque mot et le niveau du micro ; export CSV par le sélecteur de fichiers, effacement en un bouton.
 - Le code de la transcription n'existe pas dans l'APK de publication.
 
 **Décisions**
 
 - Reconnaissance de toute la phrase par défaut. Un essai sur voix de synthèse (24 nov. 2026) a montré que le mode limité aux mots-clés invente des mots-clés non prononcés et en rate d'autres ; le mode complet s'est moins trompé. À confirmer sur une vraie voix : les deux modes sont comparables dans l'APK de débogage.
+- Confiance ou stabilité, jamais la confiance seule. Mesuré le 25 nov. 2026 sur 75 phrases de synthèse : le seuil seul perd 3 à 5 mots-clés, la combinaison n'en perd aucun. Les phrases pièges n'ont produit aucune fausse alerte, avec ou sans filtre : son utilité reste à mesurer sur une vraie lecture.
+- Voix d'enfant : second reconnaisseur sur le signal abaissé de 16 %, réglage de l'APK de débogage, éteint par défaut. Sur une voix d'enfant simulée il fait passer de 73 à 75 mots-clés sur 75 (de 69 à 73 dans le bruit) ; à confirmer sur une vraie voix, pour environ deux fois plus de calcul.
 - Une pause alors que seuls des sons vocaux jouent reste une pause : le micro reste coupé jusqu'au play.

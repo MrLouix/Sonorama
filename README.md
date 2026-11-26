@@ -41,7 +41,7 @@ compile, passe le lint et 71 tests automatisés, dont des tests d'écran qui pil
 - le geste de volume et le parcours TalkBack ;
 - la reconnaissance vocale réelle : précision sur une vraie voix, délai, écoute écran éteint, sons de l'appli
   captés par le micro ;
-- la qualité des 14 sons du pack de base encore **synthétisés**, qui n'ont pas été comparés à des
+- la qualité des 11 sons du pack de base encore **synthétisés**, qui n'ont pas été comparés à des
   enregistrements ; les 19 sons enregistrés ont été écoutés en boucle sur ordinateur, pas dans l'appli.
 
 Les points ouverts de la spécification (marque « Sonorama », fin du pack de base enregistré) restent à traiter.
@@ -116,7 +116,7 @@ Les failles de sécurité se signalent en privé : [SECURITY.md](SECURITY.md).
 
 - Code : [GNU GPL 3.0](LICENSE).
 - Sons du pack de base : [CC0 1.0](app/src/main/assets/basepack/LICENSES.md), 14 créations synthétisées et
-  19 enregistrements de Freesound, dont les auteurs sont cités.
+  22 enregistrements de Freesound, dont les auteurs sont cités.
 - Pictogrammes : Material Icons de Google, licence Apache 2.0.
 - Reconnaissance vocale : [Vosk](https://alphacephei.com/vosk/) et son modèle français
   `vosk-model-small-fr-0.22`, licence Apache 2.0 ; JNA, licence Apache 2.0.

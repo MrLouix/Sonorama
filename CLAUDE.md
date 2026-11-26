@@ -44,7 +44,7 @@ Les tests d'écran (`ScreensTest`, Robolectric) écrivent des captures dans `app
 
 - Les cartes de la grille portent leur nom dans leur description d'accessibilité : dans les tests, les chercher avec `hasContentDescription`, pas `onNodeWithText`.
 - `InputStream.readNBytes` n'existe qu'à partir d'Android 13 : utiliser `readAtMost` (`PackArchive.kt`).
-- L'appli n'a pas encore été essayée sur un appareil ; 14 des 33 sons du pack de base sont encore synthétisés.
+- L'appli n'a pas encore été essayée sur un appareil ; 11 des 33 sons du pack de base sont encore synthétisés.
 - Un enregistrement n'entre dans le pack de base qu'une fois écouté par l'utilisateur : `accepted` dans `tools/recordings.json`. Augmenter alors `--version` dans `generate_base_pack.py`, sinon les appareils déjà installés gardent l'ancien manifeste.
 - Toute modification du schéma Room demande une migration et un cas dans `MigrationTest` ; le schéma exporté est dans `app/schemas/`.
 - Une clé privée de signature de pack (`*.pem`) ne se commite jamais et ne se crée pas dans une session d'assistant : `OFFICIAL_KEYS` ne reçoit que des empreintes fournies par le propriétaire.
