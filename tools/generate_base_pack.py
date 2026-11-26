@@ -598,14 +598,14 @@ SOUNDS = [
 # Mots-clés du mode vocal, vérifiés contre le vocabulaire des petits modèles Vosk français et anglais.
 # Ni homonyme (« mer » et « mère »), ni mot à plusieurs sens (« feu », « vol ») : une expression à la place.
 KEYWORDS = {
-    'birds': (["oiseau", "oiseaux", "chant des oiseaux", "gazouillis", "merle", "rossignol"], ["bird", "birds", "birdsong", "chirping", "nightingale"]),
-    'stream': (["ruisseau", "ruisseaux", "rivière", "rivières", "torrent"], ["brook", "river", "creek"]),
+    'birds': (["oiseau", "oiseaux", "chant des oiseaux", "gazouillis", "merle", "rossignol", "oisillons", "un nid", "nid d'oiseau", "moineau", "moineaux", "mésange", "mésanges", "hirondelle", "hirondelles"], ["bird", "birds", "birdsong", "chirping", "nightingale"]),
+    'stream': (["ruisseau", "ruisseaux", "rivière", "rivières", "torrent", "cours d'eau", "au bord de l'eau", "berge", "clapotis"], ["brook", "river", "creek"]),
     'waves': (["océan", "plage", "les vagues", "bord de mer", "marée haute", "marée basse"], ["ocean", "beach", "seaside", "high tide", "low tide", "crashing waves"]),
     'campfire': (["feu de camp", "feu de bois", "flammes", "bûches", "cheminée", "braises"], ["campfire", "bonfire", "flames", "fireplace", "embers"]),
-    'crickets': (["grillon", "grillons", "nuit d'été"], ["crickets", "summer night"]),
-    'frogs': (["grenouille", "grenouilles", "crapaud", "crapauds", "nénuphars"], ["frog", "frogs", "toad", "toads", "pond"]),
+    'crickets': (["grillon", "grillons", "nuit d'été", "lucioles", "soir d'été"], ["crickets", "summer night"]),
+    'frogs': (["grenouille", "grenouilles", "crapaud", "crapauds", "nénuphars", "la mare", "un étang", "têtard", "têtards"], ["frog", "frogs", "toad", "toads", "pond"]),
     'owl': (["chouette", "chouettes", "hibou", "hiboux"], ["owl", "owls", "hoot"]),
-    'cicadas': (["cigale", "cigales", "Provence", "garrigue"], ["cicada", "cicadas"]),
+    'cicadas': (["cigale", "cigales", "Provence", "garrigue", "journée d'été", "chaleur"], ["cicada", "cicadas"]),
     'cave': (["grotte", "grottes", "caverne", "cavernes"], ["cave", "caves", "cavern"]),
     'waterfall': (["cascade", "cascades", "chute d'eau"], ["waterfall", "waterfalls"]),
     'underwater': (["sous l'eau", "sous-marin", "fond des mers", "plongée sous-marine"], ["underwater", "submarine", "mermaid"]),
@@ -623,15 +623,15 @@ KEYWORDS = {
     'console_beeps': (["robot", "robots", "bip", "bips", "tableau de bord"], ["robot", "robots", "beep", "beeps", "control panel"]),
     'light_rain': (["pluie", "il pleut", "bruine", "gouttes de pluie", "averse"], ["raining", "rainy", "drizzle", "raindrops"]),
     'heavy_rain': (["déluge", "pluie battante", "trombes d'eau", "pleuvait"], ["downpour", "pouring rain", "heavy rain", "rained"]),
-    'wind': (["le vent", "vent violent", "tempête", "coup de vent", "rafales de vent", "bourrasque", "bourrasques"], ["the wind", "windy", "gust", "gusts", "breeze"]),
+    'wind': (["le vent", "vent violent", "tempête", "coup de vent", "rafales de vent", "bourrasque", "bourrasques", "du vent", "un vent", "soufflait", "une brise"], ["the wind", "windy", "gust", "gusts", "breeze"]),
     'distant_storm': (["orage", "orages", "orageux", "tonnerre"], ["thunderstorm", "thunder", "lightning", "storm"]),
     'blizzard': (["blizzard", "neige", "il neige", "tempête de neige"], ["blizzard", "snow", "snowing", "snowstorm"]),
     'train': (["le train", "quai de gare", "chemin de fer", "locomotive", "wagon", "rails"], ["the train", "train station", "locomotive", "railway"]),
     'plane_cabin': (["un avion", "en avion", "avion de ligne", "aéroport", "pilote"], ["airplane", "airplanes", "airport", "pilot"]),
     'car_interior': (["voiture", "voitures", "en voiture", "autoroute"], ["car", "cars", "driving", "highway"]),
-    'boat': (["bateau", "bateaux", "navire", "voilier", "pirates"], ["boat", "boats", "sailboat", "sailing ship", "pirates", "harbor"]),
-    'wind_chimes': (["carillon", "carillons", "clochettes"], ["chimes", "little bells"]),
-    'shimmer': (["magie", "magique", "conte de fées", "baguette magique", "sortilège"], ["magic", "magical", "fairy tale", "enchanted"]),
+    'boat': (["bateau", "bateaux", "navire", "voilier", "pirates", "à la voile"], ["boat", "boats", "sailboat", "sailing ship", "pirates", "harbor"]),
+    'wind_chimes': (["carillon", "carillons", "clochettes", "cloche", "clochette", "tintement", "grelot", "grelots"], ["chimes", "little bells"]),
+    'shimmer': (["magie", "magique", "conte de fées", "baguette magique", "sortilège", "une fée", "petite fée", "sorcière", "sorcières", "forêt enchantée", "potion"], ["magic", "magical", "fairy tale", "enchanted"]),
 }
 
 SOURCE = "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py"
@@ -672,7 +672,7 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--only", action="append", help="ne régénérer que ce son (répétable)")
     parser.add_argument("--quality", type=float, default=3.0, help="qualité Vorbis (3 ≈ 112 kbit/s)")
-    parser.add_argument("--version", type=int, default=4, help="version du pack")
+    parser.add_argument("--version", type=int, default=5, help="version du pack")
     args = parser.parse_args()
 
     audio_dir = args.out / "audio"

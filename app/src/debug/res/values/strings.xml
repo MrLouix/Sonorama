@@ -10,6 +10,7 @@
     <string name="debug_transcript_export">Export CSV</string>
     <string name="debug_transcript_clear">Delete</string>
     <string name="debug_recognition_mode">Recognition</string>
+    <string name="debug_child_voice">Child voice: second recognizer (more processing)</string>
     <string name="debug_mode_full">Whole sentence</string>
     <string name="debug_mode_keywords">Keywords only</string>
 </resources>

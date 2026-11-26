@@ -13,7 +13,9 @@ le projet applique le [versionnage sémantique](https://semver.org/lang/fr/).
 - Mots-clés par carte et par langue, déclarés par les packs (champ `keywords`) et modifiables en
   touchant une carte en mode paramétrage, ou depuis l'onglet d'une page ; mots inconnus du modèle signalés. Mots-clés fournis pour tous les sons du pack de base.
 - Modèle vocal français intégré ; modèle anglais officiel importable. Langue de l'histoire réglable.
-- Version de débogage seulement : transcription du texte entendu, exportable en CSV.
+- Version de débogage seulement : transcription du texte entendu, exportable en CSV (page, mots-clés reconnus,
+  confiances, niveau du micro), et second reconnaisseur à l'essai pour les voix d'enfant.
+- Filtre des mots-clés par confiance ou stabilité ; phrases moins découpées (fin après 1 s de silence).
 - Un APK par type de processeur.
 - Un appui sur une carte lancée à la voix la garde en lecture, comme une carte lancée à la main ; un
   second appui l'arrête.
@@ -31,8 +33,8 @@ le projet applique le [versionnage sémantique](https://semver.org/lang/fr/).
 - Mode plan : changements préparés sur plusieurs pages, appliqués ensemble en fondu croisé.
 - Volume par carte, par appui long puis glissement vertical, mémorisé entre les sessions.
 - Lecture en arrière-plan avec notification média, écran verrouillé et casque Bluetooth.
-- Pack de base de 33 boucles sous CC0 (Nature et météo, Ville et machines, Féerique) : 19 enregistrements
-  de Freesound et 14 sons synthétisés, au niveau visé de −17 LUFS (la grotte reste plus basse).
+- Pack de base de 33 boucles sous CC0 (Nature et météo, Ville et machines, Féerique) : 22 enregistrements
+  de Freesound et 11 sons synthétisés, au niveau visé de −17 LUFS (la grotte reste plus basse).
 - Pages personnalisées : création, édition, réordonnancement, duplication, export et import.
 - Cartes composées et scènes (enregistrement du mix en cours).
 - Import de packs ZIP depuis le téléphone, avec vérifications et bilan ; écran des licences des sons.
@@ -40,6 +42,7 @@ le projet applique le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ### Corrigé
 
+- Mode vocal : un mot-clé redit après une phrase abandonnée par le reconnaisseur déclenche de nouveau sa carte.
 - Barre de commande et noms de cartes lisibles sur écran étroit et jusqu'à 200 % de taille de police.
 - Les messages (limites atteintes, refus) s'affichent sur l'écran où ils se produisent.
 - La pré-écoute s'arrête en quittant l'appli, sur un appel et au débranchement du casque.

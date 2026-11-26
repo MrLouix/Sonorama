@@ -1,7 +1,7 @@
 {
   "format": 1,
   "id": "sonorama.base",
-  "version": 4,
+  "version": 5,
   "name": {
     "fr": "Pack de base",
     "en": "Base pack"
@@ -53,7 +53,16 @@
           "chant des oiseaux",
           "gazouillis",
           "merle",
-          "rossignol"
+          "rossignol",
+          "oisillons",
+          "un nid",
+          "nid d'oiseau",
+          "moineau",
+          "moineaux",
+          "mésange",
+          "mésanges",
+          "hirondelle",
+          "hirondelles"
         ],
         "en": [
           "bird",
@@ -74,16 +83,20 @@
       "symbol": "water",
       "defaultVolume": 65,
       "page": "nature",
-      "author": "Sonorama",
+      "author": "INNORECORDS",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/469009/",
       "keywords": {
         "fr": [
           "ruisseau",
           "ruisseaux",
           "rivière",
           "rivières",
-          "torrent"
+          "torrent",
+          "cours d'eau",
+          "au bord de l'eau",
+          "berge",
+          "clapotis"
         ],
         "en": [
           "brook",
@@ -172,7 +185,9 @@
         "fr": [
           "grillon",
           "grillons",
-          "nuit d'été"
+          "nuit d'été",
+          "lucioles",
+          "soir d'été"
         ],
         "en": [
           "crickets",
@@ -199,7 +214,11 @@
           "grenouilles",
           "crapaud",
           "crapauds",
-          "nénuphars"
+          "nénuphars",
+          "la mare",
+          "un étang",
+          "têtard",
+          "têtards"
         ],
         "en": [
           "frog",
@@ -228,7 +247,9 @@
           "cigale",
           "cigales",
           "Provence",
-          "garrigue"
+          "garrigue",
+          "journée d'été",
+          "chaleur"
         ],
         "en": [
           "cicada",
@@ -382,9 +403,9 @@
       "symbol": "groups",
       "defaultVolume": 60,
       "page": "ville",
-      "author": "Sonorama",
+      "author": "JohnsonBrandEditing",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/243373/",
       "keywords": {
         "fr": [
           "foule",
@@ -725,7 +746,11 @@
           "coup de vent",
           "rafales de vent",
           "bourrasque",
-          "bourrasques"
+          "bourrasques",
+          "du vent",
+          "un vent",
+          "soufflait",
+          "une brise"
         ],
         "en": [
           "the wind",
@@ -861,9 +886,9 @@
       "symbol": "directions_car",
       "defaultVolume": 65,
       "page": "ville",
-      "author": "Sonorama",
+      "author": "jc144940",
       "license": "CC0-1.0",
-      "source": "https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py",
+      "source": "https://freesound.org/s/179121/",
       "keywords": {
         "fr": [
           "voiture",
@@ -898,7 +923,8 @@
           "bateaux",
           "navire",
           "voilier",
-          "pirates"
+          "pirates",
+          "à la voile"
         ],
         "en": [
           "boat",
@@ -927,7 +953,12 @@
         "fr": [
           "carillon",
           "carillons",
-          "clochettes"
+          "clochettes",
+          "cloche",
+          "clochette",
+          "tintement",
+          "grelot",
+          "grelots"
         ],
         "en": [
           "chimes",
@@ -954,7 +985,13 @@
           "magique",
           "conte de fées",
           "baguette magique",
-          "sortilège"
+          "sortilège",
+          "une fée",
+          "petite fée",
+          "sorcière",
+          "sorcières",
+          "forêt enchantée",
+          "potion"
         ],
         "en": [
           "magic",

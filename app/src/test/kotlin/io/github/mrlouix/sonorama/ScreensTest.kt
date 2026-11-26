@@ -37,8 +37,10 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowLooper
+import io.github.mrlouix.sonorama.voice.Heard
 import io.github.mrlouix.sonorama.voice.SpeechEngine
 import io.github.mrlouix.sonorama.voice.SpeechListener
+import io.github.mrlouix.sonorama.voice.SpeechOptions
 import io.github.mrlouix.sonorama.voice.SpeechSession
 import java.io.File
 
@@ -248,7 +250,7 @@ class ScreensTest {
     private class ScriptedSpeech : SpeechEngine {
         var listener: SpeechListener? = null
 
-        override fun start(modelDir: File, grammar: List<String>?, transcribe: Boolean, listener: SpeechListener): SpeechSession {
+        override fun start(modelDir: File, options: SpeechOptions, listener: SpeechListener): SpeechSession {
             this.listener = listener
             return SpeechSession { this.listener = null }
         }
@@ -266,7 +268,7 @@ class ScreensTest {
 
         rule.onNodeWithContentDescription("Mode vocal").performClick()
         waitFor { viewModel.voiceState.value.listening }
-        speech.listener!!.onPartial("il entendit un oiseau")
+        speech.listener!!.onPartial(Heard.of("il entendit un oiseau"))
         waitFor { "s:sonorama.base/birds" in viewModel.mix.value.timed }
         rule.onNodeWithText("Dernier mot-clé entendu : oiseau").assertExists()
         capture("voice")

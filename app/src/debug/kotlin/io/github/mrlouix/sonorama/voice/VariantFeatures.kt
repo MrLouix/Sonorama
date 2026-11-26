@@ -97,12 +97,19 @@ object VariantFeatures {
                     }
                 }
             }
+            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.debug_child_voice), Modifier.weight(1f))
+                Switch(checked = settings.childVoice, onCheckedChange = {
+                    scope.launch { container.settingsStore.setChildVoice(it) }
+                })
+            }
         }
     }
 }
 
 /**
- * Journal CSV du texte entendu : horodatage, phrase, cartes déclenchées. Texte seulement, jamais d'audio ;
+ * Journal CSV du texte entendu : horodatage, phrase, cartes déclenchées, page affichée, mots-clés reconnus
+ * et phrase en cours à cet instant, confiance des mots, niveau du micro. Texte seulement, jamais d'audio ;
  * il reste dans le dossier privé de l'appli jusqu'à son export par l'utilisateur.
  */
 class TranscriptLog(context: Context) : TranscriptSink {
@@ -122,10 +129,23 @@ class TranscriptLog(context: Context) : TranscriptSink {
         enabledFlow.value = value
     }
 
-    override fun record(text: String, cardIds: List<String>) {
-        val line = listOf(format.format(Date()), text, cardIds.joinToString(" ")).joinToString(",", transform = ::csv)
+    override fun record(entry: TranscriptEntry) {
+        val hits = entry.hits
+        val line = listOf(
+            format.format(Date()),
+            entry.heard.text,
+            hits.flatMap { it.hit.cardIds }.distinct().joinToString(" "),
+            entry.page,
+            hits.joinToString(" | ") {
+                val voice = if (it.source == SpeechSource.LOWERED) ", enfant" else ""
+                "%s (%.2f%s)".format(Locale.ROOT, it.hit.keyword, it.hit.confidence, voice)
+            },
+            hits.joinToString(" | ") { it.text },
+            entry.heard.words.joinToString(" ") { "%.2f".format(Locale.ROOT, it.confidence) },
+            "%.1f".format(Locale.ROOT, entry.levelDb),
+        ).joinToString(",", transform = ::csv)
         writer.execute {
-            if (!file.exists()) file.writeText(HEADER)
+            if (!file.exists()) file.writeText(HEADER) else upgradeHeader()
             file.appendText(line + "\n")
             _lines.value = countLines()
         }
@@ -140,12 +160,19 @@ class TranscriptLog(context: Context) : TranscriptSink {
         _lines.value = 0
     }
 
+    /** Un journal commencé par une version précédente garde ses lignes, plus courtes, sous le nouvel en-tête. */
+    private fun upgradeHeader() {
+        val lines = file.readLines()
+        if (lines.firstOrNull() == HEADER.trim()) return
+        file.writeText(HEADER + lines.drop(1).joinToString("") { it + "\n" })
+    }
+
     private fun countLines(): Int = if (file.exists()) (file.readLines().size - 1).coerceAtLeast(0) else 0
 
     private fun csv(value: String): String = "\"" + value.replace("\"", "\"\"") + "\""
 
     private companion object {
         const val KEY = "enabled"
-        const val HEADER = "heure,texte,cartes\n"
+        const val HEADER = "heure,texte,cartes,page,mots-clés,texte au déclenchement,confiances,niveau micro (dBFS)\n"
     }
 }

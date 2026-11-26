@@ -69,8 +69,9 @@ Flux unidirectionnel : l'interface envoie des commandes au `MainViewModel`, qui 
 ### Mode vocal
 
 - `VoiceController` observe le mix, la bibliothèque et les réglages ; il ouvre le micro quand le mode est allumé et hors pause, le ferme sinon. Le micro rouvert après une pause relance le délai d'arrêt automatique (5 min sans mot-clé).
-- Le texte partiel est comparé aux mots-clés de la page affichée (`KeywordMatcher`) : un mot-clé déclenche quand son nombre d'occurrences dans la phrase augmente, ce qui absorbe les répétitions et corrections des résultats partiels.
-- Vosk : `AudioRecord` 16 kHz mono, source `VOICE_RECOGNITION`, annulation d'écho si disponible. La grammaire est envoyée en UTF-8 brut (les échappements `\u00ea` font ignorer le mot). `vosk_model_find_word`, absente de l'API Java, est appelée par JNA pour repérer les mots inconnus.
+- Le texte partiel est comparé aux mots-clés de la page affichée (`KeywordMatcher`) : un mot-clé déclenche quand son nombre d'occurrences dans la phrase augmente, ce qui absorbe les répétitions et corrections des résultats partiels. Une occurrence compte si sa confiance atteint 0,6 ou si elle figure dans 4 résultats partiels de suite (un toutes les 0,1 s).
+- Vosk : `AudioRecord` 16 kHz mono, source `VOICE_RECOGNITION`, annulation d'écho si disponible. La grammaire est envoyée en UTF-8 brut (les échappements `\u00ea` font ignorer le mot). `vosk_model_find_word`, absente de l'API Java, est appelée par JNA pour repérer les mots inconnus. Fin de phrase après 1 s de silence (0,5 s par défaut dans Vosk), pour ne pas découper la lecture. Avec `setMaxAlternatives`, Vosk ne donne plus la confiance par mot : les deux ne se cumulent pas.
+- Voix d'enfant (réglage de débogage) : `LoweredRecognizer` étire le signal de 16 à 19 kHz (`Stretcher`) sur son propre fil, avec un détecteur de mots-clés à part, et repart d'un reconnaisseur neuf toutes les 30 s environ, en fin de phrase.
 - Le modèle français est téléchargé par Gradle (`downloadVoskModel`, empreinte vérifiée, cache dans le dossier Gradle de l'utilisateur) puis placé dans les assets ; il s'extrait dans le dossier privé au premier usage. Le modèle anglais s'importe : seule l'empreinte d'un modèle officiel connu est acceptée.
 - La transcription n'existe que dans `src/debug/` (`VariantFeatures`) ; `src/release/` en fournit une version vide.
 
@@ -81,7 +82,7 @@ Flux unidirectionnel : l'interface envoie des commandes au `MainViewModel`, qui 
 | Identifiant | `io.github.mrlouix.sonorama` | Convention F-Droid pour un dépôt GitHub |
 | Mix vide | La première carte activée lance la lecture ; un mix qui se vide repasse à l'arrêt | « Chaque action a un effet audible en moins d'une seconde » |
 | Activation en pause | Silencieuse (spécification), avec un message « En pause » | Éviter de croire à une panne |
-| Pack de base | 33 boucles sous CC0 : 19 enregistrements de Freesound (`tools/prepare_recordings.py`) et 14 sons **synthétisés** (`tools/generate_base_pack.py`) | Un son synthétisé est remplacé quand un enregistrement libre a été écouté et accepté ; sources hors de Git, recette versionnée dans `tools/recordings.json` |
+| Pack de base | 33 boucles sous CC0 : 22 enregistrements de Freesound (`tools/prepare_recordings.py`) et 11 sons **synthétisés** (`tools/generate_base_pack.py`) | Un son synthétisé est remplacé quand un enregistrement libre a été écouté et accepté ; sources hors de Git, recette versionnée dans `tools/recordings.json` |
 | Niveau des sons | −17 LUFS intégrés, crête réelle ≤ −1,5 dBTP | À RMS égal, l'écart perçu dépassait 17 LU entre un son grave et un son aigu |
 | Format de pack | Un manifeste peut déclarer plusieurs pages ; le pack de base utilise le même format | Un seul chemin de code pour l'APK et les ZIP |
 | Symboles | Jeu Material Icons (Apache 2.0) via `material-icons-extended`, identifiés par leur nom Material | Même licence et mêmes noms que Material Symbols, sans embarquer de police |
