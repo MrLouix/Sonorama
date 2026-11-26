@@ -1,6 +1,7 @@
 package io.github.mrlouix.sonorama.voice
 
 import io.github.mrlouix.sonorama.audio.MixEngine
+import io.github.mrlouix.sonorama.data.Card
 import io.github.mrlouix.sonorama.data.Library
 import io.github.mrlouix.sonorama.data.RecognitionMode
 import io.github.mrlouix.sonorama.data.Settings
@@ -46,11 +47,24 @@ interface VoiceServiceLauncher {
     fun stop()
 }
 
+/** Mot-clé qui a déclenché des cartes, avec la phrase telle qu'elle était reconnue à cet instant. */
+data class TranscriptHit(val hit: KeywordHit, val text: String, val source: SpeechSource)
+
+/** Phrase entendue et ce qu'elle a déclenché. */
+data class TranscriptEntry(
+    val heard: Heard,
+    /** Nom de la page affichée ; vide sans page. */
+    val page: String,
+    val hits: List<TranscriptHit>,
+    /** Niveau moyen du micro pendant la phrase. */
+    val levelDb: Float,
+)
+
 /** Destination de la transcription ; n'existe que dans l'APK de débogage. */
 interface TranscriptSink {
     val enabled: Boolean
 
-    fun record(text: String, cardIds: List<String>)
+    fun record(entry: TranscriptEntry)
 }
 
 /**
@@ -77,7 +91,8 @@ class VoiceController(
     val notices: SharedFlow<VoiceNotice> = _notices.asSharedFlow()
 
     private var pageId: String? = null
-    private var matcher = KeywordMatcher(emptyMap())
+    private var matchers = matchersFor(emptyList(), "fr")
+    private val matcher: KeywordMatcher get() = matchers.getValue(SpeechSource.MAIN)
     private var session: SpeechSession? = null
     private var opening: Job? = null
     /** Ouverture en cours ; l'appel natif ne s'interrompt pas, une ouverture périmée referme ce qu'elle obtient. */
@@ -85,7 +100,7 @@ class VoiceController(
     private var autoStop: Job? = null
     /** Ce qui exige de rouvrir le micro quand ça change : langue, mots-clés en mode limité, réglages. */
     private var sessionKey: Any? = null
-    private val pendingCards = LinkedHashSet<String>()
+    private val pendingHits = ArrayList<TranscriptHit>()
 
     init {
         scope.launch {
@@ -148,16 +163,17 @@ class VoiceController(
         val language = storyLanguage(s)
         val page = library.value.page(pageId ?: "")
         val cards = page?.cardIds.orEmpty().mapNotNull { library.value.cards[it] }
-        matcher = KeywordMatcher.forCards(cards, language)
+        matchers = matchersFor(cards, language)
         val paused = engine.state.value.paused
         val enabled = _state.value.enabled
         val grammar = if (s.recognitionMode == RecognitionMode.KEYWORDS_ONLY) matcher.keywords.sorted() else null
-        val key = listOf(language, grammar, transcripts?.enabled == true)
+        val options = SpeechOptions(grammar, transcripts?.enabled == true, s.childVoice)
+        val key = language to options
         val wanted = enabled && !paused && (grammar == null || grammar.isNotEmpty())
         if (session != null || opening != null) {
             if (!wanted || key != sessionKey) closeSession()
         }
-        if (wanted && session == null && opening == null) open(language, grammar, key)
+        if (wanted && session == null && opening == null) open(language, options, key)
         if (enabled && !paused) {
             if (autoStop == null || _state.value.paused) armAutoStop()
         } else {
@@ -172,16 +188,19 @@ class VoiceController(
         )
     }
 
-    private fun open(language: String, grammar: List<String>?, key: Any) {
+    /** Chaque reconnaisseur suit sa propre phrase : un détecteur par source. */
+    private fun matchersFor(cards: List<Card>, language: String): Map<SpeechSource, KeywordMatcher> =
+        SpeechSource.entries.associateWith { KeywordMatcher.forCards(cards, language) }
+
+    private fun open(language: String, options: SpeechOptions, key: Any) {
         val token = Any()
         openToken = token
         sessionKey = key
-        val transcribe = transcripts?.enabled == true
         opening = scope.launch {
             val started = runCatching {
                 withContext(io) {
                     val dir: File = models.modelDir(language) ?: error("modèle absent")
-                    speech().start(dir, grammar, transcribe, Listener())
+                    speech().start(dir, options, Listener())
                 }
             }
             if (openToken !== token) {
@@ -220,29 +239,30 @@ class VoiceController(
         }
     }
 
-    private fun onHits(hits: List<KeywordHit>) {
+    private fun onHits(hits: List<KeywordHit>, heard: Heard, source: SpeechSource) {
         if (hits.isEmpty() || !_state.value.enabled) return
         val cards = hits.flatMap { it.cardIds }.distinct()
         engine.trigger(cards, settings.value.voiceDurationSec * 1000L)
-        pendingCards += cards
+        if (transcripts?.enabled == true) hits.mapTo(pendingHits) { TranscriptHit(it, heard.text, source) }
         _state.value = _state.value.copy(lastKeyword = hits.last().keyword)
         armAutoStop()
     }
 
     private inner class Listener : SpeechListener {
-        override fun onPartial(text: String) {
-            scope.launch { onHits(matcher.onPartial(text)) }
+        override fun onPartial(heard: Heard, source: SpeechSource) {
+            scope.launch { onHits(matchers.getValue(source).onPartial(heard), heard, source) }
         }
 
-        override fun onFinal(text: String) {
-            scope.launch { onHits(matcher.onFinal(text)) }
+        override fun onFinal(heard: Heard, source: SpeechSource) {
+            scope.launch { onHits(matchers.getValue(source).onFinal(heard), heard, source) }
         }
 
-        override fun onTranscript(text: String) {
+        override fun onTranscript(heard: Heard, levelDb: Float) {
             scope.launch {
                 val sink = transcripts?.takeIf { it.enabled } ?: return@launch
-                sink.record(text, pendingCards.toList())
-                pendingCards.clear()
+                val page = library.value.page(pageId ?: "")?.name?.get(language() == "fr").orEmpty()
+                sink.record(TranscriptEntry(heard, page, pendingHits.toList(), levelDb))
+                pendingHits.clear()
             }
         }
 

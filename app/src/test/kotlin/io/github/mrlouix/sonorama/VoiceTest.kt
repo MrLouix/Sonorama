@@ -15,11 +15,17 @@ import io.github.mrlouix.sonorama.data.LocalizedName
 import io.github.mrlouix.sonorama.data.Page
 import io.github.mrlouix.sonorama.data.RecognitionMode
 import io.github.mrlouix.sonorama.data.Settings
+import io.github.mrlouix.sonorama.voice.Heard
+import io.github.mrlouix.sonorama.voice.HeardWord
 import io.github.mrlouix.sonorama.voice.KeywordMatcher
 import io.github.mrlouix.sonorama.voice.SpeechEngine
 import io.github.mrlouix.sonorama.voice.SpeechListener
 import io.github.mrlouix.sonorama.voice.SpeechModelSource
+import io.github.mrlouix.sonorama.voice.SpeechOptions
 import io.github.mrlouix.sonorama.voice.SpeechSession
+import io.github.mrlouix.sonorama.voice.SpeechSource
+import io.github.mrlouix.sonorama.voice.Stretcher
+import io.github.mrlouix.sonorama.voice.TranscriptEntry
 import io.github.mrlouix.sonorama.voice.TranscriptSink
 import io.github.mrlouix.sonorama.voice.VoiceController
 import io.github.mrlouix.sonorama.voice.VoiceNotice
@@ -54,13 +60,55 @@ class VoiceTest {
     @Test
     fun `a keyword fires once per sentence even when partial results repeat`() {
         val matcher = KeywordMatcher(mapOf("loup" to listOf("wolf")))
-        assertEquals(listOf("wolf"), matcher.onPartial("il était un loup").single().cardIds)
-        assertTrue(matcher.onPartial("il était un loup qui").isEmpty())
+        assertEquals(listOf("wolf"), matcher.onPartial(Heard.of("il était un loup")).single().cardIds)
+        assertTrue(matcher.onPartial(Heard.of("il était un loup qui")).isEmpty())
         // Redit dans la même phrase : le nombre d'occurrences augmente, le son repart.
-        assertEquals(1, matcher.onPartial("il était un loup qui voyait un loup").size)
-        assertTrue(matcher.onFinal("il était un loup qui voyait un loup").isEmpty())
+        assertEquals(1, matcher.onPartial(Heard.of("il était un loup qui voyait un loup")).size)
+        assertTrue(matcher.onFinal(Heard.of("il était un loup qui voyait un loup")).isEmpty())
         // Nouvelle phrase : les compteurs repartent de zéro.
-        assertEquals(1, matcher.onPartial("le loup").size)
+        assertEquals(1, matcher.onPartial(Heard.of("le loup")).size)
+    }
+
+    @Test
+    fun `an unsure keyword waits until it holds, a fleeting one never fires`() {
+        val matcher = KeywordMatcher(mapOf("loup" to listOf("wolf")))
+        val unsure = Heard.of("un loup", 0.4f)
+        repeat(KeywordMatcher.STABLE_RESULTS - 1) { assertTrue(matcher.onPartial(unsure).isEmpty()) }
+        assertEquals(0.4f, matcher.onPartial(unsure).single().confidence)
+        assertTrue(matcher.onFinal(unsure).isEmpty())
+        // L'hypothèse change avant d'avoir tenu : rien, et le compte repart de zéro.
+        repeat(KeywordMatcher.STABLE_RESULTS - 1) { matcher.onPartial(unsure) }
+        assertTrue(matcher.onPartial(Heard.of("un loue", 0.4f)).isEmpty())
+        assertTrue(matcher.onPartial(unsure).isEmpty())
+        assertTrue(matcher.onFinal(unsure).isEmpty())
+        // Sûr d'emblée : déclenche aussitôt.
+        assertEquals(1, matcher.onPartial(Heard.of("un loup", KeywordMatcher.MIN_CONFIDENCE)).size)
+    }
+
+    @Test
+    fun `an abandoned sentence does not hide the keyword of the next one`() {
+        val matcher = KeywordMatcher(mapOf("loup" to listOf("wolf")))
+        assertEquals(1, matcher.onPartial(Heard.of("un loup")).size)
+        assertTrue(matcher.onFinal(Heard.of("")).isEmpty())
+        assertEquals(1, matcher.onPartial(Heard.of("le loup")).size)
+    }
+
+    @Test
+    fun `a phrase is as sure as its least sure word`() {
+        val matcher = KeywordMatcher(mapOf("bord de mer" to listOf("waves")))
+        val heard = Heard(listOf(HeardWord("bord", 0.9f), HeardWord("de", 1f), HeardWord("mer", 0.3f)))
+        assertTrue(matcher.onPartial(heard).isEmpty())
+    }
+
+    @Test
+    fun `the stretched signal is lower and continuous across buffers`() {
+        val input = ShortArray(16_000) { (10_000 * kotlin.math.sin(2 * Math.PI * 300 * it / 16_000)).toInt().toShort() }
+        val stretcher = Stretcher()
+        val out = input.toList().chunked(1600).flatMap { stretcher.process(it.toShortArray()).toList() }
+        assertEquals(19_000.0, out.size.toDouble(), 2.0)
+        val crossings = out.zipWithNext().count { (a, b) -> a < 0 && b >= 0 }
+        assertEquals(300.0, crossings.toDouble(), 2.0) // 300 périodes sur 19 000 échantillons : 253 Hz lus à 16 kHz
+        assertTrue(out.zipWithNext().maxOf { (a, b) -> kotlin.math.abs(a - b) } < 1300)
     }
 
     @Test
@@ -68,10 +116,10 @@ class VoiceTest {
         val matcher = KeywordMatcher(
             mapOf("feu de camp" to listOf("fire"), "nuit d'été" to listOf("crickets"), "forêt" to listOf("birds")),
         )
-        assertTrue(matcher.onPartial("un feu [unk]").isEmpty())
-        assertEquals(listOf("fire"), matcher.onPartial("un feu de camp").flatMap { it.cardIds })
-        assertEquals(listOf("crickets"), matcher.onPartial("un feu de camp par une nuit d'été").flatMap { it.cardIds })
-        assertEquals(listOf("birds"), matcher.onFinal("un feu de camp par une nuit d'été en FORET").flatMap { it.cardIds })
+        assertTrue(matcher.onPartial(Heard.of("un feu [unk]")).isEmpty())
+        assertEquals(listOf("fire"), matcher.onPartial(Heard.of("un feu de camp")).flatMap { it.cardIds })
+        assertEquals(listOf("crickets"), matcher.onPartial(Heard.of("un feu de camp par une nuit d'été")).flatMap { it.cardIds })
+        assertEquals(listOf("birds"), matcher.onFinal(Heard.of("un feu de camp par une nuit d'été en FORET")).flatMap { it.cardIds })
     }
 
     @Test
@@ -82,7 +130,7 @@ class VoiceTest {
             card("gone", fr = listOf("orage"), available = false),
         )
         val matcher = KeywordMatcher.forCards(cards, "fr")
-        assertEquals(listOf("rain", "thunder"), matcher.onPartial("l'orage").single().cardIds)
+        assertEquals(listOf("rain", "thunder"), matcher.onPartial(Heard.of("l'orage")).single().cardIds)
         assertTrue(KeywordMatcher.forCards(cards, "en").isEmpty)
     }
 
@@ -97,14 +145,14 @@ class VoiceTest {
     }
 
     private class FakeSpeech : SpeechEngine {
-        val starts = ArrayList<Pair<List<String>?, Boolean>>()
+        val starts = ArrayList<SpeechOptions>()
         val sessions = ArrayList<FakeSession>()
         lateinit var listener: SpeechListener
 
         val open: Int get() = sessions.count { !it.closed }
 
-        override fun start(modelDir: File, grammar: List<String>?, transcribe: Boolean, listener: SpeechListener): SpeechSession {
-            starts += grammar to transcribe
+        override fun start(modelDir: File, options: SpeechOptions, listener: SpeechListener): SpeechSession {
+            starts += options
             this.listener = listener
             return FakeSession().also { sessions += it }
         }
@@ -142,7 +190,7 @@ class VoiceTest {
             ),
         )
         var serviceRunning = false
-        val transcripts = ArrayList<Pair<String, List<String>>>()
+        val transcripts = ArrayList<TranscriptEntry>()
         var transcribing = false
         val notices = ArrayList<VoiceNotice>()
 
@@ -182,8 +230,8 @@ class VoiceTest {
             transcripts = object : TranscriptSink {
                 override val enabled: Boolean get() = transcribing
 
-                override fun record(text: String, cardIds: List<String>) {
-                    transcripts += text to cardIds
+                override fun record(entry: TranscriptEntry) {
+                    transcripts += entry
                 }
             },
             io = StandardTestDispatcher(scope.testScheduler),
@@ -202,10 +250,10 @@ class VoiceTest {
         runCurrent()
         assertTrue(h.serviceRunning)
         assertEquals(1, h.speech.open)
-        assertNull(h.speech.starts.single().first)
+        assertNull(h.speech.starts.single().grammar)
         assertTrue(h.voice.state.value.listening)
 
-        h.speech.listener.onPartial("il était une fois un loup")
+        h.speech.listener.onPartial(Heard.of("il était une fois un loup"))
         runCurrent()
         assertEquals(listOf("wolf"), h.engine.state.value.active)
         assertEquals(5000L, h.engine.state.value.timed["wolf"]?.durationMs)
@@ -223,11 +271,11 @@ class VoiceTest {
         h.voice.setPage("forest")
         h.voice.enable()
         runCurrent()
-        h.speech.listener.onPartial("le train")
+        h.speech.listener.onPartial(Heard.of("le train"))
         runCurrent()
         assertTrue(h.engine.state.value.active.isEmpty())
         h.voice.setPage("city")
-        h.speech.listener.onFinal("le train siffle")
+        h.speech.listener.onFinal(Heard.of("le train siffle"))
         runCurrent()
         assertEquals(listOf("train"), h.engine.state.value.active)
     }
@@ -259,7 +307,7 @@ class VoiceTest {
         h.voice.enable()
         runCurrent()
         advanceTimeBy(4 * 60_000L)
-        h.speech.listener.onPartial("la pluie")
+        h.speech.listener.onPartial(Heard.of("la pluie"))
         runCurrent()
         // Un mot-clé relance le délai.
         advanceTimeBy(4 * 60_000L)
@@ -287,10 +335,10 @@ class VoiceTest {
         h.voice.setPage("forest")
         h.voice.enable()
         runCurrent()
-        assertEquals(listOf("loup", "pluie"), h.speech.starts.last().first)
+        assertEquals(listOf("loup", "pluie"), h.speech.starts.last().grammar)
         h.voice.setPage("city")
         runCurrent()
-        assertEquals(listOf("train"), h.speech.starts.last().first)
+        assertEquals(listOf("train"), h.speech.starts.last().grammar)
         assertEquals(1, h.speech.open)
     }
 
@@ -301,11 +349,44 @@ class VoiceTest {
         h.voice.setPage("forest")
         h.voice.enable()
         runCurrent()
-        h.speech.listener.onPartial("le loup")
-        h.speech.listener.onFinal("le loup hurle")
-        h.speech.listener.onTranscript("le loup hurle")
+        h.speech.listener.onPartial(Heard.of("le loup"))
+        h.speech.listener.onFinal(Heard.of("le loup hurle"))
+        h.speech.listener.onTranscript(Heard.of("le loup hurle"), -30f)
         runCurrent()
-        assertEquals(listOf("le loup hurle" to listOf("wolf")), h.transcripts)
+        val entry = h.transcripts.single()
+        assertEquals("le loup hurle", entry.heard.text)
+        assertEquals("Forêt", entry.page)
+        assertEquals(-30f, entry.levelDb)
+        val hit = entry.hits.single()
+        assertEquals("loup", hit.hit.keyword)
+        assertEquals(listOf("wolf"), hit.hit.cardIds)
+        assertEquals("le loup", hit.text)
+    }
+
+    @Test
+    fun `the child voice recognizer follows its own sentence and adds its hits`() = runTest {
+        val h = Harness(this)
+        h.settings.value = h.settings.value.copy(childVoice = true)
+        h.voice.setPage("forest")
+        h.voice.enable()
+        runCurrent()
+        assertTrue(h.speech.starts.single().childVoice)
+        h.speech.listener.onPartial(Heard.of("le loup"))
+        h.speech.listener.onPartial(Heard.of("la pluie"), SpeechSource.LOWERED)
+        runCurrent()
+        assertEquals(setOf("wolf", "rain"), h.engine.state.value.active.toSet())
+    }
+
+    @Test
+    fun `changing the child voice setting reopens the microphone`() = runTest {
+        val h = Harness(this)
+        h.voice.setPage("forest")
+        h.voice.enable()
+        runCurrent()
+        h.settings.value = h.settings.value.copy(childVoice = true)
+        runCurrent()
+        assertEquals(listOf(false, true), h.speech.starts.map { it.childVoice })
+        assertEquals(1, h.speech.open)
     }
 
     @Test
@@ -317,7 +398,7 @@ class VoiceTest {
         val lib = h.library.value
         h.library.value = lib.copy(cards = lib.cards + ("wolf" to card("wolf", fr = listOf("hurlement"))))
         runCurrent()
-        h.speech.listener.onPartial("un hurlement")
+        h.speech.listener.onPartial(Heard.of("un hurlement"))
         runCurrent()
         assertEquals(listOf("wolf"), h.engine.state.value.active)
     }
