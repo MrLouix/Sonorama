@@ -2,8 +2,10 @@
 
 Tous les sons de ce pack sont dans le domaine public, sous licence
 [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/deed.fr). Ceux de l'auteur « Sonorama » sont
-synthétisés par le script `tools/generate_base_pack.py` du dépôt. Les autres sont des enregistrements publiés
-sur Freesound, mis en boucle par `tools/prepare_recordings.py`. Merci à leurs auteurs.
+synthétisés par le script `tools/generate_base_pack.py` du dépôt. Ceux de l'auteur « MrLouix » sont générés
+par le modèle Stable Audio Open 1.0, dont l'invite et la graine sont données en source. Les autres sont des
+enregistrements publiés sur Freesound. Sons générés et enregistrements sont mis en boucle par
+`tools/prepare_recordings.py`. Merci à leurs auteurs.
 
 | Fichier | Nom | Auteur | Licence | Source |
 | --- | --- | --- | --- | --- |
@@ -13,11 +15,14 @@ sur Freesound, mis en boucle par `tools/prepare_recordings.py`. Merci à leurs a
 | `audio/campfire.ogg` | Feu de camp | Sonorama | CC0 1.0 | https://github.com/MrLouix/Sonorama/blob/main/tools/generate_base_pack.py |
 | `audio/crickets.ogg` | Grillons | Defelozedd94 | CC0 1.0 | https://freesound.org/s/522298/ |
 | `audio/frogs.ogg` | Grenouilles | CHallSmith | CC0 1.0 | https://freesound.org/s/870580/ |
+| `audio/owl.ogg` | Chouette | MrLouix | CC0 1.0 | Stable Audio Open 1.0 — "tawny owl hooting, close-up, isolated owl call, natural field recording, quiet night, clear recording, high quality, stereo, 44.1kHz, frequent hoots" — négative "music, melody, vocals, speech, wind noise, rain, traffic, distortion, low quality, crickets" — graine 218615083814393 |
 | `audio/cicadas.ogg` | Cigales | SamuelGremaud | CC0 1.0 | https://freesound.org/s/543958/ |
 | `audio/cave.ogg` | Grotte | Sclolex | CC0 1.0 | https://freesound.org/s/177958/ |
 | `audio/waterfall.ogg` | Cascade | Nox_Sound | CC0 1.0 | https://freesound.org/s/511075/ |
 | `audio/underwater.ogg` | Sous l'eau | Fission9 | CC0 1.0 | https://freesound.org/s/504641/ |
 | `audio/seagulls.ogg` | Mouettes | Ambientsoundapp | CC0 1.0 | https://freesound.org/s/537853/ |
+| `audio/cow.ogg` | Vache | MrLouix | CC0 1.0 | Stable Audio Open 1.0 — "cow mooing, close-up, isolated cow moo, natural field recording, quiet farm, clear recording, high quality, stereo, 44.1kHz, frequent moos" — négative "music, melody, vocals, speech, wind noise, rain, traffic, distortion, low quality, crickets, birds, machinery, cowbells" — graine 249943282259014 |
+| `audio/cat.ogg` | Chat | MrLouix | CC0 1.0 | Stable Audio Open 1.0 — "cat meowing, close-up, isolated cat meow, natural recording, quiet room, clear recording, high quality, stereo, 44.1kHz, frequent meows" — négative "music, melody, vocals, speech, wind noise, rain, traffic, distortion, low quality, crickets, birds, purring, hissing, television" — graine 777271578405943 |
 | `audio/traffic.ogg` | Circulation | chimerical | CC0 1.0 | https://freesound.org/s/106839/ |
 | `audio/crowd.ogg` | Foule | JohnsonBrandEditing | CC0 1.0 | https://freesound.org/s/243373/ |
 | `audio/fountain.ogg` | Fontaine | martats | CC0 1.0 | https://freesound.org/s/156969/ |

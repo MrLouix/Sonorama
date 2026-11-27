@@ -13,7 +13,7 @@
   {"id": "plane_cabin", "freesound": 451741, "author": "richwise", "skip": 75.5, "duration": 60.0, "accepted": true},
   {"id": "car_interior", "freesound": 179121, "author": "jc144940", "limiting": 14, "skip": 0.0, "duration": 44.0, "accepted": true},
   {"id": "frogs", "freesound": 870580, "author": "CHallSmith", "skip": 526.0, "duration": 53.5, "accepted": true},
-  {"id": "owl", "freesound": 763194, "author": "Bansemer", "skip": 0.0, "duration": 52.0},
+  {"id": "owl", "file": "ia/chouette_seed218615083814393.flac", "author": "MrLouix", "source": "Stable Audio Open 1.0 — \"tawny owl hooting, close-up, isolated owl call, natural field recording, quiet night, clear recording, high quality, stereo, 44.1kHz, frequent hoots\" — négative \"music, melody, vocals, speech, wind noise, rain, traffic, distortion, low quality, crickets\" — graine 218615083814393", "repeat": true, "accepted": true, "skip": 0.0, "duration": 23.7},
   {"id": "cicadas", "freesound": 543958, "author": "SamuelGremaud", "skip": 0.0, "duration": 36.5, "accepted": true},
   {"id": "cave", "freesound": 177958, "author": "Sclolex", "limiting": 14, "skip": 4.5, "duration": 59.5, "accepted": true},
   {"id": "waterfall", "freesound": 511075, "author": "Nox_Sound", "repeat": true, "skip": 0.0, "duration": 23.25, "accepted": true},
@@ -21,5 +21,7 @@
   {"id": "seagulls", "freesound": 537853, "author": "Ambientsoundapp", "repeat": true, "skip": 0.0, "duration": 26.75, "accepted": true},
   {"id": "cafe", "freesound": 370973, "author": "waweee", "skip": 64.5, "duration": 60.0, "accepted": true},
   {"id": "wind_chimes", "freesound": 336664, "author": "MrCisum", "skip": 6.5, "duration": 59.0, "accepted": true},
-  {"id": "shimmer", "freesound": 521882, "author": "opticaillusions", "skip": 0.0, "duration": 39.5, "accepted": true}
+  {"id": "shimmer", "freesound": 521882, "author": "opticaillusions", "skip": 0.0, "duration": 39.5, "accepted": true},
+  {"id": "cow", "file": "ia/vache/vache_seed249943282259014.flac", "author": "MrLouix", "source": "Stable Audio Open 1.0 — \"cow mooing, close-up, isolated cow moo, natural field recording, quiet farm, clear recording, high quality, stereo, 44.1kHz, frequent moos\" — négative \"music, melody, vocals, speech, wind noise, rain, traffic, distortion, low quality, crickets, birds, machinery, cowbells\" — graine 249943282259014", "repeat": true, "accepted": true, "skip": 0.0, "duration": 22.35},
+  {"id": "cat", "file": "ia/chat-miaule/chat-miaule_seed777271578405943.flac", "author": "MrLouix", "source": "Stable Audio Open 1.0 — \"cat meowing, close-up, isolated cat meow, natural recording, quiet room, clear recording, high quality, stereo, 44.1kHz, frequent meows\" — négative \"music, melody, vocals, speech, wind noise, rain, traffic, distortion, low quality, crickets, birds, purring, hissing, television\" — graine 777271578405943", "repeat": true, "accepted": true, "skip": 0.0, "duration": 26.85}
 ]

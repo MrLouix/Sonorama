@@ -79,7 +79,7 @@ class ScreensTest {
     fun `main screen shows the built-in pages and the base pack`() {
         val library = viewModel.library.value
         assertEquals(listOf("nature", "ville", "feerique"), library.pages.map { it.id })
-        assertEquals(33, library.cards.size)
+        assertEquals(36, library.cards.size)
         rule.onNodeWithText("Ville et machines").assertExists()
         capture("main")
     }
@@ -170,7 +170,7 @@ class ScreensTest {
                          {"id":"b","file":"b.ogg","name":{"fr":"Son B"},"page":"p2","license":"CC0"}]}""",
         ).also(PackFormat::validate)
         runBlocking { app.container.repository.installPack(manifest, builtIn = false) { "file:///absent/${it.file}" } }
-        waitFor { viewModel.library.value.cards.size == 35 }
+        waitFor { viewModel.library.value.cards.size == 38 }
     }
 
     @Test
@@ -184,7 +184,7 @@ class ScreensTest {
         rule.onNodeWithText("Son A").assertExists()
         rule.onNodeWithText("Son B").assertExists()
 
-        // 35 cartes installées pour 24 places : le refus s'affiche sur l'écran où il se produit.
+        // 38 cartes installées pour 24 places : le refus s'affiche sur l'écran où il se produit.
         rule.runOnUiThread { viewModel.library.value.cards.keys.forEach(viewModel::togglePageCard) }
         assertEquals(24, viewModel.pageDraft.value!!.cardIds.size)
         waitFor { rule.onAllNodes(hasText("Une page contient 24 cartes au plus.")).fetchSemanticsNodes().isNotEmpty() }
