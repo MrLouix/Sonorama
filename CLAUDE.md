@@ -21,6 +21,7 @@ Prérequis : JDK 21 et SDK Android (plateforme 37).
 ./gradlew lintDebug testDebugUnitTest   # ce que lance la CI, avec assembleDebug
 ./gradlew assembleDebug
 ./gradlew assembleRelease               # APK optimisés, un par processeur, non signés
+./gradlew bundleRelease                 # AAB du Play Store, signé si keystore.properties existe
 python3 tools/generate_base_pack.py     # boucles synthétisées, manifeste et licences (numpy, ffmpeg avec libvorbis)
 python3 tools/prepare_recordings.py     # boucles enregistrées acceptées, depuis pack-sources/ (non versionné)
 python3 tools/prepare_loop.py src out.ogg   # boucle prête pour un pack ; --check pour contrôler
@@ -47,6 +48,7 @@ Les tests d'écran (`ScreensTest`, Robolectric) écrivent des captures dans `app
 - L'appli n'a pas encore été essayée sur un appareil ; 11 des 36 sons du pack de base sont encore synthétisés.
 - Un enregistrement n'entre dans le pack de base qu'une fois écouté par l'utilisateur : `accepted` dans `tools/recordings.json`. Augmenter alors `--version` dans `generate_base_pack.py`, sinon les appareils déjà installés gardent l'ancien manifeste.
 - Toute modification du schéma Room demande une migration et un cas dans `MigrationTest` ; le schéma exporté est dans `app/schemas/`.
+- La clé d'envoi du Play Store (`*.jks`, `keystore.properties`) ne se commite jamais et ne se crée pas dans une session d'assistant ; `versionCode` augmente à chaque envoi.
 - Une clé privée de signature de pack (`*.pem`) ne se commite jamais et ne se crée pas dans une session d'assistant : `OFFICIAL_KEYS` ne reçoit que des empreintes fournies par le propriétaire.
 - La première compilation télécharge le modèle Vosk français depuis alphacephei.com (empreinte vérifiée, cache `~/.gradle/caches/sonorama-vosk`) : l'hôte doit être joignable.
 - La transcription du mode vocal vit dans `src/debug/` et ne doit jamais passer dans `src/main/` : l'APK de publication ne la contient pas. `src/release/` en garde une version vide de même signature.

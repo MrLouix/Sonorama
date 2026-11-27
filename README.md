@@ -67,6 +67,22 @@ vérifie son empreinte et le garde en cache dans le dossier Gradle de l'utilisat
 Le pack de base se régénère avec `python3 tools/generate_base_pack.py` (Python 3.10+, numpy, ffmpeg) ; ses sons
 enregistrés ou générés, avec `python3 tools/prepare_recordings.py`, à partir des sources déposées dans `pack-sources/`.
 
+## Publier sur le Play Store
+
+Le Play Store reçoit un AAB signé par une clé d'envoi ; Google garde la clé de l'appli (Play App Signing).
+
+1. Créer la clé d'envoi sur sa machine (commande dans `keystore.properties.example`), puis copier ce fichier en
+   `keystore.properties` et le remplir. La clé, ses mots de passe et ce fichier restent hors du dépôt.
+2. Augmenter `versionCode` (et `versionName`) dans `app/build.gradle.kts` à chaque envoi.
+3. `./gradlew bundleRelease` → `app/build/outputs/bundle/release/app-release.aab`, signé si
+   `keystore.properties` existe. Sans lui, la version reste non signée, ce qu'attend F-Droid.
+4. Dans la Play Console : politique de confidentialité = l'adresse de [PRIVACY.md](PRIVACY.md) sur GitHub ;
+   sécurité des données = aucune donnée collectée ; services de premier plan à déclarer : lecture média et micro.
+
+La fiche réutilise `fastlane/metadata/android`. Il lui manque encore l'icône (`images/icon.png`, 512 × 512) et la
+bannière (`images/featureGraphic.png`, 1024 × 500, sans transparence), ainsi que des captures en anglais. Un
+compte personnel récent doit d'abord faire tourner un test fermé : 12 testeurs pendant 14 jours d'affilée.
+
 ## Organisation du dépôt
 
 | Chemin | Contenu |
@@ -86,7 +102,7 @@ enregistrés ou générés, avec `python3 tools/prepare_recordings.py`, à parti
 | `tools/generate_ambience.py` | Génération d'extraits d'ambiance par IA (Stable Audio Open, en local) |
 | `.claude/skills/` | Skills Claude Code : constituer un pack, générer des sons par IA |
 | `docs/` | [Spécification](docs/specification.md), [plan de codage](docs/plan-de-codage.md), [format des packs](docs/format-pack.md) |
-| `fastlane/metadata` | Fiche de l'appli pour F-Droid |
+| `fastlane/metadata` | Fiche de l'appli pour F-Droid et le Play Store |
 
 ## Fabriquer un pack de sons
 
@@ -109,6 +125,7 @@ Sonorama ne demande ni accès réseau ni accès au stockage. Ses permissions son
 (lecture média et micro), les notifications, le maintien du processeur éveillé pendant la lecture et le micro.
 Le micro n'est demandé qu'au premier usage du mode vocal et n'est ouvert que pendant l'écoute ; la
 reconnaissance se fait sur le téléphone et aucun son n'est enregistré. Rien n'est collecté, rien n'est envoyé.
+Détail : [politique de confidentialité](PRIVACY.md).
 
 ## Contribuer
 
