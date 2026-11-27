@@ -71,6 +71,15 @@ L'appli tient en un écran principal : des pages que l'on fait défiler horizont
 - Bouton « Enregistrer ce mix » : crée une carte composée à partir des cartes actives et de leurs volumes (section 7).
 - Bouton « Tout arrêter ».
 
+**Visite guidée**
+
+- Au premier lancement, une fois le pack de base installé, une visite de 9 étapes présente l'écran principal : bienvenue, toucher une carte, volume, lecture/pause, panneau « En cours », pages, mode Plan, mode vocal, mots-clés. On la revoit depuis le menu ⋮ (« Visite guidée », en dernier).
+- Un voile assombrit l'écran sauf l'élément expliqué, cerné d'un contour ambré ; une bulle (compteur « n / 9 », « Passer », « Suivant », puis « Terminer ») se place à côté. Le reste de l'écran ne réagit pas.
+- Deux étapes se font : toucher la carte d'exemple (la première de Nature et météo) et régler son volume. Elles avancent dès que le geste est fait ; « Suivant » reste possible, et un doigt animé montre le geste du volume au bout de 8 s. Les autres étapes montrent sans changer de mode ni ouvrir d'écran ; le mode vocal est expliqué sans demander le micro.
+- La visite part d'un écran neutre : page Nature et météo, mode Direct, rien qui joue. Le mix en cours (cartes, lecture ou pause, mode, plan) et le mode vocal sont mis de côté, puis rendus à la fin ou à l'abandon ; la carte d'exemple retrouve son volume. Pendant la visite, le mix enregistré pour le prochain lancement reste celui d'avant.
+- Elle compte comme vue dès qu'elle commence, même passée. Le retour la quitte.
+- Avec TalkBack, seule la bulle est lisible ; chaque bulle est annoncée et toutes les étapes avancent par « Suivant » (le volume passe par les actions « Augmenter / Diminuer le volume » de la carte).
+
 **Autres écrans**
 
 - Packs : import d'un ZIP, liste des packs installés, suppression.

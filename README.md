@@ -28,11 +28,13 @@ de cartes, un bouton play/pause, aucun compte, aucune publicité, aucun accès r
 - **Packs de sons** : 36 boucles fournies, d'autres par fichiers ZIP importés depuis le téléphone ; les
   packs peuvent être signés, et toute mise à jour demande confirmation.
 - **Accessibilité** : TalkBack, grandes cibles tactiles, thèmes clair et sombre, français et anglais.
+- **Visite guidée** : au premier lancement, neuf étapes montrent sur l'écran réel les cartes, le volume, les
+  modes Direct, Plan et vocal, et les mots-clés ; elle se revoit depuis le menu.
 
 ## État du projet
 
 Le code couvre les lots 0 à 3 de la [spécification](docs/specification.md) et le mode vocal (section 14). Il
-compile, passe le lint et 71 tests automatisés, dont des tests d'écran qui pilotent l'appli réelle sur JVM.
+compile, passe le lint et 87 tests automatisés, dont des tests d'écran qui pilotent l'appli réelle sur JVM.
 
 **Il n'a pas encore tourné sur un téléphone.** Restent donc à valider sur appareil, avant toute publication :
 

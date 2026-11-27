@@ -646,4 +646,87 @@ class MixEngineTest {
         h.engine.keep("mix")
         assertTrue("mix" in h.engine.state.value.active)
     }
+
+    @Test
+    fun `the guided tour sets the mix aside and brings it back as it was`() = runTest {
+        val h = Harness(this)
+        h.card("rain")
+        h.card("wind")
+        h.card("birds")
+        h.engine.tap("rain")
+        h.engine.tap("wind")
+        advanceTimeBy(600)
+        h.engine.setMode(MixMode.PLAN)
+        h.engine.tap("birds")
+
+        h.engine.setAside()
+        val during = h.engine.state.value
+        assertTrue(during.active.isEmpty())
+        assertTrue(during.plan.isEmpty())
+        assertEquals(MixMode.DIRECT, during.mode)
+        advanceTimeBy(600)
+        assertTrue(h.live().isEmpty())
+        // La visite lance une carte : le mix enregistré reste celui d'avant.
+        h.engine.tap("birds")
+        assertEquals(listOf("rain", "wind"), h.savedMix)
+
+        h.engine.bringBack()
+        val after = h.engine.state.value
+        assertEquals(listOf("rain", "wind"), after.active)
+        assertTrue(after.playing)
+        assertEquals(MixMode.PLAN, after.mode)
+        assertEquals(setOf("birds"), after.plan.keys)
+        advanceTimeBy(600)
+        assertEquals(setOf("rain-1", "wind-1"), h.live().map { it.uri }.toSet())
+        assertEquals(1f, h.player("rain-1").gain, 1e-4f)
+    }
+
+    @Test
+    fun `a paused mix comes back paused after the tour`() = runTest {
+        val h = Harness(this)
+        h.card("rain")
+        h.engine.tap("rain")
+        advanceTimeBy(600)
+        h.engine.pause()
+        advanceTimeBy(600)
+        h.engine.setAside()
+        h.engine.bringBack()
+        assertEquals(listOf("rain"), h.engine.state.value.active)
+        assertTrue(h.engine.state.value.paused)
+        assertFalse(h.engine.state.value.playing)
+    }
+
+    @Test
+    fun `volumes changed during the tour are put back and saved`() = runTest {
+        val h = Harness(this)
+        h.card("birds", volume = 60)
+        h.engine.setVolume("birds", 80, commit = true)
+        h.engine.setAside()
+        h.engine.tap("birds")
+        h.engine.setVolume("birds", 40, commit = false)
+        h.engine.setVolume("birds", 30, commit = true)
+        assertEquals(30, h.savedVolumes["birds"])
+
+        h.engine.bringBack()
+        assertEquals(80, h.engine.state.value.volumes["birds"])
+        assertEquals(80, h.savedVolumes["birds"])
+        advanceTimeBy(600)
+        // La visite n'avait rien à rétablir : sa carte s'éteint en fondu.
+        assertTrue(h.engine.state.value.active.isEmpty())
+        assertTrue(h.live().isEmpty())
+    }
+
+    @Test
+    fun `the mix restored at launch waits for the end of the tour`() = runTest {
+        val h = Harness(this)
+        h.card("rain")
+        h.card("birds")
+        h.engine.setAside()
+        h.engine.restore(listOf("rain"))
+        assertTrue(h.engine.state.value.active.isEmpty())
+        h.engine.tap("birds")
+        h.engine.bringBack()
+        assertEquals(listOf("rain"), h.engine.state.value.active)
+        assertTrue(h.engine.state.value.paused)
+    }
 }

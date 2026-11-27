@@ -25,8 +25,12 @@ import io.github.mrlouix.sonorama.data.pack.PackFormat
 import io.github.mrlouix.sonorama.ui.MainViewModel
 import io.github.mrlouix.sonorama.ui.Screen
 import io.github.mrlouix.sonorama.ui.SonoramaRoot
+import io.github.mrlouix.sonorama.ui.tour.TourStep
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -59,7 +63,10 @@ class ScreensTest {
 
     @Before
     fun setUp() {
-        viewModel = MainViewModel(ApplicationProvider.getApplicationContext<Application>())
+        // La visite guidée du premier lancement couvrirait l'écran : elle a son propre test.
+        val app = ApplicationProvider.getApplicationContext<Application>() as SonoramaApp
+        runBlocking { app.container.settingsStore.setTourSeen(true) }
+        viewModel = MainViewModel(app)
         rule.setContent { SonoramaRoot(viewModel, onLanguageChanged = {}) }
         waitFor { rule.onAllNodes(hasContentDescription("Oiseaux", substring = true)).fetchSemanticsNodes().isNotEmpty() }
     }
@@ -158,6 +165,71 @@ class ScreensTest {
         capture("now-playing")
         rule.onNodeWithText("Tout arrêter").performClick()
         waitFor { viewModel.mix.value.active.isEmpty() }
+    }
+
+    @Test
+    fun `the guided tour walks through every step and gives the mix back`() {
+        card("Vagues").performClick()
+        waitFor { viewModel.mix.value.active.size == 1 }
+        val mixBefore = viewModel.mix.value.active
+        val birds = viewModel.library.value.page("nature")!!.cardIds.first()
+        val volumeBefore = viewModel.mix.value.volumes[birds] ?: viewModel.library.value.cards.getValue(birds).volume
+
+        rule.onNodeWithContentDescription("Menu").performClick()
+        rule.onNodeWithText("Visite guidée").performClick()
+        waitFor { viewModel.tour.value != null }
+        assertTrue(viewModel.mix.value.active.isEmpty())
+        rule.onNodeWithText("1 / 9").assertExists()
+        // Hors des étapes interactives, l'écran sous le voile ne réagit pas.
+        card("Ruisseau").performClick()
+        rule.waitForIdle()
+        assertTrue(viewModel.mix.value.active.isEmpty())
+        capture("tour-1")
+
+        rule.onNodeWithText("Suivant").performClick()
+        capture("tour-2")
+        // Étape interactive : la carte montrée se touche à travers le voile, et la visite avance seule.
+        card("Oiseaux").performClick()
+        waitFor { viewModel.tour.value?.step == TourStep.VOLUME }
+        assertEquals(listOf(birds), viewModel.mix.value.active)
+        capture("tour-3")
+        rule.runOnUiThread { viewModel.setVolume(birds, 25, true) }
+        waitFor { viewModel.tour.value?.step == TourStep.PLAY }
+
+        for (step in 4..8) {
+            rule.onNodeWithText("$step / 9").assertExists()
+            capture("tour-$step")
+            rule.onNodeWithText("Suivant").performClick()
+        }
+        rule.onNodeWithText("9 / 9").assertExists()
+        rule.onNodeWithText("Passer").assertDoesNotExist()
+        capture("tour-9")
+        rule.onNodeWithText("Terminer").performClick()
+        waitFor { viewModel.tour.value == null }
+
+        // Le mix d'avant revient, et la carte d'exemple retrouve son volume.
+        assertEquals(mixBefore, viewModel.mix.value.active)
+        assertTrue(viewModel.mix.value.playing)
+        assertEquals(volumeBefore, viewModel.mix.value.volumes[birds])
+    }
+
+    @Test
+    fun `the tour starts by itself on first launch, once, even when skipped`() {
+        val app = ApplicationProvider.getApplicationContext<Application>() as SonoramaApp
+        val store = app.container.settingsStore
+        runBlocking { store.setTourSeen(false) }
+        val fresh = MainViewModel(app)
+        waitFor { fresh.tour.value != null }
+        assertEquals(TourStep.WELCOME, fresh.tour.value!!.step)
+        waitFor { runBlocking { store.settings.first().tourSeen } }
+        rule.runOnUiThread { fresh.endTour() }
+        assertNull(fresh.tour.value)
+
+        val again = MainViewModel(app)
+        rule.waitForIdle()
+        ShadowLooper.idleMainLooper()
+        assertNull(again.tour.value)
+        assertFalse(viewModel.mix.value.playing)
     }
 
     /** Installe un pack dont deux pages portent le même nom que la page Nature et météo. */

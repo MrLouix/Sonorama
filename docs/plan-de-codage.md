@@ -64,6 +64,7 @@ Flux unidirectionnel : l'interface envoie des commandes au `MainViewModel`, qui 
 - Pause : rampe du fondu général vers 0 puis `pause()` des lecteurs ; les cartes restent actives. En pause, les voix ajoutées ne créent leurs lecteurs qu'au prochain *play*.
 - Limite de 12 sons vérifiée à l'activation (mode direct) et à la mise au plan (mix projeté).
 - Le moteur vit dans l'`Application` ; le service ne fait qu'exposer play/pause à la session média.
+- Visite guidée : `setAside()` met de côté les cartes durables, la lecture, le mode et le plan, puis vide le mix ; `bringBack()` arrête ce que la visite a lancé, rend aux cartes réglées pendant la visite leur volume d'avant (mémorisé au premier réglage, réenregistré) et rétablit le mix comme `restore`, repris s'il jouait. Pendant ce temps, le dernier mix n'est pas réenregistré, et un `restore` du lancement attend la fin de la visite.
 - Mode vocal : `trigger(cartes, durée)` lance des voix minutées (fondus fixes de 0,5 s et 1 s), prolongées si le mot revient. Elles comptent dans la limite ; à la limite, la plus ancienne voix minutée cède sa place. Elles ne sont jamais enregistrées comme dernier mix. Une pause les arrête ; `paused` reste vrai même si le mix s'est vidé, pour que le micro reste coupé. `keep(carte)` retire le minutage : la voix devient une voix ordinaire.
 
 ### Mode vocal
@@ -90,6 +91,7 @@ Flux unidirectionnel : l'interface envoie des commandes au `MainViewModel`, qui 
 | Réordonnancement | Glisser-déposer **et** boutons monter/descendre | Alternative accessible |
 | Navigation | Pile d'écrans dans le ViewModel, sans bibliothèque de navigation | Six écrans, aucune URL profonde |
 | Garder un son vocal | Un appui sur la carte la garde, un second l'arrête ; l'anneau porte une épingle | Aucun bouton de plus ; une cible minuscule ferait arrêter le son par erreur pendant la lecture |
+| Visite guidée | Voile Compose sur l'écran réel (`ui/tour/GuidedTour.kt`) : les éléments se déclarent par `Modifier.tourTarget`, quatre bandes bloquent les appuis autour de l'élément montré ; l'état vit dans `MainViewModel`, le mix mis de côté dans le moteur | Apprendre les gestes sur l'interface qu'on utilisera ; aucune bibliothèque tierce |
 | Mots-clés | Mode paramétrage : un appui sur une carte ouvre ses mots-clés ; toute la page depuis son onglet (appui long, « Mots-clés ») | L'appui long sur une carte règle déjà le volume |
 | Reconnaissance | Phrase entière par défaut ; mode limité aux mots-clés comparable dans l'APK de débogage | Essai sur voix de synthèse : le mode limité invente des mots-clés |
 | APK | Un APK par processeur, codes de version `version × 10 + processeur` | Vosk ajoute environ 10 Mo de code natif par processeur |

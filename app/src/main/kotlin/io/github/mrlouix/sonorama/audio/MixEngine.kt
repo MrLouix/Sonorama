@@ -96,8 +96,19 @@ class MixEngine(
     private var savedMix: List<String> = emptyList()
     private var ticker: Job? = null
     private val timed = LinkedHashMap<String, Timer>()
+    /** Mix mis de côté pendant la visite guidée ; nul hors visite. */
+    private var aside: Aside? = null
 
     private class Timer(val play: TimedPlay, val job: Job)
+
+    private data class Aside(
+        val active: List<String>,
+        val playing: Boolean,
+        val mode: MixMode,
+        val plan: Map<String, PlanChange>,
+        /** Volume d'avant la visite de chaque carte réglée pendant celle-ci. */
+        val volumes: MutableMap<String, Int> = HashMap(),
+    )
 
     // ---------------------------------------------------------------- commandes
 
@@ -162,6 +173,7 @@ class MixEngine(
      */
     fun setVolume(cardId: String, volume: Int, commit: Boolean) {
         val target = volume.coerceIn(VolumeCurve.MIN_VOLUME, VolumeCurve.MAX_VOLUME)
+        aside?.volumes?.getOrPut(cardId) { volumeOf(cardId) }
         if (mode == MixMode.PLAN) {
             if (!commit) return
             val change = (plan[cardId] ?: PlanChange())
@@ -376,8 +388,48 @@ class MixEngine(
         publish()
     }
 
+    /**
+     * Visite guidée : met le mix de côté (cartes, lecture, mode et plan) et part d'un mix vide en mode direct.
+     * Pendant la visite, le mix enregistré pour le prochain lancement reste celui de l'utilisateur.
+     */
+    fun setAside() {
+        if (aside != null) return
+        aside = Aside(voices.keys.filter { it !in timed }, playing, mode, plan)
+        plan = emptyMap()
+        mode = MixMode.DIRECT
+        held = false
+        voices.keys.toList().forEach { deactivate(it) }
+        publish()
+    }
+
+    /** Fin de la visite : arrête ce qu'elle a lancé, rend leurs volumes aux cartes réglées et rétablit le mix. */
+    fun bringBack() {
+        val snapshot = aside ?: return
+        plan = emptyMap()
+        mode = MixMode.DIRECT
+        held = false
+        // Le mix rétabli coupe d'emblée le master : les sons de la visite s'arrêtent net plutôt que de remonter.
+        val fadeOut = if (snapshot.active.isEmpty()) fades().fadeOutMs else 0
+        voices.keys.toList().forEach { deactivate(it, fadeOut) }
+        for ((cardId, volume) in snapshot.volumes) {
+            volumes = volumes + (cardId to volume)
+            persistence.saveVolume(cardId, volume)
+        }
+        aside = null
+        restore(snapshot.active)
+        mode = snapshot.mode
+        plan = snapshot.plan.filterKeys { cards(it) != null }
+        if (snapshot.playing) resume()
+        publish()
+    }
+
     /** Restaure un mix enregistré, en pause. Sans effet si un mix est déjà en place. */
     fun restore(cardIds: List<String>) {
+        // Pendant la visite, le mix restauré au lancement attend qu'elle se termine.
+        aside?.let { snapshot ->
+            if (snapshot.active.isEmpty()) aside = snapshot.copy(active = cardIds)
+            return
+        }
         if (voices.isNotEmpty()) return
         for (cardId in cardIds) {
             val spec = cards(cardId)?.takeIf { it.sounds.isNotEmpty() } ?: continue
@@ -499,7 +551,7 @@ class MixEngine(
         )
         // Les sons vocaux sont passagers : ils ne font pas partie du mix restauré au lancement.
         val lasting = active.filter { it !in timed }
-        if (lasting != savedMix) {
+        if (aside == null && lasting != savedMix) {
             savedMix = lasting
             persistence.saveMix(lasting)
         }

@@ -22,6 +22,9 @@ import io.github.mrlouix.sonorama.data.Settings
 import io.github.mrlouix.sonorama.data.ThemeMode
 import io.github.mrlouix.sonorama.data.pack.ImportState
 import io.github.mrlouix.sonorama.data.pack.readAtMost
+import io.github.mrlouix.sonorama.ui.tour.TOUR_PAGE
+import io.github.mrlouix.sonorama.ui.tour.TourState
+import io.github.mrlouix.sonorama.ui.tour.TourStep
 import io.github.mrlouix.sonorama.voice.ModelImportError
 import io.github.mrlouix.sonorama.voice.ModelImportException
 import io.github.mrlouix.sonorama.voice.VoiceNotice
@@ -33,6 +36,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -124,6 +128,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _messages = MutableSharedFlow<UiMessage>(extraBufferCapacity = 8)
     val messages: SharedFlow<UiMessage> = _messages.asSharedFlow()
 
+    /** Visite guidée en cours ; nulle hors visite. */
+    private val _tour = MutableStateFlow<TourState?>(null)
+    val tour: StateFlow<TourState?> = _tour.asStateFlow()
+
+    /** Mode vocal allumé quand la visite a commencé : il est rallumé à la fin. */
+    private var voiceBeforeTour = false
+
     init {
         viewModelScope.launch {
             engine.events.collect { event ->
@@ -153,6 +164,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _previewCard.value = owner.takeIf { it != EDITOR_PREVIEW }
                 if (owner != EDITOR_PREVIEW) _compositeDraft.update { it?.copy(listening = false) }
             }
+        }
+        // Premier lancement : la visite guidée commence une fois le pack de base installé.
+        viewModelScope.launch {
+            library.first { tourCard(it) != null }
+            if (!container.settingsStore.settings.first().tourSeen) startTour()
         }
     }
 
@@ -205,9 +221,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         engine.tap(card.id)
+        val tour = _tour.value
+        if (tour?.step == TourStep.CARD && mix.value.isActive(tour.cardId)) nextTourStep()
     }
 
-    fun setVolume(cardId: String, volume: Int, commit: Boolean) = engine.setVolume(cardId, volume, commit)
+    fun setVolume(cardId: String, volume: Int, commit: Boolean) {
+        engine.setVolume(cardId, volume, commit)
+        val tour = _tour.value
+        if (commit && tour?.step == TourStep.VOLUME && cardId == tour.cardId) nextTourStep()
+    }
 
     fun togglePlayback() {
         val state = mix.value
@@ -310,6 +332,44 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteSpeechModel(language: String) {
         if (voiceState.value.enabled && voiceState.value.language == language) voice.disable()
         viewModelScope.launch { container.speechModels.delete(language) }
+    }
+
+    // ---------------------------------------------------------- visite guidée
+
+    /** Carte d'exemple de la visite : la première carte jouable de la page Nature et météo. */
+    private fun tourCard(lib: Library): String? =
+        lib.page(TOUR_PAGE)?.cardIds?.firstOrNull { lib.cards[it]?.available == true }
+
+    /**
+     * Lance la visite depuis un écran neutre : page Nature et météo, mode direct, rien qui joue.
+     * Le mix et le mode vocal sont mis de côté, puis rendus à la fin ([endTour]).
+     */
+    fun startTour() {
+        if (_tour.value != null) return
+        val cardId = tourCard(library.value) ?: return
+        _setupMode.value = false
+        voiceBeforeTour = voiceState.value.enabled
+        if (voiceBeforeTour) voice.disable()
+        engine.setAside()
+        _pageToShow.value = TOUR_PAGE
+        _tour.value = TourState(TourStep.entries.first(), cardId)
+        // Vue dès qu'elle commence : passée ou finie, elle ne revient qu'à la demande.
+        viewModelScope.launch { container.settingsStore.setTourSeen() }
+    }
+
+    fun nextTourStep() {
+        val tour = _tour.value ?: return
+        val next = TourStep.entries.getOrNull(tour.step.ordinal + 1)
+        if (next == null) endTour() else _tour.value = tour.copy(step = next)
+    }
+
+    /** Fin ou abandon de la visite : arrête ce qu'elle a lancé et rend le mix d'avant. */
+    fun endTour() {
+        if (_tour.value == null) return
+        _tour.value = null
+        engine.bringBack()
+        if (voiceBeforeTour) voice.enable()
+        voiceBeforeTour = false
     }
 
     // ------------------------------------------------------------------ pages

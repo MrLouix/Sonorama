@@ -258,4 +258,23 @@
     <string name="model_missing">Non installé</string>
     <string name="action_import">Importer</string>
     <string name="model_how_to">Téléchargez %1$s sur %2$s, puis importez-le ici. Seuls les modèles officiels sont acceptés.</string>
+
+    <!-- Visite guidée -->
+    <string name="tour_menu">Visite guidée</string>
+    <string name="tour_title">Visite guidée</string>
+    <string name="tour_counter">%1$d / %2$d</string>
+    <string name="tour_counter_spoken">Étape %1$d sur %2$d</string>
+    <string name="tour_skip">Passer</string>
+    <string name="tour_next">Suivant</string>
+    <string name="tour_finish">Terminer</string>
+    <string name="tour_welcome">Bienvenue ! Sonorama joue des ambiances sonores pendant que vous lisez une histoire.</string>
+    <string name="tour_card">Touchez une carte pour lancer son ambiance. Touchez-la encore pour l\'arrêter.</string>
+    <string name="tour_volume">Pour régler le volume, gardez le doigt appuyé sur la carte, puis glissez vers le haut ou le bas.</string>
+    <string name="tour_volume_talkback">Pour régler le volume, ouvrez les actions de la carte, puis choisissez « Augmenter le volume » ou « Diminuer le volume ».</string>
+    <string name="tour_play">Ce bouton met toutes les ambiances en pause, puis les reprend.</string>
+    <string name="tour_now_playing">Voici le nombre d\'ambiances en cours. Touchez-le pour les voir, régler leur volume ou tout arrêter.</string>
+    <string name="tour_pages">Les ambiances sont rangées par pages. Changez de page avec les onglets, ou en glissant le doigt sur les cartes.</string>
+    <string name="tour_plan">En mode Plan, vos appuis préparent des changements sans rien jouer. « Appliquer » les lance tous ensemble, en fondu.</string>
+    <string name="tour_voice">Le mode vocal écoute votre lecture. Quand il entend un mot-clé d\'une carte de la page affichée, il la lance quelques secondes.</string>
+    <string name="tour_keywords">Touchez ce bouton, puis une carte, pour voir et modifier ses mots-clés. Vous retrouverez cette visite dans le menu ⋮.</string>
 </resources>

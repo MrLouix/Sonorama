@@ -254,4 +254,23 @@
     <string name="model_missing">Not installed</string>
     <string name="action_import">Import</string>
     <string name="model_how_to">Download %1$s from %2$s, then import it here. Only official models are accepted.</string>
+
+    <!-- Guided tour -->
+    <string name="tour_menu">Guided tour</string>
+    <string name="tour_title">Guided tour</string>
+    <string name="tour_counter">%1$d / %2$d</string>
+    <string name="tour_counter_spoken">Step %1$d of %2$d</string>
+    <string name="tour_skip">Skip</string>
+    <string name="tour_next">Next</string>
+    <string name="tour_finish">Done</string>
+    <string name="tour_welcome">Welcome! Sonorama plays soundscapes while you read a story aloud.</string>
+    <string name="tour_card">Tap a card to start its soundscape. Tap it again to stop it.</string>
+    <string name="tour_volume">To change the volume, touch and hold the card, then slide up or down.</string>
+    <string name="tour_volume_talkback">To change the volume, open the card\'s actions, then choose “Increase volume” or “Decrease volume”.</string>
+    <string name="tour_play">This button pauses every soundscape, then resumes them.</string>
+    <string name="tour_now_playing">This is how many soundscapes are playing. Tap it to see them, change their volume or stop them all.</string>
+    <string name="tour_pages">Soundscapes are sorted into pages. Switch pages with the tabs, or by swiping across the cards.</string>
+    <string name="tour_plan">In Plan mode, your taps prepare changes without playing anything. “Apply” starts them all together, with a crossfade.</string>
+    <string name="tour_voice">Voice mode listens as you read. When it hears a keyword of a card on the page shown, it plays that card for a few seconds.</string>
+    <string name="tour_keywords">Tap this button, then a card, to see and edit its keywords. You can take this tour again from the ⋮ menu.</string>
 </resources>
