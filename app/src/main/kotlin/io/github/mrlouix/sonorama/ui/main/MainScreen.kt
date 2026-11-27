@@ -51,6 +51,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,6 +69,7 @@ import androidx.core.content.ContextCompat
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -88,6 +90,13 @@ import io.github.mrlouix.sonorama.ui.MainViewModel
 import io.github.mrlouix.sonorama.ui.Screen
 import io.github.mrlouix.sonorama.ui.Symbols
 import io.github.mrlouix.sonorama.ui.text
+import io.github.mrlouix.sonorama.ui.tour.LocalTourTargets
+import io.github.mrlouix.sonorama.ui.tour.TOUR_PAGE
+import io.github.mrlouix.sonorama.ui.tour.TourOverlay
+import io.github.mrlouix.sonorama.ui.tour.TourTarget
+import io.github.mrlouix.sonorama.ui.tour.TourTargets
+import io.github.mrlouix.sonorama.ui.tour.rememberTouchExploration
+import io.github.mrlouix.sonorama.ui.tour.tourTarget
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,6 +107,9 @@ fun MainScreen(viewModel: MainViewModel) {
     val pageToShow by viewModel.pageToShow.collectAsStateWithLifecycle()
     val voice by viewModel.voiceState.collectAsStateWithLifecycle()
     val setup by viewModel.setupMode.collectAsStateWithLifecycle()
+    val tour by viewModel.tour.collectAsStateWithLifecycle()
+    val tourTargets = remember { TourTargets() }
+    val touchExploration = rememberTouchExploration()
     val context = LocalContext.current
     val pages = library.pages
     val scope = rememberCoroutineScope()
@@ -154,95 +166,124 @@ fun MainScreen(viewModel: MainViewModel) {
     }
 
     BackHandler(enabled = setup) { viewModel.setSetupMode(false) }
+    BackHandler(enabled = tour != null) { viewModel.endTour() }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
-                actions = {
-                    IconToggleButton(checked = setup, onCheckedChange = viewModel::setSetupMode) {
-                        Icon(Icons.Rounded.Tune, contentDescription = stringResource(R.string.action_setup_mode))
-                    }
-                    IconButton(onClick = { menuOpen = true }) {
-                        Icon(Icons.Rounded.MoreVert, contentDescription = stringResource(R.string.action_menu))
-                    }
-                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.packs_title)) },
-                            onClick = {
-                                menuOpen = false
-                                viewModel.open(Screen.Packs)
+    CompositionLocalProvider(LocalTourTargets provides tourTargets) {
+        Box(Modifier.fillMaxSize()) {
+            // Avec TalkBack, seule la bulle de la visite reste lisible : on avance avec « Suivant ».
+            Box(if (tour != null && touchExploration) Modifier.clearAndSetSemantics {} else Modifier) {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = { Text(stringResource(R.string.app_name)) },
+                            actions = {
+                                IconToggleButton(
+                                    checked = setup,
+                                    onCheckedChange = viewModel::setSetupMode,
+                                    modifier = Modifier.tourTarget(TourTarget.SETUP),
+                                ) {
+                                    Icon(Icons.Rounded.Tune, contentDescription = stringResource(R.string.action_setup_mode))
+                                }
+                                IconButton(onClick = { menuOpen = true }) {
+                                    Icon(Icons.Rounded.MoreVert, contentDescription = stringResource(R.string.action_menu))
+                                }
+                                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.packs_title)) },
+                                        onClick = {
+                                            menuOpen = false
+                                            viewModel.open(Screen.Packs)
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.settings_title)) },
+                                        onClick = {
+                                            menuOpen = false
+                                            viewModel.open(Screen.Settings)
+                                        },
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.tour_menu)) },
+                                        onClick = {
+                                            menuOpen = false
+                                            viewModel.startTour()
+                                        },
+                                    )
+                                }
                             },
                         )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.settings_title)) },
-                            onClick = {
-                                menuOpen = false
-                                viewModel.open(Screen.Settings)
-                            },
+                    },
+                    bottomBar = {
+                        BottomBar(
+                            mix = mix,
+                            voice = voice,
+                            onVoice = onVoice,
+                            onTogglePlayback = viewModel::togglePlayback,
+                            onMode = { mode -> if (!viewModel.setMode(mode)) askPlan = true },
+                            onOpenNowPlaying = { sheetOpen = true },
+                            onApply = viewModel::applyPlan,
+                            onCancel = viewModel::cancelPlan,
                         )
-                    }
-                },
-            )
-        },
-        bottomBar = {
-            BottomBar(
-                mix = mix,
-                voice = voice,
-                onVoice = onVoice,
-                onTogglePlayback = viewModel::togglePlayback,
-                onMode = { mode -> if (!viewModel.setMode(mode)) askPlan = true },
-                onOpenNowPlaying = { sheetOpen = true },
-                onApply = viewModel::applyPlan,
-                onCancel = viewModel::cancelPlan,
-            )
-        },
-        snackbarHost = { AppSnackbarHost() },
-    ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
-            if (setup) SetupBanner(onDone = { viewModel.setSetupMode(false) })
-            if (pages.isNotEmpty()) {
-                PrimaryScrollableTabRow(
-                    selectedTabIndex = pagerState.currentPage.coerceIn(0, pages.lastIndex),
-                    edgePadding = 8.dp,
-                ) {
-                    pages.forEachIndexed { index, page ->
-                        PageTab(
-                            page = page,
-                            selected = index == pagerState.currentPage,
-                            hasActiveCard = page.cardIds.any(mix::isActive),
-                            canMoveLeft = index > 0,
-                            canMoveRight = index < pages.lastIndex,
-                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                            onEdit = { viewModel.editPage(page.id) },
-                            onDuplicate = { pageToDuplicate = page },
-                            onKeywords = { viewModel.openKeywords(page.id) },
-                            onExport = {
-                                pageToExport = page.id
-                                exportLauncher.launch("${page.name.fr}.sonorama-page.json")
-                            },
-                            onDelete = { pageToDelete = page },
-                            onMove = { delta -> viewModel.movePage(page.id, delta) },
-                        )
-                    }
-                    Box(
-                        Modifier
-                            .heightIn(min = 56.dp)
-                            .combinedClickable(role = Role.Button, onClick = { addPageOpen = true })
-                            .padding(horizontal = 20.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.action_add_page))
+                    },
+                    snackbarHost = { AppSnackbarHost() },
+                ) { padding ->
+                    Column(Modifier.padding(padding).fillMaxSize()) {
+                        if (setup) SetupBanner(onDone = { viewModel.setSetupMode(false) })
+                        if (pages.isNotEmpty()) {
+                            PrimaryScrollableTabRow(
+                                selectedTabIndex = pagerState.currentPage.coerceIn(0, pages.lastIndex),
+                                edgePadding = 8.dp,
+                                modifier = Modifier.tourTarget(TourTarget.PAGES),
+                            ) {
+                                pages.forEachIndexed { index, page ->
+                                    PageTab(
+                                        page = page,
+                                        selected = index == pagerState.currentPage,
+                                        hasActiveCard = page.cardIds.any(mix::isActive),
+                                        canMoveLeft = index > 0,
+                                        canMoveRight = index < pages.lastIndex,
+                                        onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                                        onEdit = { viewModel.editPage(page.id) },
+                                        onDuplicate = { pageToDuplicate = page },
+                                        onKeywords = { viewModel.openKeywords(page.id) },
+                                        onExport = {
+                                            pageToExport = page.id
+                                            exportLauncher.launch("${page.name.fr}.sonorama-page.json")
+                                        },
+                                        onDelete = { pageToDelete = page },
+                                        onMove = { delta -> viewModel.movePage(page.id, delta) },
+                                    )
+                                }
+                                Box(
+                                    Modifier
+                                        .heightIn(min = 56.dp)
+                                        .combinedClickable(role = Role.Button, onClick = { addPageOpen = true })
+                                        .padding(horizontal = 20.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.action_add_page))
+                                }
+                            }
+                            HorizontalPager(
+                                state = pagerState,
+                                modifier = Modifier.fillMaxSize(),
+                                key = { pages.getOrNull(it)?.id ?: it },
+                            ) { index ->
+                                val page = pages.getOrNull(index) ?: return@HorizontalPager
+                                PageGrid(page, library, mix, setup, tour?.cardId?.takeIf { page.id == TOUR_PAGE }, viewModel)
+                            }
+                        }
                     }
                 }
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize(),
-                    key = { pages.getOrNull(it)?.id ?: it },
-                ) { index ->
-                    val page = pages.getOrNull(index) ?: return@HorizontalPager
-                    PageGrid(page, library, mix, setup, viewModel)
-                }
+            }
+            tour?.let {
+                TourOverlay(
+                    tour = it,
+                    targets = tourTargets,
+                    touchExploration = touchExploration,
+                    onNext = viewModel::nextTourStep,
+                    onSkip = viewModel::endTour,
+                )
             }
         }
     }
@@ -447,7 +488,15 @@ private fun SetupBanner(onDone: () -> Unit) {
 }
 
 @Composable
-private fun PageGrid(page: Page, library: Library, mix: MixState, setup: Boolean, viewModel: MainViewModel) {
+private fun PageGrid(
+    page: Page,
+    library: Library,
+    mix: MixState,
+    setup: Boolean,
+    /** Carte d'exemple de la visite guidée, si elle est sur cette page. */
+    tourCard: String?,
+    viewModel: MainViewModel,
+) {
     val cards = page.cardIds.mapNotNull { library.cards[it] }
     if (cards.isEmpty()) {
         Column(
@@ -498,7 +547,9 @@ private fun PageGrid(page: Page, library: Library, mix: MixState, setup: Boolean
                 onTap = { if (setup) viewModel.openCardKeywords(card.id) else viewModel.tapCard(card) },
                 onVolumeChange = { viewModel.setVolume(card.id, it, false) },
                 onVolumeCommit = { viewModel.setVolume(card.id, it, true) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(if (card.id == tourCard) Modifier.tourTarget(TourTarget.CARD) else Modifier),
             )
         }
     }

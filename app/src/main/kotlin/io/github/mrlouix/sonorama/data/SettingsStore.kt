@@ -33,6 +33,8 @@ data class Settings(
     val recognitionMode: RecognitionMode = RecognitionMode.FULL,
     /** Second reconnaisseur pour les voix d'enfant ; réglage d'essai, éteint par défaut. */
     val childVoice: Boolean = false,
+    /** Visite guidée déjà montrée (vue jusqu'au bout ou passée). */
+    val tourSeen: Boolean = false,
 ) {
     companion object {
         const val MIN_VOICE_SECONDS = 3
@@ -66,6 +68,7 @@ class SettingsStore(context: Context) {
         storyLanguage = p[STORY_LANGUAGE].orEmpty(),
         recognitionMode = RecognitionMode.entries.firstOrNull { it.name == p[RECOGNITION_MODE] } ?: RecognitionMode.FULL,
         childVoice = p[CHILD_VOICE] ?: false,
+        tourSeen = p[TOUR_SEEN] ?: false,
     )
 
     suspend fun setFades(fades: FadeSettings) = store.edit {
@@ -92,6 +95,8 @@ class SettingsStore(context: Context) {
 
     suspend fun setChildVoice(enabled: Boolean) = store.edit { it[CHILD_VOICE] = enabled }
 
+    suspend fun setTourSeen(seen: Boolean = true) = store.edit { it[TOUR_SEEN] = seen }
+
     companion object {
         const val MAX_FADE_MS = 5000
         private val FADE_IN = intPreferencesKey("fade_in_ms")
@@ -105,5 +110,6 @@ class SettingsStore(context: Context) {
         private val STORY_LANGUAGE = stringPreferencesKey("story_language")
         private val RECOGNITION_MODE = stringPreferencesKey("recognition_mode")
         private val CHILD_VOICE = booleanPreferencesKey("child_voice")
+        private val TOUR_SEEN = booleanPreferencesKey("tour_seen")
     }
 }

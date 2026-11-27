@@ -17,6 +17,9 @@ le projet applique le [versionnage sémantique](https://semver.org/lang/fr/).
   confiances, niveau du micro), et second reconnaisseur à l'essai pour les voix d'enfant.
 - Filtre des mots-clés par confiance ou stabilité ; phrases moins découpées (fin après 1 s de silence).
 - Un APK par type de processeur.
+- Visite guidée de l'écran principal en 9 étapes, au premier lancement et depuis le menu ⋮ : cartes, volume,
+  lecture/pause, panneau « En cours », pages, mode Plan, mode vocal, mots-clés. Le mix en cours est mis de côté
+  pendant la visite, puis rendu tel quel.
 - Un appui sur une carte lancée à la voix la garde en lecture, comme une carte lancée à la main ; un
   second appui l'arrête.
 - Outils de pack : `tools/prepare_loop.py` (boucle sans raccord, niveau et Ogg du pack de base, contrôle),

@@ -48,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import io.github.mrlouix.sonorama.R
 import io.github.mrlouix.sonorama.audio.MixMode
 import io.github.mrlouix.sonorama.audio.MixState
+import io.github.mrlouix.sonorama.ui.tour.TourTarget
+import io.github.mrlouix.sonorama.ui.tour.tourTarget
 import io.github.mrlouix.sonorama.voice.VoiceState
 
 // Largeurs que demandent les éléments à la taille de police normale ; elles grandissent avec elle.
@@ -138,7 +140,7 @@ private fun PlanActions(count: Int, stacked: Boolean, onApply: () -> Unit, onCan
 
 @Composable
 private fun ModeSwitch(mode: MixMode, onMode: (MixMode) -> Unit, modifier: Modifier = Modifier) {
-    SingleChoiceSegmentedButtonRow(modifier) {
+    SingleChoiceSegmentedButtonRow(modifier.tourTarget(TourTarget.MODE)) {
         MixMode.entries.forEachIndexed { index, entry ->
             SegmentedButton(
                 selected = mode == entry,
@@ -159,7 +161,7 @@ private fun ModeSwitch(mode: MixMode, onMode: (MixMode) -> Unit, modifier: Modif
 
 @Composable
 private fun PlayButton(playing: Boolean, onClick: () -> Unit, modifier: Modifier) {
-    FilledIconButton(onClick = onClick, modifier = modifier) {
+    FilledIconButton(onClick = onClick, modifier = modifier.tourTarget(TourTarget.PLAY)) {
         Icon(
             if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
             contentDescription = stringResource(if (playing) R.string.action_pause else R.string.action_play),
@@ -179,7 +181,7 @@ private fun MicButton(voice: VoiceState, onClick: () -> Unit) {
             else -> R.string.voice_state_on
         },
     )
-    val modifier = Modifier.size(48.dp).semantics { stateDescription = state }
+    val modifier = Modifier.size(48.dp).tourTarget(TourTarget.MIC).semantics { stateDescription = state }
     when {
         !voice.enabled -> IconButton(onClick = onClick, modifier = modifier) {
             Icon(Icons.Rounded.MicOff, contentDescription = label)
@@ -216,7 +218,7 @@ private fun Counter(count: Int, onClick: () -> Unit) {
     val label = pluralStringResource(R.plurals.active_cards, count, count)
     FilledTonalButton(
         onClick = onClick,
-        modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = label },
+        modifier = Modifier.heightIn(min = 48.dp).tourTarget(TourTarget.NOW_PLAYING).semantics { contentDescription = label },
     ) {
         Icon(Icons.Rounded.GraphicEq, contentDescription = null, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(8.dp))
