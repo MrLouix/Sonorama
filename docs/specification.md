@@ -186,7 +186,7 @@ L'appli embarque un petit pack de base pour fonctionner dès l'installation ; le
 
 **Pack de base (dans l'APK)**
 
-- 33 sons sur trois pages intégrées (Nature et météo, Ville et machines, Féerique) ; Féerique n'en compte que deux au départ.
+- 36 sons sur trois pages intégrées (Nature et météo, Ville et machines, Féerique) ; Féerique n'en compte que deux au départ.
 - Objectif : APK sous 30 Mo.
 
 **Import d'un pack**
@@ -327,7 +327,7 @@ Toutes les questions ouvertes ont été tranchées le 12 nov. 2026 ; trois point
 
 - [ ] Vérifier les marques déposées « Sonorama » (INPI, EUIPO) avant publication.
 - [ ] Lever le risque audio par le prototype du lot 0 : raccord de boucle et 12 sons simultanés.
-- [ ] Constituer le pack de base : boucles sous CC0 ou CC BY, normalisées. 22 enregistrements acceptés les 25 et 26 nov. 2026 ; 11 sons restent synthétisés.
+- [ ] Constituer le pack de base : boucles sous CC0 ou CC BY, normalisées. 22 enregistrements acceptés les 25 et 26 nov. 2026, 3 sons générés par Stable Audio Open (chouette, vache, chat) le 27 nov. ; 11 sons restent synthétisés.
 
 ## 14. Mode vocal
 

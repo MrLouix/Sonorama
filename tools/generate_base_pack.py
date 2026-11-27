@@ -7,8 +7,9 @@ Chaque boucle est construite pour être périodique sur sa durée exacte :
   * les évènements (gouttes, chants, crépitements) sont posés modulo la durée.
 Le raccord est donc inaudible par construction, sans fondu de bouclage.
 
-Les sons produits sont originaux et placés sous CC0 1.0. Un son remplacé par un enregistrement accepté
-(« accepted » dans tools/recordings.json) n'est plus synthétisé : son fichier vient de prepare_recordings.py.
+Les sons produits sont originaux et placés sous CC0 1.0. Un son remplacé par un enregistrement ou un son
+généré accepté (« accepted » dans tools/recordings.json) n'est plus synthétisé : son fichier vient de
+prepare_recordings.py.
 
 Dépendances : Python 3.10+, numpy, ffmpeg (avec libvorbis).
 Usage : python3 tools/generate_base_pack.py [--only nom] [--out dossier]
@@ -571,6 +572,8 @@ SOUNDS = [
     ("waterfall", "nature", "Cascade", "Waterfall", "water_drop", 60, None),
     ("underwater", "nature", "Sous l'eau", "Underwater", "anchor", 60, None),
     ("seagulls", "nature", "Mouettes", "Seagulls", "beach_access", 55, None),
+    ("cow", "nature", "Vache", "Cow", "agriculture", 55, None),
+    ("cat", "nature", "Chat", "Cat", "pets", 55, None),
     ("traffic", "ville", "Circulation", "Traffic", "traffic", 60, traffic),
     ("crowd", "ville", "Foule", "Crowd", "groups", 60, crowd),
     ("fountain", "ville", "Fontaine", "Fountain", "water_drop", 60, fountain),
@@ -610,6 +613,8 @@ KEYWORDS = {
     'waterfall': (["cascade", "cascades", "chute d'eau"], ["waterfall", "waterfalls"]),
     'underwater': (["sous l'eau", "sous-marin", "fond des mers", "plongée sous-marine"], ["underwater", "submarine", "mermaid"]),
     'seagulls': (["mouette", "mouettes", "goéland", "goélands"], ["seagull", "seagulls", "gull", "gulls"]),
+    'cow': (["vache", "vaches", "meuh", "veau", "veaux", "troupeau", "étable", "pâturage", "à la ferme"], ["cow", "cows", "moo", "mooing", "cattle", "barn", "farm"]),
+    'cat': (["chat", "chats", "chaton", "chatons", "miaou", "miaule", "minou"], ["cat", "cats", "kitten", "kittens", "meow", "kitty"]),
     'traffic': (["circulation", "embouteillage", "embouteillages", "klaxon", "boulevard"], ["traffic", "traffic jam", "honking", "boulevard"]),
     'crowd': (["foule", "place du marché", "place du village"], ["crowd", "market square", "town square", "festival"]),
     'fountain': (["fontaine", "fontaines", "jet d'eau"], ["fountain", "fountains", "water jet"]),
@@ -640,8 +645,10 @@ LICENSES_MD = """# Licences des sons — pack de base Sonorama
 
 Tous les sons de ce pack sont dans le domaine public, sous licence
 [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/deed.fr). Ceux de l'auteur « Sonorama » sont
-synthétisés par le script `tools/generate_base_pack.py` du dépôt. Les autres sont des enregistrements publiés
-sur Freesound, mis en boucle par `tools/prepare_recordings.py`. Merci à leurs auteurs.
+synthétisés par le script `tools/generate_base_pack.py` du dépôt. Ceux de l'auteur « MrLouix » sont générés
+par le modèle Stable Audio Open 1.0, dont l'invite et la graine sont données en source. Les autres sont des
+enregistrements publiés sur Freesound. Sons générés et enregistrements sont mis en boucle par
+`tools/prepare_recordings.py`. Merci à leurs auteurs.
 
 | Fichier | Nom | Auteur | Licence | Source |
 | --- | --- | --- | --- | --- |
@@ -672,7 +679,7 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--only", action="append", help="ne régénérer que ce son (répétable)")
     parser.add_argument("--quality", type=float, default=3.0, help="qualité Vorbis (3 ≈ 112 kbit/s)")
-    parser.add_argument("--version", type=int, default=5, help="version du pack")
+    parser.add_argument("--version", type=int, default=6, help="version du pack")
     args = parser.parse_args()
 
     audio_dir = args.out / "audio"
@@ -687,7 +694,7 @@ def main() -> None:
             continue
         author, source = "Sonorama", SOURCE
         if recording:
-            author, source = recording["author"], f"https://freesound.org/s/{recording['freesound']}/"
+            author, source = recording["author"], prepare_recordings.origin_of(recording)
         elif not args.only or sound_id in args.only:
             stereo = finish(generator(rng_for(sound_id)))
             edge = float(np.abs(stereo[:, 0] - stereo[:, -1]).max())

@@ -1,7 +1,7 @@
 {
   "format": 1,
   "id": "sonorama.base",
-  "version": 5,
+  "version": 6,
   "name": {
     "fr": "Pack de base",
     "en": "Base pack"
@@ -230,6 +230,33 @@
       }
     },
     {
+      "id": "owl",
+      "file": "audio/owl.ogg",
+      "name": {
+        "fr": "Chouette",
+        "en": "Owl"
+      },
+      "symbol": "dark_mode",
+      "defaultVolume": 55,
+      "page": "nature",
+      "author": "MrLouix",
+      "license": "CC0-1.0",
+      "source": "Stable Audio Open 1.0 — \"tawny owl hooting, close-up, isolated owl call, natural field recording, quiet night, clear recording, high quality, stereo, 44.1kHz, frequent hoots\" — négative \"music, melody, vocals, speech, wind noise, rain, traffic, distortion, low quality, crickets\" — graine 218615083814393",
+      "keywords": {
+        "fr": [
+          "chouette",
+          "chouettes",
+          "hibou",
+          "hiboux"
+        ],
+        "en": [
+          "owl",
+          "owls",
+          "hoot"
+        ]
+      }
+    },
+    {
       "id": "cicadas",
       "file": "audio/cicadas.ogg",
       "name": {
@@ -361,6 +388,75 @@
           "seagulls",
           "gull",
           "gulls"
+        ]
+      }
+    },
+    {
+      "id": "cow",
+      "file": "audio/cow.ogg",
+      "name": {
+        "fr": "Vache",
+        "en": "Cow"
+      },
+      "symbol": "agriculture",
+      "defaultVolume": 55,
+      "page": "nature",
+      "author": "MrLouix",
+      "license": "CC0-1.0",
+      "source": "Stable Audio Open 1.0 — \"cow mooing, close-up, isolated cow moo, natural field recording, quiet farm, clear recording, high quality, stereo, 44.1kHz, frequent moos\" — négative \"music, melody, vocals, speech, wind noise, rain, traffic, distortion, low quality, crickets, birds, machinery, cowbells\" — graine 249943282259014",
+      "keywords": {
+        "fr": [
+          "vache",
+          "vaches",
+          "meuh",
+          "veau",
+          "veaux",
+          "troupeau",
+          "étable",
+          "pâturage",
+          "à la ferme"
+        ],
+        "en": [
+          "cow",
+          "cows",
+          "moo",
+          "mooing",
+          "cattle",
+          "barn",
+          "farm"
+        ]
+      }
+    },
+    {
+      "id": "cat",
+      "file": "audio/cat.ogg",
+      "name": {
+        "fr": "Chat",
+        "en": "Cat"
+      },
+      "symbol": "pets",
+      "defaultVolume": 55,
+      "page": "nature",
+      "author": "MrLouix",
+      "license": "CC0-1.0",
+      "source": "Stable Audio Open 1.0 — \"cat meowing, close-up, isolated cat meow, natural recording, quiet room, clear recording, high quality, stereo, 44.1kHz, frequent meows\" — négative \"music, melody, vocals, speech, wind noise, rain, traffic, distortion, low quality, crickets, birds, purring, hissing, television\" — graine 777271578405943",
+      "keywords": {
+        "fr": [
+          "chat",
+          "chats",
+          "chaton",
+          "chatons",
+          "miaou",
+          "miaule",
+          "minou"
+        ],
+        "en": [
+          "cat",
+          "cats",
+          "kitten",
+          "kittens",
+          "meow",
+          "kitty"
         ]
       }
     },

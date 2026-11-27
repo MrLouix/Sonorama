@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Refait les boucles enregistrées du pack de base à partir des sources Freesound.
+"""Refait les boucles enregistrées ou générées du pack de base à partir de leurs sources.
 
-La recette (tools/recordings.json) donne pour chaque son le numéro Freesound, l'auteur et les réglages :
+La recette (tools/recordings.json) donne pour chaque son sa source, l'auteur et les réglages :
+  freesound        numéro du son sur Freesound ; ou bien :
+  file, source     fichier sous pack-sources/ et description de son origine (son généré : modèle, invites, graine)
   skip, duration   passage retenu, en secondes ; absents : choisis automatiquement, puis écrits par --freeze
   crossfade, highpass, limiting, repeat   comme dans prepare_loop.py
   accepted         boucle écoutée et acceptée : elle entre dans le pack de base
-Les sources ne sont pas versionnées : les télécharger dans pack-sources/ sous leur nom Freesound
-(« 531015__noted451__ocean-waves.wav »). Un son sans source est signalé et laissé tel quel.
+Les sources ne sont pas versionnées : télécharger celles de Freesound dans pack-sources/ sous leur nom
+Freesound (« 531015__noted451__ocean-waves.wav »). Un son sans source est signalé et laissé tel quel.
 
 Dépendances : Python 3.10+, numpy, ffmpeg (avec libvorbis).
 Usage :
@@ -40,7 +42,15 @@ def save(recipe: list[dict]) -> None:
 
 
 def source_of(entry: dict) -> Path | None:
+    if "file" in entry:
+        path = SOURCES / entry["file"]
+        return path if path.is_file() else None
     return next(iter(sorted(SOURCES.glob(f"{entry['freesound']}__*"))), None)
+
+
+def origin_of(entry: dict) -> str:
+    """Champ « source » du manifeste : la page Freesound, ou l'origine décrite dans la recette."""
+    return entry["source"] if "file" in entry else f"https://freesound.org/s/{entry['freesound']}/"
 
 
 def main() -> None:
@@ -77,7 +87,8 @@ def main() -> None:
     if warned:
         print("À écouter en priorité : " + ", ".join(warned))
     for entry in missing:
-        print(f"Source absente : {entry['id']} (https://freesound.org/s/{entry['freesound']}/)")
+        where = f"pack-sources/{entry['file']}" if "file" in entry else origin_of(entry)
+        print(f"Source absente : {entry['id']} ({where})")
 
 
 if __name__ == "__main__":
