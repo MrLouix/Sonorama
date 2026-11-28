@@ -79,8 +79,8 @@ Le Play Store reçoit un AAB signé par une clé d'envoi ; Google garde la clé 
 4. Dans la Play Console : politique de confidentialité = l'adresse de [PRIVACY.md](PRIVACY.md) sur GitHub ;
    sécurité des données = aucune donnée collectée ; services de premier plan à déclarer : lecture média et micro.
 
-La fiche réutilise `fastlane/metadata/android`. Il lui manque encore l'icône (`images/icon.png`, 512 × 512) et la
-bannière (`images/featureGraphic.png`, 1024 × 500, sans transparence), ainsi que des captures en anglais. Un
+La fiche réutilise `fastlane/metadata/android`. Il lui manque encore la bannière
+(`images/featureGraphic.png`, 1024 × 500, sans transparence) et des captures en anglais. Un
 compte personnel récent doit d'abord faire tourner un test fermé : 12 testeurs pendant 14 jours d'affilée.
 
 ## Organisation du dépôt
@@ -135,8 +135,8 @@ Les failles de sécurité se signalent en privé : [SECURITY.md](SECURITY.md).
 ## Licences
 
 - Code : [GNU GPL 3.0](LICENSE).
-- Sons du pack de base : [CC0 1.0](app/src/main/assets/basepack/LICENSES.md), 11 créations synthétisées,
-  22 enregistrements de Freesound, dont les auteurs sont cités, et 3 sons générés par Stable Audio Open.
+- Sons du pack de base : libres de droits (CC0 de préférence, CC BY avec attribution). L'auteur, la licence et la
+  source de chaque son figurent dans [LICENSES.md](app/src/main/assets/basepack/LICENSES.md).
 - Pictogrammes : Material Icons de Google, licence Apache 2.0.
 - Reconnaissance vocale : [Vosk](https://alphacephei.com/vosk/) et son modèle français
   `vosk-model-small-fr-0.22`, licence Apache 2.0 ; JNA, licence Apache 2.0.
