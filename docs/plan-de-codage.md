@@ -94,7 +94,7 @@ Flux unidirectionnel : l'interface envoie des commandes au `MainViewModel`, qui 
 | Visite guidée | Voile Compose sur l'écran réel (`ui/tour/GuidedTour.kt`) : les éléments se déclarent par `Modifier.tourTarget`, quatre bandes bloquent les appuis autour de l'élément montré ; l'état vit dans `MainViewModel`, le mix mis de côté dans le moteur | Apprendre les gestes sur l'interface qu'on utilisera ; aucune bibliothèque tierce |
 | Mots-clés | Mode paramétrage : un appui sur une carte ouvre ses mots-clés ; toute la page depuis son onglet (appui long, « Mots-clés ») | L'appui long sur une carte règle déjà le volume |
 | Reconnaissance | Phrase entière par défaut ; mode limité aux mots-clés comparable dans l'APK de débogage | Essai sur voix de synthèse : le mode limité invente des mots-clés |
-| APK | Un APK par processeur, codes de version `version × 10 + processeur` | Vosk ajoute environ 10 Mo de code natif par processeur |
+| APK | Un APK par processeur, codes de version `version × 10 + processeur` ; l'AAB du Play Store n'est pas découpé (`bundleRelease`, code `version × 10`) et se signe par une clé d'envoi lue dans `keystore.properties` | Vosk ajoute environ 10 Mo de code natif par processeur ; le Play Store découpe l'AAB lui-même, et AGP refuse les APK multiples en le fabriquant |
 
 ## 3. Modèle de données
 

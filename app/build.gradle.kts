@@ -1,6 +1,7 @@
 import java.io.File
 import java.net.URI
 import java.security.MessageDigest
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -8,6 +9,11 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
 }
+
+// Clé d'envoi du Play Store, lue dans keystore.properties (non versionné, voir keystore.properties.example).
+// Sans ce fichier, la version de publication reste non signée, comme l'attend F-Droid.
+val keystoreFile: File = rootProject.file("keystore.properties")
+val keystore = Properties().apply { if (keystoreFile.isFile) keystoreFile.inputStream().use(::load) }
 
 android {
     namespace = "io.github.mrlouix.sonorama"
@@ -22,8 +28,20 @@ android {
         androidResources.localeFilters += listOf("fr", "en")
     }
 
+    signingConfigs {
+        if (keystoreFile.isFile) {
+            create("upload") {
+                storeFile = rootProject.file(keystore.getProperty("storeFile"))
+                storePassword = keystore.getProperty("storePassword")
+                keyAlias = keystore.getProperty("keyAlias")
+                keyPassword = keystore.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("upload")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -58,8 +76,9 @@ android {
 
     splits {
         // Vosk embarque environ 10 Mo de code natif par processeur : un APK par processeur.
+        // Un AAB est découpé par le Play Store lui-même, et AGP refuse les APK multiples en le fabriquant.
         abi {
-            isEnable = true
+            isEnable = gradle.startParameter.taskNames.none { it.contains("bundle", ignoreCase = true) }
             reset()
             include("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
             isUniversalApk = false
