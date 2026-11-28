@@ -129,7 +129,7 @@ fun rememberTouchExploration(): Boolean {
  * Contour de l'élément montré : l'ambre d'accent du thème sombre, dans les deux thèmes. Il ressort sur le voile,
  * sur le vert de l'appli et sur un fond clair, sans être criard.
  */
-private val RING_COLOR = Color(0xFFF0BE6D)
+private val RING_COLOR = Color(0xFFFFCC66)
 
 /** Délai avant de montrer le geste du volume à qui ne l'a pas encore fait. */
 private const val GESTURE_HINT_MS = 8_000L
