@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.mrlouix.sonorama.BuildConfig
 import io.github.mrlouix.sonorama.R
+import io.github.mrlouix.sonorama.data.CardSize
 import io.github.mrlouix.sonorama.data.Settings
 import io.github.mrlouix.sonorama.data.SettingsStore
 import io.github.mrlouix.sonorama.data.ThemeMode
@@ -80,6 +81,13 @@ fun SettingsScreen(viewModel: MainViewModel, onLanguageChanged: () -> Unit) {
                 Choice(R.string.settings_follow_system, settings.theme == ThemeMode.SYSTEM) { viewModel.setTheme(ThemeMode.SYSTEM) }
                 Choice(R.string.settings_theme_light, settings.theme == ThemeMode.LIGHT) { viewModel.setTheme(ThemeMode.LIGHT) }
                 Choice(R.string.settings_theme_dark, settings.theme == ThemeMode.DARK) { viewModel.setTheme(ThemeMode.DARK) }
+            }
+
+            SectionTitle(R.string.settings_card_size)
+            Column(Modifier.selectableGroup()) {
+                Choice(R.string.settings_card_size_normal, settings.cardSize == CardSize.NORMAL) { viewModel.setCardSize(CardSize.NORMAL) }
+                Choice(R.string.settings_card_size_compact, settings.cardSize == CardSize.COMPACT) { viewModel.setCardSize(CardSize.COMPACT) }
+                Choice(R.string.settings_card_size_dense, settings.cardSize == CardSize.DENSE) { viewModel.setCardSize(CardSize.DENSE) }
             }
 
             SectionTitle(R.string.settings_language)

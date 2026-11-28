@@ -16,12 +16,32 @@ import kotlinx.coroutines.runBlocking
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+/**
+ * Taille des cartes de la grille, en dp : largeur minimale d'une colonne, hauteur minimale, pictogramme,
+ * écart entre cartes, marges haute et basse du contenu, et échelle du nom. Plus les cartes sont petites,
+ * plus il en tient à l'écran ; la hauteur reste au-dessus de la cible tactile de 48 dp.
+ */
+enum class CardSize(
+    val columnDp: Int,
+    val heightDp: Int,
+    val iconDp: Int,
+    val gapDp: Int,
+    val padTopDp: Int,
+    val padBottomDp: Int,
+    val labelScale: Float,
+) {
+    NORMAL(104, 112, 34, 10, 14, 16, 1f),
+    COMPACT(84, 96, 28, 8, 10, 12, 0.93f),
+    DENSE(84, 88, 26, 8, 8, 10, 0.86f),
+}
+
 /** Mode vocal : reconnaissance de toute la phrase, ou limitée aux mots-clés de la page. */
 enum class RecognitionMode { FULL, KEYWORDS_ONLY }
 
 data class Settings(
     val fades: FadeSettings = FadeSettings(),
     val theme: ThemeMode = ThemeMode.SYSTEM,
+    val cardSize: CardSize = CardSize.NORMAL,
     /** Code de langue (`fr`, `en`) ou chaîne vide pour suivre le système. */
     val language: String = "",
     val lastMix: List<String> = emptyList(),
@@ -60,6 +80,7 @@ class SettingsStore(context: Context) {
             crossfadeMs = (p[CROSSFADE] ?: 2000).coerceIn(0, MAX_FADE_MS),
         ),
         theme = ThemeMode.entries.firstOrNull { it.name == p[THEME] } ?: ThemeMode.SYSTEM,
+        cardSize = CardSize.entries.firstOrNull { it.name == p[CARD_SIZE] } ?: CardSize.NORMAL,
         language = p[LANGUAGE].orEmpty(),
         lastMix = p[LAST_MIX].orEmpty().split('\n').filter { it.isNotEmpty() },
         notificationsAsked = p[NOTIFICATIONS_ASKED] ?: false,
@@ -78,6 +99,8 @@ class SettingsStore(context: Context) {
     }
 
     suspend fun setTheme(theme: ThemeMode) = store.edit { it[THEME] = theme.name }
+
+    suspend fun setCardSize(size: CardSize) = store.edit { it[CARD_SIZE] = size.name }
 
     suspend fun setLanguage(language: String) = store.edit { it[LANGUAGE] = language }
 
@@ -103,6 +126,7 @@ class SettingsStore(context: Context) {
         private val FADE_OUT = intPreferencesKey("fade_out_ms")
         private val CROSSFADE = intPreferencesKey("crossfade_ms")
         private val THEME = stringPreferencesKey("theme")
+        private val CARD_SIZE = stringPreferencesKey("card_size")
         private val LANGUAGE = stringPreferencesKey("language")
         private val LAST_MIX = stringPreferencesKey("last_mix")
         private val NOTIFICATIONS_ASKED = booleanPreferencesKey("notifications_asked")

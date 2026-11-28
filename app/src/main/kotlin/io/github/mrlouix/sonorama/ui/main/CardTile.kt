@@ -65,6 +65,7 @@ import io.github.mrlouix.sonorama.R
 import io.github.mrlouix.sonorama.audio.TimedPlay
 import io.github.mrlouix.sonorama.audio.VolumeCurve
 import io.github.mrlouix.sonorama.audio.monotonicMillis
+import io.github.mrlouix.sonorama.data.CardSize
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
@@ -102,6 +103,7 @@ fun CardTile(
     onVolumeChange: (Int) -> Unit,
     onVolumeCommit: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    cardSize: CardSize = CardSize.NORMAL,
 ) {
     val haptics = LocalHapticFeedback.current
     var dragVolume by remember { mutableStateOf<Int?>(null) }
@@ -156,7 +158,7 @@ fun CardTile(
 
     Box(
         modifier = modifier
-            .defaultMinSize(minHeight = 112.dp)
+            .defaultMinSize(minHeight = cardSize.heightDp.dp)
             .alpha(if (available) 1f else 0.45f)
             .clip(shape)
             .background(container)
@@ -228,7 +230,7 @@ fun CardTile(
                 }
             },
     ) {
-        CardLabel(name, icon, content, lit)
+        CardLabel(name, icon, content, lit, cardSize)
 
         // L'état se lit aussi par une icône, jamais par la couleur seule.
         val badge = cardBadge(status, available, setup, voiceCard)
@@ -266,17 +268,17 @@ private fun Modifier.statusOutline(outline: Color, pending: Boolean): Modifier =
 }
 
 @Composable
-private fun BoxScope.CardLabel(name: String, icon: ImageVector, content: Color, lit: Boolean) {
+private fun BoxScope.CardLabel(name: String, icon: ImageVector, content: Color, lit: Boolean, cardSize: CardSize) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .align(Alignment.Center)
-            .padding(start = 8.dp, end = 8.dp, top = 14.dp, bottom = 16.dp),
+            .padding(start = 8.dp, end = 8.dp, top = cardSize.padTopDp.dp, bottom = cardSize.padBottomDp.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(34.dp))
-        Spacer(Modifier.height(8.dp))
+        Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(cardSize.iconDp.dp))
+        Spacer(Modifier.height(if (cardSize == CardSize.NORMAL) 8.dp else 4.dp))
         Text(
             text = name,
             color = content,
@@ -287,8 +289,8 @@ private fun BoxScope.CardLabel(name: String, icon: ImageVector, content: Color, 
             overflow = TextOverflow.Ellipsis,
             // Un mot plus large que la carte rétrécit légèrement au lieu d'être coupé en son milieu.
             autoSize = TextAutoSize.StepBased(
-                minFontSize = MaterialTheme.typography.labelLarge.fontSize * 0.7f,
-                maxFontSize = MaterialTheme.typography.labelLarge.fontSize,
+                minFontSize = MaterialTheme.typography.labelLarge.fontSize * 0.7f * cardSize.labelScale,
+                maxFontSize = MaterialTheme.typography.labelLarge.fontSize * cardSize.labelScale,
             ),
         )
     }

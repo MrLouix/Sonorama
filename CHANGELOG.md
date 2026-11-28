@@ -7,6 +7,8 @@ le projet applique le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ### Ajouté
 
+- Réglage « Taille des cartes » (Normale, Compacte, Très compacte) : les deux dernières mettent quatre cartes par ligne
+  au lieu de trois, pour en voir davantage à l'écran sur un téléphone.
 - Mode vocal : bouton micro dans la barre du bas ; les cartes de la page affichée dont un mot-clé est
   entendu jouent pendant une durée réglable (3 à 30 s), en plus du mix. Reconnaissance hors ligne par Vosk,
   écoute écran éteint, micro coupé en pause, arrêt automatique après 5 minutes sans mot-clé.

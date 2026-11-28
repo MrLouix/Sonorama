@@ -84,7 +84,7 @@ L'appli tient en un écran principal : des pages que l'on fait défiler horizont
 
 - Packs : import d'un ZIP, liste des packs installés, suppression.
 - Éditeur de page personnalisée et éditeur de carte composée.
-- Réglages : durées de fondu, thème clair ou sombre, langue, mode vocal, licences des sons.
+- Réglages : durées de fondu, thème clair ou sombre, taille des cartes (normale, compacte, très compacte), langue, mode vocal, licences des sons.
 
 ## 4. Modes de lecture
 
