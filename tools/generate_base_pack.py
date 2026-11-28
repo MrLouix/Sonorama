@@ -19,9 +19,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
-import tempfile
-import wave
 from pathlib import Path
 
 import numpy as np
@@ -655,25 +652,6 @@ enregistrements publiés sur Freesound. Sons générés et enregistrements sont 
 """
 
 
-def write_ogg(stereo: np.ndarray, path: Path, quality: float) -> None:
-    pcm = (np.clip(stereo.T, -1, 1) * 32767).astype("<i2")
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as handle:
-        wav_path = Path(handle.name)
-    try:
-        with wave.open(str(wav_path), "wb") as wav:
-            wav.setnchannels(2)
-            wav.setsampwidth(2)
-            wav.setframerate(SR)
-            wav.writeframes(pcm.tobytes())
-        subprocess.run(
-            ["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav_path), "-c:a", "libvorbis", "-q:a", str(quality),
-             "-map_metadata", "-1", "-fflags", "+bitexact", "-flags:a", "+bitexact", "-serial_offset", "1", str(path)],
-            check=True,
-        )
-    finally:
-        wav_path.unlink(missing_ok=True)
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
@@ -698,7 +676,7 @@ def main() -> None:
         elif not args.only or sound_id in args.only:
             stereo = finish(generator(rng_for(sound_id)))
             edge = float(np.abs(stereo[:, 0] - stereo[:, -1]).max())
-            write_ogg(stereo, args.out / file_name, args.quality)
+            prepare_loop.encode(stereo, args.out / file_name, args.quality)
             size = (args.out / file_name).stat().st_size // 1024
             print(f"{sound_id:14s} crête {np.abs(stereo).max():.2f}  raccord {edge:.4f}  {size} Ko")
         manifest_sounds.append(
