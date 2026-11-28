@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.mrlouix.sonorama.R
+import io.github.mrlouix.sonorama.data.Library
 import io.github.mrlouix.sonorama.data.Limits
 import io.github.mrlouix.sonorama.ui.AppSnackbarHost
 import io.github.mrlouix.sonorama.ui.MainViewModel
@@ -123,74 +124,90 @@ fun PageEditorScreen(viewModel: MainViewModel) {
             if (page.cardIds.isEmpty()) {
                 Text(stringResource(R.string.page_editor_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            val rowHeightPx = with(LocalDensity.current) { ROW_HEIGHT.toPx() }
-            var dragged by remember { mutableStateOf<String?>(null) }
-            var dragOffset by remember { mutableFloatStateOf(0f) }
-            val move by rememberUpdatedState(viewModel::movePageCard)
-            val ids by rememberUpdatedState(page.cardIds)
-            Column {
-                page.cardIds.forEachIndexed { index, cardId ->
-                    key(cardId) {
-                        val card = library.cards[cardId]
-                        val name = card?.name?.text() ?: cardId
-                        val isDragged = dragged == cardId
-                        Row(
-                            Modifier
-                                .zIndex(if (isDragged) 1f else 0f)
-                                .graphicsLayer { translationY = if (isDragged) dragOffset else 0f }
-                                .fillMaxWidth()
-                                .height(ROW_HEIGHT)
-                                .padding(vertical = 3.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(
-                                    if (isDragged) MaterialTheme.colorScheme.primaryContainer
-                                    else MaterialTheme.colorScheme.surfaceContainerHigh,
-                                )
-                                .alpha(if (card?.available == false) 0.5f else 1f),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Box(
-                                Modifier
-                                    .size(48.dp)
-                                    .pointerInput(cardId) {
-                                        detectDragGestures(
-                                            onDragStart = {
-                                                dragged = cardId
-                                                dragOffset = 0f
-                                            },
-                                            onDragEnd = { dragged = null },
-                                            onDragCancel = { dragged = null },
-                                        ) { change, amount ->
-                                            change.consume()
-                                            dragOffset += amount.y
-                                            // Franchir la moitié d'une ligne échange la carte avec sa voisine.
-                                            val position = ids.indexOf(cardId)
-                                            if (dragOffset > rowHeightPx / 2 && position < ids.lastIndex) {
-                                                move(cardId, 1)
-                                                dragOffset -= rowHeightPx
-                                            } else if (dragOffset < -rowHeightPx / 2 && position > 0) {
-                                                move(cardId, -1)
-                                                dragOffset += rowHeightPx
-                                            }
-                                        }
+            PageCardList(
+                cardIds = page.cardIds,
+                library = library,
+                onMove = viewModel::movePageCard,
+                onToggle = viewModel::togglePageCard,
+            )
+        }
+    }
+}
+
+/** Liste des cartes d'une page : glisser par la poignée ou utiliser les flèches pour réordonner. */
+@Composable
+private fun PageCardList(
+    cardIds: List<String>,
+    library: Library,
+    onMove: (String, Int) -> Unit,
+    onToggle: (String) -> Unit,
+) {
+    val rowHeightPx = with(LocalDensity.current) { ROW_HEIGHT.toPx() }
+    var dragged by remember { mutableStateOf<String?>(null) }
+    var dragOffset by remember { mutableFloatStateOf(0f) }
+    val move by rememberUpdatedState(onMove)
+    val ids by rememberUpdatedState(cardIds)
+    Column {
+        cardIds.forEachIndexed { index, cardId ->
+            key(cardId) {
+                val card = library.cards[cardId]
+                val name = card?.name?.text() ?: cardId
+                val isDragged = dragged == cardId
+                Row(
+                    Modifier
+                        .zIndex(if (isDragged) 1f else 0f)
+                        .graphicsLayer { translationY = if (isDragged) dragOffset else 0f }
+                        .fillMaxWidth()
+                        .height(ROW_HEIGHT)
+                        .padding(vertical = 3.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            if (isDragged) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surfaceContainerHigh,
+                        )
+                        .alpha(if (card?.available == false) 0.5f else 1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        Modifier
+                            .size(48.dp)
+                            .pointerInput(cardId) {
+                                detectDragGestures(
+                                    onDragStart = {
+                                        dragged = cardId
+                                        dragOffset = 0f
                                     },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(Icons.Rounded.DragHandle, contentDescription = null)
-                            }
-                            Icon(Symbols.icon(card?.symbol ?: Symbols.DEFAULT), contentDescription = null, modifier = Modifier.size(24.dp))
-                            Spacer(Modifier.width(10.dp))
-                            Text(name, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            IconButton(onClick = { viewModel.movePageCard(cardId, -1) }, enabled = index > 0) {
-                                Icon(Icons.Rounded.KeyboardArrowUp, contentDescription = stringResource(R.string.action_move_up, name))
-                            }
-                            IconButton(onClick = { viewModel.movePageCard(cardId, 1) }, enabled = index < page.cardIds.lastIndex) {
-                                Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = stringResource(R.string.action_move_down, name))
-                            }
-                            IconButton(onClick = { viewModel.togglePageCard(cardId) }) {
-                                Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_remove_card, name))
-                            }
-                        }
+                                    onDragEnd = { dragged = null },
+                                    onDragCancel = { dragged = null },
+                                ) { change, amount ->
+                                    change.consume()
+                                    dragOffset += amount.y
+                                    // Franchir la moitié d'une ligne échange la carte avec sa voisine.
+                                    val position = ids.indexOf(cardId)
+                                    if (dragOffset > rowHeightPx / 2 && position < ids.lastIndex) {
+                                        move(cardId, 1)
+                                        dragOffset -= rowHeightPx
+                                    } else if (dragOffset < -rowHeightPx / 2 && position > 0) {
+                                        move(cardId, -1)
+                                        dragOffset += rowHeightPx
+                                    }
+                                }
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Rounded.DragHandle, contentDescription = null)
+                    }
+                    Icon(Symbols.icon(card?.symbol ?: Symbols.DEFAULT), contentDescription = null, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(10.dp))
+                    Text(name, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    IconButton(onClick = { onMove(cardId, -1) }, enabled = index > 0) {
+                        Icon(Icons.Rounded.KeyboardArrowUp, contentDescription = stringResource(R.string.action_move_up, name))
+                    }
+                    IconButton(onClick = { onMove(cardId, 1) }, enabled = index < cardIds.lastIndex) {
+                        Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = stringResource(R.string.action_move_down, name))
+                    }
+                    IconButton(onClick = { onToggle(cardId) }) {
+                        Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_remove_card, name))
                     }
                 }
             }

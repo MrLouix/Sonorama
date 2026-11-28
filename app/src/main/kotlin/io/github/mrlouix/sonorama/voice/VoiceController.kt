@@ -170,22 +170,31 @@ class VoiceController(
         val options = SpeechOptions(grammar, transcripts?.enabled == true, s.childVoice)
         val key = language to options
         val wanted = enabled && !paused && (grammar == null || grammar.isNotEmpty())
-        if (session != null || opening != null) {
-            if (!wanted || key != sessionKey) closeSession()
-        }
-        if (wanted && session == null && opening == null) open(language, options, key)
-        if (enabled && !paused) {
-            if (autoStop == null || _state.value.paused) armAutoStop()
-        } else {
-            autoStop?.cancel()
-            autoStop = null
-        }
+        syncSession(wanted, language, options, key)
+        syncAutoStop(listeningAllowed = enabled && !paused)
         _state.value = _state.value.copy(
             paused = enabled && paused,
             listening = session != null,
             keywordCount = matcher.keywords.size,
             language = language,
         )
+    }
+
+    /** Ferme la session devenue inutile ou périmée, puis en ouvre une si besoin. */
+    private fun syncSession(wanted: Boolean, language: String, options: SpeechOptions, key: Any) {
+        if (session != null || opening != null) {
+            if (!wanted || key != sessionKey) closeSession()
+        }
+        if (wanted && session == null && opening == null) open(language, options, key)
+    }
+
+    private fun syncAutoStop(listeningAllowed: Boolean) {
+        if (listeningAllowed) {
+            if (autoStop == null || _state.value.paused) armAutoStop()
+        } else {
+            autoStop?.cancel()
+            autoStop = null
+        }
     }
 
     /** Chaque reconnaisseur suit sa propre phrase : un détecteur par source. */

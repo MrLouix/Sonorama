@@ -48,8 +48,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.mrlouix.sonorama.R
+import io.github.mrlouix.sonorama.data.CardSound
 import io.github.mrlouix.sonorama.data.Library
 import io.github.mrlouix.sonorama.data.Limits
+import io.github.mrlouix.sonorama.data.Sound
 import io.github.mrlouix.sonorama.ui.CompositeDraft
 import io.github.mrlouix.sonorama.ui.AppSnackbarHost
 import io.github.mrlouix.sonorama.ui.MainViewModel
@@ -137,34 +139,21 @@ fun CompositeEditorScreen(viewModel: MainViewModel) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             for (part in draft.sounds) {
-                val sound = library.sounds[part.soundId]
-                val name = sound?.name?.get(french) ?: part.soundId
-                Column(Modifier.padding(top = 10.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Symbols.icon(sound?.symbol ?: Symbols.DEFAULT), contentDescription = null, modifier = Modifier.size(24.dp))
-                        Spacer(Modifier.width(12.dp))
-                        Text(name, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(stringResource(R.string.percent, part.relativeVolume), style = MaterialTheme.typography.labelLarge)
-                        IconButton(onClick = { viewModel.toggleCompositeSound(part.soundId) }) {
-                            Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_remove_card, name))
+                CompositeSoundRow(
+                    part = part,
+                    sound = library.sounds[part.soundId],
+                    french = french,
+                    onRemove = { viewModel.toggleCompositeSound(part.soundId) },
+                    onVolume = { value ->
+                        viewModel.updateCompositeDraft { current ->
+                            current.copy(
+                                sounds = current.sounds.map {
+                                    if (it.soundId == part.soundId) it.copy(relativeVolume = value) else it
+                                },
+                            )
                         }
-                    }
-                    val sliderLabel = stringResource(R.string.volume_of, name)
-                    Slider(
-                        value = part.relativeVolume.toFloat(),
-                        onValueChange = { value ->
-                            viewModel.updateCompositeDraft { current ->
-                                current.copy(
-                                    sounds = current.sounds.map {
-                                        if (it.soundId == part.soundId) it.copy(relativeVolume = value.roundToInt()) else it
-                                    },
-                                )
-                            }
-                        },
-                        valueRange = 0f..100f,
-                        modifier = Modifier.semantics { contentDescription = sliderLabel },
-                    )
-                }
+                    },
+                )
             }
             if (draft.cardId != null) {
                 Spacer(Modifier.height(24.dp))
@@ -191,6 +180,36 @@ fun CompositeEditorScreen(viewModel: MainViewModel) {
                 }) { Text(stringResource(R.string.action_delete)) }
             },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.action_cancel)) } },
+        )
+    }
+}
+
+/** Un son de la carte composée : nom, volume relatif et retrait. */
+@Composable
+private fun CompositeSoundRow(
+    part: CardSound,
+    sound: Sound?,
+    french: Boolean,
+    onRemove: () -> Unit,
+    onVolume: (Int) -> Unit,
+) {
+    val name = sound?.name?.get(french) ?: part.soundId
+    Column(Modifier.padding(top = 10.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Symbols.icon(sound?.symbol ?: Symbols.DEFAULT), contentDescription = null, modifier = Modifier.size(24.dp))
+            Spacer(Modifier.width(12.dp))
+            Text(name, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(stringResource(R.string.percent, part.relativeVolume), style = MaterialTheme.typography.labelLarge)
+            IconButton(onClick = onRemove) {
+                Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.action_remove_card, name))
+            }
+        }
+        val sliderLabel = stringResource(R.string.volume_of, name)
+        Slider(
+            value = part.relativeVolume.toFloat(),
+            onValueChange = { value -> onVolume(value.roundToInt()) },
+            valueRange = 0f..100f,
+            modifier = Modifier.semantics { contentDescription = sliderLabel },
         )
     }
 }

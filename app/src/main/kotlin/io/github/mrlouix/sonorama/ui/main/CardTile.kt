@@ -5,6 +5,7 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -159,23 +160,7 @@ fun CardTile(
             .alpha(if (available) 1f else 0.45f)
             .clip(shape)
             .background(container)
-            .drawWithContent {
-                drawContent()
-                if (outline != Color.Transparent) {
-                    val width = 3.dp.toPx()
-                    drawRoundRect(
-                        color = outline,
-                        topLeft = androidx.compose.ui.geometry.Offset(width / 2, width / 2),
-                        size = androidx.compose.ui.geometry.Size(size.width - width, size.height - width),
-                        cornerRadius = CornerRadius(18.dp.toPx() - width / 2),
-                        style = Stroke(
-                            width = width,
-                            // Trait plein : état en cours. Pointillés : changement en attente.
-                            pathEffect = if (pending) PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx())) else null,
-                        ),
-                    )
-                }
-            }
+            .statusOutline(outline, pending)
             .pointerInput(available, setup) {
                 val travel = VOLUME_TRAVEL.toPx()
                 awaitEachGesture {
@@ -243,70 +228,11 @@ fun CardTile(
                 }
             },
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.Center)
-                .padding(start = 8.dp, end = 8.dp, top = 14.dp, bottom = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(34.dp))
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = name,
-                color = content,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = if (lit) FontWeight.Bold else FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                // Un mot plus large que la carte rétrécit légèrement au lieu d'être coupé en son milieu.
-                autoSize = TextAutoSize.StepBased(
-                    minFontSize = MaterialTheme.typography.labelLarge.fontSize * 0.7f,
-                    maxFontSize = MaterialTheme.typography.labelLarge.fontSize,
-                ),
-            )
-        }
+        CardLabel(name, icon, content, lit)
 
         // L'état se lit aussi par une icône, jamais par la couleur seule.
-        val badge = when {
-            setup -> Icons.Rounded.Edit
-            !available -> Icons.Rounded.CloudOff
-            voiceCard -> null
-            status == CardStatus.ACTIVE -> Icons.Rounded.GraphicEq
-            status == CardStatus.PENDING_START -> Icons.Rounded.AddCircle
-            status == CardStatus.PENDING_STOP -> Icons.Rounded.RemoveCircle
-            else -> null
-        }
-        if (voiceCard) {
-            // Anneau qui se vide pendant la durée de jeu d'une carte déclenchée à la voix. L'épingle rappelle
-            // qu'un appui sur la carte la garde en lecture.
-            val ringColor = content
-            Box(
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .size(48.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Box(
-                    Modifier
-                        .size(28.dp)
-                        .drawWithContent {
-                            val stroke = 2.5.dp.toPx()
-                            val inset = stroke / 2
-                            val arcSize = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke)
-                            val topLeft = androidx.compose.ui.geometry.Offset(inset, inset)
-                            drawArc(ringColor.copy(alpha = 0.25f), 0f, 360f, false, topLeft, arcSize, style = Stroke(stroke))
-                            drawArc(ringColor, -90f, 360f * remaining, false, topLeft, arcSize, style = Stroke(stroke))
-                            drawContent()
-                        },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(Icons.Rounded.PushPin, contentDescription = null, tint = content, modifier = Modifier.size(15.dp))
-                }
-            }
-        }
+        val badge = cardBadge(status, available, setup, voiceCard)
+        if (voiceCard) VoiceRing(remaining, content)
         if (badge != null) {
             Icon(
                 badge,
@@ -315,44 +241,138 @@ fun CardTile(
                 modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).size(18.dp),
             )
         }
+        if (status != CardStatus.INACTIVE || volumePlanned) VolumeBar(volume, volumePlanned, content)
+        dragVolume?.let { shown -> VolumeOverlay(shown) }
+    }
+}
 
-        if (status != CardStatus.INACTIVE || volumePlanned) {
-            Box(
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(horizontal = 14.dp, vertical = 8.dp)
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(content.copy(alpha = 0.2f)),
-            ) {
-                Box(
-                    Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(volume / 100f)
-                        .background(if (volumePlanned) colors.tertiary else content.copy(alpha = 0.75f)),
-                )
-            }
-        }
+/** Contour de la carte : plein pour un état en cours, en pointillés pour un changement en attente. */
+private fun Modifier.statusOutline(outline: Color, pending: Boolean): Modifier = drawWithContent {
+    drawContent()
+    if (outline != Color.Transparent) {
+        val width = 3.dp.toPx()
+        drawRoundRect(
+            color = outline,
+            topLeft = androidx.compose.ui.geometry.Offset(width / 2, width / 2),
+            size = androidx.compose.ui.geometry.Size(size.width - width, size.height - width),
+            cornerRadius = CornerRadius(18.dp.toPx() - width / 2),
+            style = Stroke(
+                width = width,
+                // Trait plein : état en cours. Pointillés : changement en attente.
+                pathEffect = if (pending) PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx())) else null,
+            ),
+        )
+    }
+}
 
-        dragVolume?.let { shown ->
-            Box(Modifier.matchParentSize().background(colors.inverseSurface.copy(alpha = 0.92f))) {
-                Box(
-                    Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .fillMaxHeight(shown / 100f)
-                        .background(colors.primary.copy(alpha = 0.55f)),
-                )
-                Text(
-                    text = stringResource(R.string.percent, shown),
-                    color = colors.inverseOnSurface,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Center),
-                )
-            }
+@Composable
+private fun BoxScope.CardLabel(name: String, icon: ImageVector, content: Color, lit: Boolean) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .align(Alignment.Center)
+            .padding(start = 8.dp, end = 8.dp, top = 14.dp, bottom = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(34.dp))
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = name,
+            color = content,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = if (lit) FontWeight.Bold else FontWeight.Medium,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            // Un mot plus large que la carte rétrécit légèrement au lieu d'être coupé en son milieu.
+            autoSize = TextAutoSize.StepBased(
+                minFontSize = MaterialTheme.typography.labelLarge.fontSize * 0.7f,
+                maxFontSize = MaterialTheme.typography.labelLarge.fontSize,
+            ),
+        )
+    }
+}
+
+private fun cardBadge(status: CardStatus, available: Boolean, setup: Boolean, voiceCard: Boolean): ImageVector? = when {
+    setup -> Icons.Rounded.Edit
+    !available -> Icons.Rounded.CloudOff
+    voiceCard -> null
+    status == CardStatus.ACTIVE -> Icons.Rounded.GraphicEq
+    status == CardStatus.PENDING_START -> Icons.Rounded.AddCircle
+    status == CardStatus.PENDING_STOP -> Icons.Rounded.RemoveCircle
+    else -> null
+}
+
+/**
+ * Anneau qui se vide pendant la durée de jeu d'une carte déclenchée à la voix. L'épingle rappelle
+ * qu'un appui sur la carte la garde en lecture.
+ */
+@Composable
+private fun BoxScope.VoiceRing(remaining: Float, ringColor: Color) {
+    Box(
+        Modifier
+            .align(Alignment.TopEnd)
+            .size(48.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            Modifier
+                .size(28.dp)
+                .drawWithContent {
+                    val stroke = 2.5.dp.toPx()
+                    val inset = stroke / 2
+                    val arcSize = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke)
+                    val topLeft = androidx.compose.ui.geometry.Offset(inset, inset)
+                    drawArc(ringColor.copy(alpha = 0.25f), 0f, 360f, false, topLeft, arcSize, style = Stroke(stroke))
+                    drawArc(ringColor, -90f, 360f * remaining, false, topLeft, arcSize, style = Stroke(stroke))
+                    drawContent()
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Rounded.PushPin, contentDescription = null, tint = ringColor, modifier = Modifier.size(15.dp))
         }
     }
 }
 
+@Composable
+private fun BoxScope.VolumeBar(volume: Int, planned: Boolean, content: Color) {
+    Box(
+        Modifier
+            .align(Alignment.BottomCenter)
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+            .fillMaxWidth()
+            .height(4.dp)
+            .clip(RoundedCornerShape(2.dp))
+            .background(content.copy(alpha = 0.2f)),
+    ) {
+        Box(
+            Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(volume / 100f)
+                .background(if (planned) MaterialTheme.colorScheme.tertiary else content.copy(alpha = 0.75f)),
+        )
+    }
+}
+
+/** Voile affiché pendant le réglage du volume par glissement. */
+@Composable
+private fun BoxScope.VolumeOverlay(shown: Int) {
+    val colors = MaterialTheme.colorScheme
+    Box(Modifier.matchParentSize().background(colors.inverseSurface.copy(alpha = 0.92f))) {
+        Box(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .fillMaxHeight(shown / 100f)
+                .background(colors.primary.copy(alpha = 0.55f)),
+        )
+        Text(
+            text = stringResource(R.string.percent, shown),
+            color = colors.inverseOnSurface,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.align(Alignment.Center),
+        )
+    }
+}

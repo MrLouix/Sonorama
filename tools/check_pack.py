@@ -164,7 +164,7 @@ def unknown_words(model: object, phrase: str) -> list[str]:
     return missing
 
 
-def check(folder: Path, vocab: dict[str, object]) -> dict | None:
+def load_manifest(folder: Path) -> dict | None:
     manifest_path = folder / "manifest.json"
     if not manifest_path.is_file():
         error("manifest.json introuvable")
@@ -173,11 +173,13 @@ def check(folder: Path, vocab: dict[str, object]) -> dict | None:
     if len(raw) > 1024 * 1024:
         error("manifest.json dépasse 1 Mo")
     try:
-        manifest = json.loads(raw.decode("utf-8"))
+        return json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as e:
         error(f"manifest.json illisible : {e}")
         return None
 
+
+def check_header(manifest: dict) -> None:
     if manifest.get("format") not in VERSIONS:
         error(f"format {manifest.get('format')} inconnu (1 ou 2)")
     pack_id = manifest.get("id", "")
@@ -189,7 +191,9 @@ def check(folder: Path, vocab: dict[str, object]) -> dict | None:
         error("version : entier ≥ 1 attendu")
     check_name(manifest.get("name"), "pack")
 
-    symbols = known_symbols()
+
+def check_pages(manifest: dict, symbols: set[str]) -> set[str]:
+    """Contrôle les pages déclarées et renvoie leurs identifiants."""
     pages = set()
     for page in manifest.get("pages", []):
         pid = page.get("id", "")
@@ -202,7 +206,57 @@ def check(folder: Path, vocab: dict[str, object]) -> dict | None:
         elif symbols and symbol not in symbols:
             warn(f"page {pid} : symbole « {symbol} » inconnu de l'appli")
         pages.add(pid)
+    return pages
 
+
+def check_sound_page(sound: dict, owner: str, pages: set[str]) -> None:
+    page = sound.get("page", "")
+    if page in MERGED_PAGES:
+        warn(f"{owner} : la page « {page} » a été fusionnée dans « {MERGED_PAGES[page]} »")
+    elif page not in pages and page not in BUILT_IN_PAGES:
+        error(f"{owner} : page {page!r} ni déclarée ni intégrée à l'appli")
+
+
+def check_sound_license(sound: dict, owner: str) -> None:
+    license = sound.get("license", "")
+    if len(license) > MAX_LICENSE or not license_allowed(license):
+        error(f"{owner} : licence « {license} » refusée (CC0, domaine public, CC BY, CC BY-SA seulement)")
+    if license.upper().startswith("CC-BY") and not sound.get("author", "").strip():
+        error(f"{owner} : une licence CC BY demande un auteur à citer")
+
+
+def check_sound_fields(sound: dict, owner: str, symbols: set[str]) -> None:
+    for field, limit in (("symbol", MAX_SYMBOL), ("author", MAX_AUTHOR), ("source", MAX_SOURCE)):
+        if len(sound.get(field, "")) > limit:
+            error(f"{owner} : champ {field} de plus de {limit} caractères")
+    symbol = sound.get("symbol", "music_note")
+    if symbols and symbol not in symbols:
+        warn(f"{owner} : symbole « {symbol} » inconnu de l'appli")
+    volume = sound.get("defaultVolume", 70)
+    if not isinstance(volume, int) or not 0 <= volume <= 100:
+        warn(f"{owner} : defaultVolume hors de 0–100 (ramené dans la plage)")
+    if "sha256" in sound and not SHA256.fullmatch(str(sound["sha256"])):
+        error(f"{owner} : sha256 mal formé")
+
+
+def check_keywords(sound: dict, owner: str, vocab: dict[str, object]) -> None:
+    keywords = sound.get("keywords", {})
+    if not keywords:
+        warn(f"{owner} : aucun mot-clé (le mode vocal ne le lancera pas)")
+    for lang, words in keywords.items():
+        if not LANGUAGE.fullmatch(lang) or not isinstance(words, list) or len(words) > MAX_KEYWORDS:
+            error(f"{owner} : mots-clés {lang!r} invalides (code à 2 lettres, {MAX_KEYWORDS} au plus)")
+            continue
+        for word in words:
+            if not isinstance(word, str) or len(word) > MAX_KEYWORD:
+                error(f"{owner} : mot-clé {word!r} trop long ({MAX_KEYWORD} caractères au plus)")
+            elif lang in vocab and (missing := unknown_words(vocab[lang], word)):
+                warn(f"{owner} : mot-clé « {word} » inconnu du modèle {lang} ({', '.join(missing)}) : jamais reconnu")
+
+
+def check_sounds(folder: Path, manifest: dict, pages: set[str], symbols: set[str],
+                 vocab: dict[str, object]) -> tuple[set[str], int]:
+    """Contrôle les sons ; renvoie les fichiers déclarés et la taille totale des sons."""
     sounds = manifest.get("sounds", [])
     if not sounds:
         error("aucun son déclaré")
@@ -229,41 +283,15 @@ def check(folder: Path, vocab: dict[str, object]) -> dict | None:
         if file in files:
             error(f"{owner} : fichier {file} déjà utilisé")
         files.add(file)
-        page = sound.get("page", "")
-        if page in MERGED_PAGES:
-            warn(f"{owner} : la page « {page} » a été fusionnée dans « {MERGED_PAGES[page]} »")
-        elif page not in pages and page not in BUILT_IN_PAGES:
-            error(f"{owner} : page {page!r} ni déclarée ni intégrée à l'appli")
-        license = sound.get("license", "")
-        if len(license) > MAX_LICENSE or not license_allowed(license):
-            error(f"{owner} : licence « {license} » refusée (CC0, domaine public, CC BY, CC BY-SA seulement)")
-        if license.upper().startswith("CC-BY") and not sound.get("author", "").strip():
-            error(f"{owner} : une licence CC BY demande un auteur à citer")
-        for field, limit in (("symbol", MAX_SYMBOL), ("author", MAX_AUTHOR), ("source", MAX_SOURCE)):
-            if len(sound.get(field, "")) > limit:
-                error(f"{owner} : champ {field} de plus de {limit} caractères")
-        symbol = sound.get("symbol", "music_note")
-        if symbols and symbol not in symbols:
-            warn(f"{owner} : symbole « {symbol} » inconnu de l'appli")
-        volume = sound.get("defaultVolume", 70)
-        if not isinstance(volume, int) or not 0 <= volume <= 100:
-            warn(f"{owner} : defaultVolume hors de 0–100 (ramené dans la plage)")
-        if "sha256" in sound and not SHA256.fullmatch(str(sound["sha256"])):
-            error(f"{owner} : sha256 mal formé")
-        keywords = sound.get("keywords", {})
-        if not keywords:
-            warn(f"{owner} : aucun mot-clé (le mode vocal ne le lancera pas)")
-        for lang, words in keywords.items():
-            if not LANGUAGE.fullmatch(lang) or not isinstance(words, list) or len(words) > MAX_KEYWORDS:
-                error(f"{owner} : mots-clés {lang!r} invalides (code à 2 lettres, {MAX_KEYWORDS} au plus)")
-                continue
-            for word in words:
-                if not isinstance(word, str) or len(word) > MAX_KEYWORD:
-                    error(f"{owner} : mot-clé {word!r} trop long ({MAX_KEYWORD} caractères au plus)")
-                elif lang in vocab and (missing := unknown_words(vocab[lang], word)):
-                    warn(f"{owner} : mot-clé « {word} » inconnu du modèle {lang} ({', '.join(missing)}) : jamais reconnu")
+        check_sound_page(sound, owner, pages)
+        check_sound_license(sound, owner)
+        check_sound_fields(sound, owner, symbols)
+        check_keywords(sound, owner, vocab)
         total += check_audio(folder, file, owner)
+    return files, total
 
+
+def check_folder(folder: Path, files: set[str], total: int) -> None:
     if total > MAX_UNCOMPRESSED:
         error("plus de 500 Mo de sons")
     if not (folder / "LICENSES.md").is_file():
@@ -272,6 +300,17 @@ def check(folder: Path, vocab: dict[str, object]) -> dict | None:
         "manifest.json", "LICENSES.md", "manifest.sig", "signing-key.pub"}
     if extra:
         warn(f"fichiers non déclarés, ignorés par l'import : {', '.join(sorted(extra)[:10])}")
+
+
+def check(folder: Path, vocab: dict[str, object]) -> dict | None:
+    manifest = load_manifest(folder)
+    if manifest is None:
+        return None
+    check_header(manifest)
+    symbols = known_symbols()
+    pages = check_pages(manifest, symbols)
+    files, total = check_sounds(folder, manifest, pages, symbols, vocab)
+    check_folder(folder, files, total)
     return manifest
 
 
