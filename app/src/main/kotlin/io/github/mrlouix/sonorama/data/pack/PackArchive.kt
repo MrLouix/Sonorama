@@ -134,6 +134,13 @@ object PackArchive {
             throw PackException(PackError.NOT_A_ZIP, e.message.orEmpty())
         }
         if (!manifestSeen) throw PackException(PackError.CHANGED_DURING_IMPORT)
+        verifySounds(manifest, root, copied, hashes)
+        val signerKey = verifySignature(file, signature, signingKey)
+        return ExtractedPack(PackSignature.hex(archiveDigest.digest()), signerKey)
+    }
+
+    /** Chaque son déclaré est présent, c'est un Ogg, et son empreinte correspond quand le pack en donne une. */
+    private fun verifySounds(manifest: PackManifest, root: File, copied: Set<String>, hashes: Map<String, String>) {
         for (sound in manifest.sounds) {
             if (sound.file !in copied) throw PackException(PackError.FILE_MISSING, sound.file)
             if (!isOgg(File(root, sound.file))) throw PackException(PackError.UNSUPPORTED_AUDIO, sound.file)
@@ -141,8 +148,6 @@ object PackArchive {
                 throw PackException(PackError.HASH_MISMATCH, sound.file)
             }
         }
-        val signerKey = verifySignature(file, signature, signingKey)
-        return ExtractedPack(PackSignature.hex(archiveDigest.digest()), signerKey)
     }
 
     private fun verifySignature(file: ManifestFile, signature: ByteArray?, signingKey: ByteArray?): String? {
