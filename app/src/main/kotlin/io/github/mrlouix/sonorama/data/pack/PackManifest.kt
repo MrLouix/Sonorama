@@ -121,41 +121,53 @@ object PackFormat {
         requireName(manifest.name, manifest.id)
         if (manifest.sounds.isEmpty()) throw PackException(PackError.NO_SOUNDS)
         if (manifest.sounds.size > MAX_SOUNDS) throw PackException(PackError.TOO_MANY_SOUNDS)
+        val pages = validatePages(manifest.pages)
+        val ids = HashSet<String>()
+        val files = HashSet<String>()
+        for (sound in manifest.sounds) validateSound(sound, pages, ids, files)
+    }
+
+    /** Vérifie les pages déclarées et renvoie leurs identifiants. */
+    private fun validatePages(declared: List<ManifestPage>): Set<String> {
         val pages = HashSet<String>()
-        for (page in manifest.pages) {
+        for (page in declared) {
             if (!ID.matches(page.id)) throw PackException(PackError.INVALID_ID, page.id)
             requireName(page.name, page.id)
             requireLength(page.symbol, MAX_SYMBOL, page.id)
             pages += page.id
         }
-        val ids = HashSet<String>()
-        val files = HashSet<String>()
-        for (sound in manifest.sounds) {
-            if (!ID.matches(sound.id)) throw PackException(PackError.INVALID_ID, sound.id)
-            if (!ids.add(sound.id)) throw PackException(PackError.DUPLICATE_SOUND, sound.id)
-            requireName(sound.name, sound.id)
-            if (!isSafePath(sound.file)) throw PackException(PackError.UNSAFE_PATH, sound.file)
-            if (!sound.file.endsWith(".ogg", ignoreCase = true)) {
-                throw PackException(PackError.UNSUPPORTED_AUDIO, sound.file)
+        return pages
+    }
+
+    private fun validateSound(sound: ManifestSound, pages: Set<String>, ids: MutableSet<String>, files: MutableSet<String>) {
+        if (!ID.matches(sound.id)) throw PackException(PackError.INVALID_ID, sound.id)
+        if (!ids.add(sound.id)) throw PackException(PackError.DUPLICATE_SOUND, sound.id)
+        requireName(sound.name, sound.id)
+        if (!isSafePath(sound.file)) throw PackException(PackError.UNSAFE_PATH, sound.file)
+        if (!sound.file.endsWith(".ogg", ignoreCase = true)) {
+            throw PackException(PackError.UNSUPPORTED_AUDIO, sound.file)
+        }
+        if (!files.add(sound.file)) throw PackException(PackError.DUPLICATE_SOUND, sound.file)
+        if (sound.page !in pages && pageId(sound.page) !in BUILT_IN_PAGES) {
+            throw PackException(PackError.UNKNOWN_PAGE, sound.page)
+        }
+        requireLength(sound.license, MAX_LICENSE, sound.id)
+        if (!isLicenseAllowed(sound.license)) throw PackException(PackError.FORBIDDEN_LICENSE, sound.license)
+        requireLength(sound.symbol, MAX_SYMBOL, sound.id)
+        requireLength(sound.author, MAX_AUTHOR, sound.id)
+        requireLength(sound.source, MAX_SOURCE, sound.id)
+        if (sound.sha256 != null && !SHA256.matches(sound.sha256)) {
+            throw PackException(PackError.HASH_MISMATCH, sound.file)
+        }
+        validateKeywords(sound)
+    }
+
+    private fun validateKeywords(sound: ManifestSound) {
+        for ((language, words) in sound.keywords) {
+            if (!LANGUAGE.matches(language) || words.size > MAX_KEYWORDS) {
+                throw PackException(PackError.FIELD_TOO_LONG, sound.id)
             }
-            if (!files.add(sound.file)) throw PackException(PackError.DUPLICATE_SOUND, sound.file)
-            if (sound.page !in pages && pageId(sound.page) !in BUILT_IN_PAGES) {
-                throw PackException(PackError.UNKNOWN_PAGE, sound.page)
-            }
-            requireLength(sound.license, MAX_LICENSE, sound.id)
-            if (!isLicenseAllowed(sound.license)) throw PackException(PackError.FORBIDDEN_LICENSE, sound.license)
-            requireLength(sound.symbol, MAX_SYMBOL, sound.id)
-            requireLength(sound.author, MAX_AUTHOR, sound.id)
-            requireLength(sound.source, MAX_SOURCE, sound.id)
-            if (sound.sha256 != null && !SHA256.matches(sound.sha256)) {
-                throw PackException(PackError.HASH_MISMATCH, sound.file)
-            }
-            for ((language, words) in sound.keywords) {
-                if (!LANGUAGE.matches(language) || words.size > MAX_KEYWORDS) {
-                    throw PackException(PackError.FIELD_TOO_LONG, sound.id)
-                }
-                words.forEach { requireLength(it, MAX_KEYWORD, sound.id) }
-            }
+            words.forEach { requireLength(it, MAX_KEYWORD, sound.id) }
         }
     }
 
