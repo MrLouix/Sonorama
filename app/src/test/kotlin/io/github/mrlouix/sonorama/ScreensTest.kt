@@ -20,6 +20,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.test.core.app.ApplicationProvider
 import com.github.takahirom.roborazzi.captureRoboImage
 import io.github.mrlouix.sonorama.audio.MixMode
+import io.github.mrlouix.sonorama.data.CardSize
 import io.github.mrlouix.sonorama.data.ThemeMode
 import io.github.mrlouix.sonorama.data.pack.PackFormat
 import io.github.mrlouix.sonorama.ui.MainViewModel
@@ -81,6 +82,28 @@ class ScreensTest {
     private fun card(name: String) = rule.onNode(hasContentDescription(name, substring = true))
 
     private fun capture(name: String) = rule.onRoot().captureRoboImage("build/screens/$name.png")
+
+    @Test
+    fun `smaller cards fit four to a row and stay easy to touch`() {
+        fun top(name: String) = card(name).fetchSemanticsNode().boundsInRoot.top
+        fun firstRow() = listOf("Oiseaux", "Ruisseau", "Vagues", "Feu de camp").count { top(it) == top("Oiseaux") }
+        assertEquals(3, firstRow())
+        val normalHeight = card("Oiseaux").fetchSemanticsNode().boundsInRoot.height
+
+        for (size in listOf(CardSize.COMPACT, CardSize.DENSE)) {
+            viewModel.setCardSize(size)
+            waitFor { viewModel.settings.value.cardSize == size }
+            rule.waitForIdle()
+            assertEquals(4, firstRow())
+            val bounds = card("Oiseaux").fetchSemanticsNode().boundsInRoot
+            assertTrue(bounds.height < normalHeight)
+            // Au moins 48 dp : la cible tactile minimale d'Android.
+            assertTrue(bounds.height >= 48 * ApplicationProvider.getApplicationContext<Application>().resources.displayMetrics.density)
+            capture("main-${size.name.lowercase()}")
+        }
+        viewModel.setCardSize(CardSize.NORMAL)
+        waitFor { viewModel.settings.value.cardSize == CardSize.NORMAL }
+    }
 
     @Test
     fun `main screen shows the built-in pages and the base pack`() {

@@ -81,6 +81,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.mrlouix.sonorama.R
 import io.github.mrlouix.sonorama.audio.MixMode
 import io.github.mrlouix.sonorama.audio.MixState
+import io.github.mrlouix.sonorama.data.CardSize
 import io.github.mrlouix.sonorama.data.Library
 import io.github.mrlouix.sonorama.data.Limits
 import io.github.mrlouix.sonorama.data.Page
@@ -498,6 +499,8 @@ private fun PageGrid(
     viewModel: MainViewModel,
 ) {
     val cards = page.cardIds.mapNotNull { library.cards[it] }
+    val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val cardSize = settings.cardSize
     if (cards.isEmpty()) {
         Column(
             Modifier.fillMaxSize().padding(32.dp),
@@ -518,13 +521,13 @@ private fun PageGrid(
         return
     }
     LazyVerticalGrid(
-        // Trois colonnes sur un téléphone en portrait, davantage en paysage et sur tablette,
-        // moins quand la police grossit pour que les noms tiennent sur les cartes.
-        columns = GridCells.Adaptive(minSize = 104.dp * (1f + (LocalDensity.current.fontScale - 1f).coerceAtLeast(0f) * 0.55f)),
+        // Trois colonnes sur un téléphone en portrait (quatre avec des cartes compactes), davantage en paysage
+        // et sur tablette, moins quand la police grossit pour que les noms tiennent sur les cartes.
+        columns = GridCells.Adaptive(minSize = cardSize.columnDp.dp * (1f + (LocalDensity.current.fontScale - 1f).coerceAtLeast(0f) * 0.55f)),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(cardSize.gapDp.dp),
+        verticalArrangement = Arrangement.spacedBy(cardSize.gapDp.dp),
     ) {
         items(cards, key = { it.id }) { card ->
             val change = mix.plan[card.id]
@@ -547,6 +550,7 @@ private fun PageGrid(
                 onTap = { if (setup) viewModel.openCardKeywords(card.id) else viewModel.tapCard(card) },
                 onVolumeChange = { viewModel.setVolume(card.id, it, false) },
                 onVolumeCommit = { viewModel.setVolume(card.id, it, true) },
+                cardSize = cardSize,
                 modifier = Modifier
                     .fillMaxWidth()
                     .then(if (card.id == tourCard) Modifier.tourTarget(TourTarget.CARD) else Modifier),

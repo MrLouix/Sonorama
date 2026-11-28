@@ -14,6 +14,7 @@ import io.github.mrlouix.sonorama.audio.MixMode
 import io.github.mrlouix.sonorama.audio.MixState
 import io.github.mrlouix.sonorama.audio.VolumeCurve
 import io.github.mrlouix.sonorama.data.Card
+import io.github.mrlouix.sonorama.data.CardSize
 import io.github.mrlouix.sonorama.data.CardSound
 import io.github.mrlouix.sonorama.data.Library
 import io.github.mrlouix.sonorama.data.Limits
@@ -614,6 +615,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setTheme(theme: ThemeMode) {
         viewModelScope.launch { container.settingsStore.setTheme(theme) }
+    }
+
+    fun setCardSize(size: CardSize) {
+        viewModelScope.launch { container.settingsStore.setCardSize(size) }
     }
 
     fun setLanguage(language: String, then: () -> Unit) {
